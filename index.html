@@ -400,7 +400,17 @@
     perspective: 900px;
   }
   .env { position:relative; aspect-ratio: 1 / .78; cursor:pointer; user-select:none; }
-  .env-inner { position:absolute; inset:0; transform-style: preserve-3d; transition: none; }
+  .env-inner {
+    position:absolute; inset:0;
+    -webkit-transform-style: preserve-3d; transform-style: preserve-3d;
+    transition: none;
+  }
+  .env.animate .env-inner { will-change: transform; }
+  /* хаки для Safari: явные плоскости + скрытая изнанка у всего содержимого */
+  .face.front { -webkit-transform: rotateY(0deg) translateZ(.5px); transform: rotateY(0deg) translateZ(.5px); }
+  .face *, .face::before, .face::after {
+    -webkit-backface-visibility: hidden; backface-visibility: hidden;
+  }
   .env.animate .env-inner { transition: transform .7s cubic-bezier(.3,1.3,.4,1); }
   .env.closed .env-inner, .env.animate .env-inner { transform: rotateY(180deg); }
   /* фикс Safari: статично закрытый конверт — без 3D (иначе зеркалит) */
@@ -437,19 +447,26 @@
   .env .cur { position:relative; z-index:2; font-size:8.5px; color:var(--text2); font-weight:700; letter-spacing:.5px; }
 
   .face.back {
-    transform: rotateY(180deg);
+    -webkit-transform: rotateY(180deg) translateZ(.5px);
+    transform: rotateY(180deg) translateZ(.5px);
     background: linear-gradient(160deg, #d9f5e2, #bfeccd);
     border:1px solid rgba(48,209,88,.35);
     box-shadow: 0 3px 10px rgba(48,209,88,.15), inset 0 1px 0 rgba(255,255,255,.7);
     justify-content:center; gap:2px; padding-bottom:0;
   }
-  .seal {
+  .seal {                                  /* золотая монетка на конверте */
+    position:relative;
     width:30px; height:30px; border-radius:50%;
-    background: radial-gradient(circle at 35% 30%, #48dd72, #26a349);
-    color:#fff; font-size:15px; font-weight:800;
-    display:flex; align-items:center; justify-content:center;
-    box-shadow: 0 2px 6px rgba(38,163,73,.45), inset 0 1px 0 rgba(255,255,255,.4);
+    background: radial-gradient(circle at 36% 30%, #ffeeb0 0%, #ffd35c 48%, #e39d15 100%);
+    box-shadow:
+      inset 0 -2px 4px rgba(160,105,10,.5),
+      inset 0 1px 2px rgba(255,255,255,.8),
+      0 2px 6px rgba(180,120,20,.45);
     transform: rotate(-8deg);
+  }
+  .seal::after {
+    content:''; position:absolute; inset:4px;
+    border-radius:50%; border:1.5px solid rgba(180,125,20,.5);
   }
   .face.back .amt { font-size:11.5px; color:rgba(20,90,45,.65); font-weight:700; }
 
@@ -663,7 +680,7 @@
   body.sleep #tail, body.sleep #ear { animation: none; }
 
   /* ---- живые конверты ---- */
-  .env:not(.closed):not(.tear):not(.animate) { animation: fidget 5s ease-in-out infinite; }
+  .env.fid:not(.closed):not(.tear):not(.animate) { animation: fidget 5s ease-in-out infinite; }
   @keyframes fidget {
     0%, 90%, 100% { transform: rotate(0) translateY(0); }
     92.5% { transform: rotate(-3deg) translateY(-1.5px); }
@@ -1169,8 +1186,10 @@ function load() {
     expenses: [], customCats: [], limit: 0, milestones: []
   }, s);
 }
+let spendDirty = true;     // расходы пересобираются только если данные менялись
 function save() {
   state.updatedAt = Date.now();
+  spendDirty = true;
   localStorage.setItem(KEY, JSON.stringify(state));
   maybeBackup();
   schedulePush();          // облачная синхронизация (если подключена)
@@ -1974,13 +1993,14 @@ function renderGrid() {
     if (filter === 'closed' && !closed) continue;
     const el = document.createElement('div');
     el.className = 'env' + (closed ? ' closed' : '') + (i === reco && !closed ? ' reco' : '')
-      + (!closed && ENV[i] >= 140 && i !== reco ? ' rich' : '');   // дорогой светится
+      + (!closed && ENV[i] >= 140 && i !== reco ? ' rich' : '')    // дорогой светится
+      + ((i * 7 + 3) % 13 === 0 ? ' fid' : '');                    // ёрзает ~каждый 13-й
     el.dataset.idx = i;
-    el.style.animationDelay = ((i * 1.3) % 5).toFixed(1) + 's';    // «ёрзают» вразнобой
+    el.style.animationDelay = ((i * 1.3) % 5).toFixed(1) + 's';
     el.innerHTML =
       '<div class="env-inner">' +
         '<div class="face front"><div class="amt">' + ENV[i] + '</div><div class="cur">BYN</div></div>' +
-        '<div class="face back"><div class="seal">✓</div><div class="amt">' + ENV[i] + '</div></div>' +
+        '<div class="face back"><div class="seal"></div><div class="amt">' + ENV[i] + '</div></div>' +
       '</div>';
     if (!closed) el.onclick = () => closeEnv(i, el);
     grid.appendChild(el);
@@ -2208,7 +2228,7 @@ function switchTab(t) {
   show.style.display = '';
   document.getElementById('tabSave').classList.toggle('active', t === 'save');
   document.getElementById('tabSpend').classList.toggle('active', t === 'spend');
-  if (t === 'spend') renderSpend();
+  if (t === 'spend' && spendDirty) renderSpend();   // пересобираем только при изменениях
   // мягкое проявление, как в iOS
   show.classList.remove('animin', 'fadeIn');
   void show.offsetWidth;
@@ -2483,6 +2503,7 @@ function renderSpend() {
   pieSel = null;
   startChartAnim(monthExps);
   renderExpList(monthExps);
+  spendDirty = false;
 }
 
 // одометр: цифры прокручиваются как барабан счётчика
