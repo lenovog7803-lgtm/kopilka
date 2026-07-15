@@ -403,6 +403,10 @@
   .env-inner { position:absolute; inset:0; transform-style: preserve-3d; transition: none; }
   .env.animate .env-inner { transition: transform .7s cubic-bezier(.3,1.3,.4,1); }
   .env.closed .env-inner, .env.animate .env-inner { transform: rotateY(180deg); }
+  /* фикс Safari: статично закрытый конверт — без 3D (иначе зеркалит) */
+  .env.closed:not(.animate) .env-inner { transform: none; }
+  .env.closed:not(.animate) .face.front { visibility: hidden; }
+  .env.closed:not(.animate) .face.back { transform: none; }
   .env:not(.closed):not(.animate):active .env-inner { transform: scale(.93); }
 
   .face {
@@ -713,6 +717,17 @@
     to   { transform: scale(8); opacity:0; }
   }
 
+  /* код синхронизации */
+  .sync-code {
+    font-size:28px; font-weight:800; letter-spacing:8px; text-align:center;
+    padding:14px; margin:4px 0 8px; cursor:pointer;
+    background: rgba(255,255,255,.55);
+    border:1px solid rgba(255,255,255,.7);
+    border-radius:16px;
+    font-variant-numeric: tabular-nums;
+  }
+  .sync-code:active { transform: scale(.97); }
+
   /* ---- тост ---- */
   #toast {
     position:fixed; left:50%; bottom:32px; transform:translate(-50%,20px);
@@ -1007,6 +1022,12 @@
     <div class="ach-grid" id="achGrid"></div>
   </div>
 
+  <!-- синхронизация -->
+  <div class="card" id="syncCard">
+    <div class="section-title">Синхронизация <span id="syncDot"></span></div>
+    <div id="syncBody"></div>
+  </div>
+
   <!-- история -->
   <div class="card" id="histCard">
     <div class="hist-head" onclick="document.getElementById('histCard').classList.toggle('hist-open')">
@@ -1113,6 +1134,9 @@ const N = 171;
 const DEADLINE = new Date(2026, 11, 31);
 const KEY = 'kopilkaEnv2026';
 
+// URL базы Firebase Realtime Database (для синхронизации между устройствами)
+const SYNC_DB_URL = 'https://kopilka-11601-default-rtdb.europe-west1.firebasedatabase.app';
+
 // ---------- конверты: суммы (итог ровно 15000) ----------
 const ENV = (() => {
   const min = 20, max = 155;
@@ -1143,7 +1167,12 @@ function load() {
     expenses: [], customCats: [], limit: 0, milestones: []
   }, s);
 }
-function save() { localStorage.setItem(KEY, JSON.stringify(state)); maybeBackup(); }
+function save() {
+  state.updatedAt = Date.now();
+  localStorage.setItem(KEY, JSON.stringify(state));
+  maybeBackup();
+  schedulePush();          // облачная синхронизация (если подключена)
+}
 
 // ---------- helpers ----------
 function todayStr(d = new Date()) {
@@ -1214,6 +1243,14 @@ function bestStreak() {
 // ---------- звуки (WebAudio, без файлов) ----------
 let AC = null;
 function ac() { if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)(); return AC; }
+// iOS: аудио запускается только после первого касания
+function unlockAudio() {
+  try { const c = ac(); if (c.state === 'suspended') c.resume(); } catch(e) {}
+  document.removeEventListener('touchend', unlockAudio);
+  document.removeEventListener('pointerdown', unlockAudio);
+}
+document.addEventListener('touchend', unlockAudio, { passive: true });
+document.addEventListener('pointerdown', unlockAudio, { passive: true });
 function tone(freq, dur, delay, type, vol) {
   try {
     const ctx = ac(), t = ctx.currentTime + (delay || 0);
@@ -2137,9 +2174,10 @@ function switchTab(t) {
   document.getElementById('tabSave').classList.toggle('active', t === 'save');
   document.getElementById('tabSpend').classList.toggle('active', t === 'spend');
   if (t === 'spend') renderSpend();
+  // только лёгкий слайд (каскад карточек — тяжёлый для телефона)
   show.classList.remove('animin', 'slideL', 'slideR');
   void show.offsetWidth;
-  show.classList.add('animin', t === 'spend' ? 'slideL' : 'slideR');   // слайд + каскад
+  show.classList.add(t === 'spend' ? 'slideL' : 'slideR');
 }
 
 // свайп между вкладками
@@ -2150,7 +2188,7 @@ document.addEventListener('touchstart', e => {
 document.addEventListener('touchend', e => {
   const dx = e.changedTouches[0].clientX - swX;
   const dy = e.changedTouches[0].clientY - swY;
-  if (Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+  if (Math.abs(dx) < 45 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
   const cur = document.getElementById('tabSave').classList.contains('active') ? 'save' : 'spend';
   if (dx < 0 && cur === 'save') switchTab('spend');
   if (dx > 0 && cur === 'spend') switchTab('save');
@@ -2707,6 +2745,98 @@ function renderExpList(monthExps) {
   lastAddedTs = 0;   // подсветка нового ряда — один раз
 }
 
+// ================== ОБЛАЧНАЯ СИНХРОНИЗАЦИЯ (Firebase RTDB, REST) ==================
+const SYNC_KEY = 'kopilkaSyncCfg';
+let syncCfg = null;
+try { syncCfg = JSON.parse(localStorage.getItem(SYNC_KEY)); } catch(e) {}
+let pushTimer = null, syncOk = null;
+
+function syncUrl() { return SYNC_DB_URL.replace(/\/$/, '') + '/sync/' + syncCfg.code + '.json'; }
+function genCode() {
+  const abc = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  let c = '';
+  for (let i = 0; i < 6; i++) c += abc[Math.floor(Math.random() * abc.length)];
+  return c;
+}
+function setSyncDot(ok) {
+  syncOk = ok;
+  const d = document.getElementById('syncDot');
+  d.textContent = ok === null ? '' : ok ? '· 🟢' : '· 🔴';
+}
+function schedulePush() {
+  if (!SYNC_DB_URL || !syncCfg) return;
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(syncPush, 1500);
+}
+function syncPush() {
+  if (!SYNC_DB_URL || !syncCfg) return;
+  fetch(syncUrl(), { method: 'PUT', body: JSON.stringify({ ts: state.updatedAt || Date.now(), state }) })
+    .then(r => setSyncDot(r.ok))
+    .catch(() => setSyncDot(false));
+}
+function syncPull(force) {
+  if (!SYNC_DB_URL || !syncCfg) return;
+  fetch(syncUrl())
+    .then(r => r.json())
+    .then(data => {
+      setSyncDot(true);
+      if (!data || !data.state) { if (force) syncPush(); return; }
+      if (force || (data.ts || 0) > (state.updatedAt || 0)) {
+        state = Object.assign({
+          startDate: todayStr(), closed: [], unlocked: [],
+          stars: 0, qAwarded: [], bought: [], worn: [],
+          celebrated: false, lastBackup: null, wallet: 0,
+          expenses: [], customCats: [], limit: 0, milestones: []
+        }, data.state);
+        localStorage.setItem(KEY, JSON.stringify(state));
+        dispSum = null;
+        render(); renderSpend();
+        toast('🔄 Данные синхронизированы');
+      }
+    })
+    .catch(() => setSyncDot(false));
+}
+function connectSync(code) {
+  syncCfg = { code: code.toUpperCase().trim() };
+  localStorage.setItem(SYNC_KEY, JSON.stringify(syncCfg));
+  renderSync();
+  syncPull(true);   // если в облаке есть данные — берём их; если нет — зальём свои
+}
+function disconnectSync() {
+  syncCfg = null;
+  localStorage.removeItem(SYNC_KEY);
+  setSyncDot(null);
+  renderSync();
+}
+function renderSync() {
+  const body = document.getElementById('syncBody');
+  if (!SYNC_DB_URL) {
+    body.innerHTML = '<div class="today-line">Синхронизация появится после настройки облака</div>';
+    return;
+  }
+  if (!syncCfg) {
+    body.innerHTML =
+      '<div class="hint">Один код — одни данные на всех устройствах. Создай код здесь и введи его на телефоне (или наоборот).</div>' +
+      '<button class="add-btn" onclick="connectSync(genCode())" style="margin-bottom:10px">Создать код синхронизации</button>' +
+      '<div class="extra-row" style="margin-bottom:0">' +
+        '<input id="syncInput" maxlength="6" placeholder="Или введи код с другого устройства" style="text-transform:uppercase">' +
+        '<button onclick="var v=document.getElementById(\'syncInput\').value; if(v.trim().length===6) connectSync(v); else toast(\'Код — 6 символов\')">OK</button>' +
+      '</div>';
+  } else {
+    body.innerHTML =
+      '<div class="hint" style="margin-bottom:8px">Введи этот код на другом устройстве:</div>' +
+      '<div class="sync-code" onclick="navigator.clipboard && navigator.clipboard.writeText(\'' + syncCfg.code + '\').then(()=>toast(\'Код скопирован\'))">' + syncCfg.code + '</div>' +
+      '<div class="today-line">Обновляется автоматически · нажми на код, чтобы скопировать</div>' +
+      '<div class="undo"><button onclick="disconnectSync()">отключить синхронизацию</button></div>';
+  }
+}
+if (SYNC_DB_URL && syncCfg) {
+  setInterval(() => syncPull(false), 25000);
+  window.addEventListener('focus', () => syncPull(false));
+  syncPull(false);
+}
+renderSync();
+
 xmasMode();
 sleepCheck();
 render();
@@ -2715,8 +2845,19 @@ document.getElementById('viewSave').classList.add('animin');
 maybeBackup();
 </script>
 <script>
+// авто-обновление: проверяем новую версию при запуске и раз в час,
+// при выходе обновления страница сама перезагружается один раз
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
+  navigator.serviceWorker.register('sw.js').then(reg => {
+    reg.update();
+    setInterval(() => reg.update(), 60 * 60 * 1000);
+  }).catch(() => {});
+  let swRefreshed = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (swRefreshed) return;
+    swRefreshed = true;
+    location.reload();
+  });
 }
 </script>
 </body>
