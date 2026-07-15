@@ -663,11 +663,12 @@
   body.sleep #tail, body.sleep #ear { animation: none; }
 
   /* ---- живые конверты ---- */
-  .env:not(.closed):not(.tear):not(.animate) { animation: fidget 9s ease-in-out infinite; }
+  .env:not(.closed):not(.tear):not(.animate) { animation: fidget 5s ease-in-out infinite; }
   @keyframes fidget {
-    0%, 96.4%, 100% { transform: rotate(0); }
-    97.4% { transform: rotate(-2.2deg); }
-    98.6% { transform: rotate(1.8deg); }
+    0%, 90%, 100% { transform: rotate(0) translateY(0); }
+    92.5% { transform: rotate(-3deg) translateY(-1.5px); }
+    95%   { transform: rotate(2.6deg) translateY(0); }
+    97.5% { transform: rotate(-1.5deg) translateY(-1px); }
   }
   .env.rich .face.front {
     border-color: rgba(255,205,80,.8);
@@ -1732,7 +1733,7 @@ function pigFlip() {
 // ночной режим по часам устройства (23:00–07:00)
 function sleepCheck() {
   const h = new Date().getHours();
-  const on = h >= 23 || h < 7;
+  const on = h >= 22 || h < 7;   // сон: 22:00–07:00
   document.body.classList.toggle('sleep', on);
   document.getElementById('sleepGroup').style.display = on ? '' : 'none';
   refreshEyes();
@@ -1975,7 +1976,7 @@ function renderGrid() {
     el.className = 'env' + (closed ? ' closed' : '') + (i === reco && !closed ? ' reco' : '')
       + (!closed && ENV[i] >= 140 && i !== reco ? ' rich' : '');   // дорогой светится
     el.dataset.idx = i;
-    el.style.animationDelay = ((i * 1.7) % 9).toFixed(1) + 's';    // «ёрзают» вразнобой
+    el.style.animationDelay = ((i * 1.3) % 5).toFixed(1) + 's';    // «ёрзают» вразнобой
     el.innerHTML =
       '<div class="env-inner">' +
         '<div class="face front"><div class="amt">' + ENV[i] + '</div><div class="cur">BYN</div></div>' +
