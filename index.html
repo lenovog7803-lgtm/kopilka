@@ -616,11 +616,12 @@
   .od-strip span { height:1.06em; line-height:1.06; }
   .od-static { display:inline-block; line-height:1.06; }
 
-  /* слайд вкладок */
-  .view.slideL { animation: viewL .42s cubic-bezier(.22,1,.36,1); }
-  .view.slideR { animation: viewR .42s cubic-bezier(.22,1,.36,1); }
-  @keyframes viewL { from { opacity:0; transform: translateX(40px); } }
-  @keyframes viewR { from { opacity:0; transform: translateX(-40px); } }
+  /* переход вкладок: мягкое проявление, как в iOS */
+  .view.fadeIn { animation: viewFade .38s cubic-bezier(.25,.1,.25,1); }
+  @keyframes viewFade {
+    from { opacity:0; transform: scale(.985); }
+    to   { opacity:1; transform: scale(1); }
+  }
 
   .blobs { transition: transform .3s ease-out; }
 
@@ -1262,10 +1263,56 @@ function tone(freq, dur, delay, type, vol) {
     o.start(t); o.stop(t + dur + .05);
   } catch(e) {}
 }
-const sndCoin = () => { tone(1320, .18, 0, 'triangle', .14); tone(1760, .22, .07, 'triangle', .1); };
-const sndStar = () => { tone(880, .12, 0, 'sine', .12); tone(1174, .14, .09, 'sine', .12); tone(1568, .2, .18, 'sine', .12); };
-const sndAch  = () => { [523,659,784,1046].forEach((f,i) => tone(f, .25, i*.11, 'triangle', .13)); };
-const sndBuy  = () => { tone(600, .09, 0, 'square', .06); tone(900, .12, .08, 'square', .06); };
+// ---- Стиль iOS: чистые мягкие тоны, дорого и спокойно ----
+function softTone(f, delay, dur, vol) {   // бархатный тон с мягкой атакой (как Apple Pay)
+  try {
+    const ctx = ac(), t = ctx.currentTime + (delay || 0);
+    dur = dur || .3; vol = vol || .09;
+    [[f, 1], [f * 2.001, .18]].forEach(([fq, gm]) => {   // лёгкая октава для «дорогого» тембра
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'sine'; o.frequency.value = fq;
+      g.gain.setValueAtTime(.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol * gm, t + .012);   // мягкая атака
+      g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(t); o.stop(t + dur + .05);
+    });
+  } catch(e) {}
+}
+function pop(f, delay, vol) {             // короткий деликатный «пик» (как клавиатура iOS)
+  try {
+    const ctx = ac(), t = ctx.currentTime + (delay || 0);
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'sine'; o.frequency.value = f;
+    g.gain.setValueAtTime(vol || .05, t);
+    g.gain.exponentialRampToValueAtTime(.0001, t + .05);
+    o.connect(g); g.connect(ctx.destination);
+    o.start(t); o.stop(t + .08);
+  } catch(e) {}
+}
+function swoosh(delay, dur, vol) {        // мягкий «свуш» (как отправка сообщения)
+  try {
+    const ctx = ac(), t = ctx.currentTime + (delay || 0);
+    dur = dur || .28;
+    const b = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate);
+    const d = b.getChannelData(0);
+    for (let i = 0; i < d.length; i++) {
+      const p = i / d.length;
+      d[i] = (Math.random() * 2 - 1) * Math.sin(p * Math.PI);
+    }
+    const s = ctx.createBufferSource(); s.buffer = b;
+    const f = ctx.createBiquadFilter(); f.type = 'lowpass';
+    f.frequency.setValueAtTime(1400, t);
+    f.frequency.exponentialRampToValueAtTime(350, t + dur);
+    const g = ctx.createGain(); g.gain.value = vol || .07;
+    s.connect(f); f.connect(g); g.connect(ctx.destination);
+    s.start(t);
+  } catch(e) {}
+}
+const sndCoin = () => { softTone(880, 0, .22, .09); softTone(1318, .09, .3, .09); };          // двухтоновый «успех»
+const sndStar = () => { softTone(1568, 0, .35, .07); pop(2093, .02, .03); };                  // тонкий «динь»
+const sndAch  = () => { softTone(987, 0, .28, .08); softTone(1318, .13, .28, .08); softTone(1760, .26, .5, .08); }; // трезвучие
+const sndBuy  = () => { pop(1046, 0, .05); pop(1318, .08, .05); };
 
 // ---------- ачивки ----------
 const ACH = [
@@ -1464,6 +1511,9 @@ function closeEnv(idx, el, quiet) {
     el.onclick = null;
     el.classList.add('animate');                 // 3D-переворот, как раньше
     sparkBurst(el);
+    // как только переворот закончился — переводим в статичное закрытое
+    // состояние без 3D (фикс секундного «зеркала» в Safari)
+    setTimeout(() => { el.classList.add('closed'); el.classList.remove('animate'); }, 720);
     flyCoin(el, () => { pigHappy(); sndCoin(); vib(15); render(); });
     setTimeout(render, 1600);
   } else render();
@@ -1644,8 +1694,8 @@ function sndTear() {
     const d = buf.getChannelData(0);
     for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length);
     const src = ctx.createBufferSource(); src.buffer = buf;
-    const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 1400;
-    const g = ctx.createGain(); g.gain.value = .14;
+    const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 1800;   // едва слышный «шурх»
+    const g = ctx.createGain(); g.gain.value = .05;
     src.connect(f); f.connect(g); g.connect(ctx.destination);
     src.start(t);
   } catch(e) {}
@@ -2174,25 +2224,11 @@ function switchTab(t) {
   document.getElementById('tabSave').classList.toggle('active', t === 'save');
   document.getElementById('tabSpend').classList.toggle('active', t === 'spend');
   if (t === 'spend') renderSpend();
-  // только лёгкий слайд (каскад карточек — тяжёлый для телефона)
-  show.classList.remove('animin', 'slideL', 'slideR');
+  // мягкое проявление, как в iOS
+  show.classList.remove('animin', 'fadeIn');
   void show.offsetWidth;
-  show.classList.add(t === 'spend' ? 'slideL' : 'slideR');
+  show.classList.add('fadeIn');
 }
-
-// свайп между вкладками
-let swX = 0, swY = 0;
-document.addEventListener('touchstart', e => {
-  swX = e.touches[0].clientX; swY = e.touches[0].clientY;
-}, { passive: true });
-document.addEventListener('touchend', e => {
-  const dx = e.changedTouches[0].clientX - swX;
-  const dy = e.changedTouches[0].clientY - swY;
-  if (Math.abs(dx) < 45 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
-  const cur = document.getElementById('tabSave').classList.contains('active') ? 'save' : 'spend';
-  if (dx < 0 && cur === 'save') switchTab('spend');
-  if (dx > 0 && cur === 'spend') switchTab('save');
-}, { passive: true });
 
 // параллакс фона
 const blobsEl = document.querySelector('.blobs');
@@ -2223,7 +2259,7 @@ document.getElementById('pieCv').addEventListener('click', e => {
   const hit = pieGeom.entries.find(en => a >= en.start && a < en.end);
   pieSel = (hit && pieSel !== hit.cat) ? hit.cat : null;
   drawPie(curMonthExps, 1);
-  tone(760, .07, 0, 'sine', .05);
+  pop(1200, 0, .04);
 });
 
 function renderCats() {
@@ -2285,7 +2321,7 @@ function addExpense() {
   lastAddedTs = ts;
   save();
   inp.value = ''; document.getElementById('expNote').value = '';
-  tone(500, .1, 0, 'triangle', .1); tone(380, .12, .07, 'triangle', .08);
+  swoosh(0, .26, .07); pop(660, .16, .04);    // мягкий свуш, как отправка
 
   flyBills(inp, v, () => renderSpend());   // стайка купюр летит в сводку
 
@@ -2348,7 +2384,7 @@ function flyBills(fromEl, amount, onDone) {
       stat.classList.remove('bump');       // лёгкий толчок на каждое «попадание»
       void stat.offsetWidth;
       stat.classList.add('bump');
-      tone(300 - finished * 12, .08, 0, 'triangle', .05);
+      pop(760 - finished * 30, 0, .035);      // деликатный тик на каждое попадание
       if (++finished === n && onDone) onDone();
     };
   }
@@ -2845,8 +2881,6 @@ document.getElementById('viewSave').classList.add('animin');
 maybeBackup();
 </script>
 <script>
-// авто-обновление: проверяем новую версию при запуске и раз в час,
-// при выходе обновления страница сама перезагружается один раз
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   navigator.serviceWorker.register('sw.js').then(reg => {
     reg.update();
