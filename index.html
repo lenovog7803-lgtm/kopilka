@@ -790,6 +790,85 @@
   }
   .sync-code:active { transform: scale(.97); }
 
+  /* ---- пакет живости v2 ---- */
+  /* приветствие: ухо машет */
+  .pig.hi #ear { animation: earWave .9s ease-in-out; }
+  @keyframes earWave {
+    0%,100% { transform: rotate(0); } 20% { transform: rotate(-16deg); }
+    45% { transform: rotate(10deg); } 70% { transform: rotate(-10deg); }
+  }
+  /* зевота-потягивание */
+  .pig.yawn { animation: yawnA 1.8s ease-in-out; }
+  @keyframes yawnA {
+    0%,100% { transform: scale(1); }
+    35% { transform: scale(1.05, 1.07) translateY(-3px); }
+    60% { transform: scale(1.05, 1.07) translateY(-3px); }
+    80% { transform: scale(.98, .99); }
+  }
+  /* чих */
+  .pig.sneeze { animation: sneezeA .65s cubic-bezier(.3,.8,.4,1); }
+  @keyframes sneezeA {
+    20% { transform: translateX(7px) scale(.97, 1.05) rotate(2deg); }
+    45% { transform: translateX(-12px) scale(1.1, .88) rotate(-4deg); }
+    70% { transform: translateX(3px) scale(1.02, .98); }
+    100% { transform: none; }
+  }
+  .dust-p {
+    position:fixed; left:0; top:0; z-index:55; pointer-events:none;
+    width:7px; height:7px; border-radius:50%;
+    background: rgba(150,150,162,.6); filter: blur(1px);
+    animation: gdropFly .8s ease-out forwards;
+  }
+  /* пар изо рта зимой */
+  .breath {
+    position:absolute; z-index:3; pointer-events:none;
+    width:16px; height:12px; border-radius:50%;
+    background: rgba(255,255,255,.65); filter: blur(4px);
+    animation: breathPuff 2.1s ease-out forwards;
+  }
+  @keyframes breathPuff {
+    0%   { transform: translate(0,0) scale(.4); opacity:0; }
+    20%  { opacity:.6; }
+    100% { transform: translate(20px,-14px) scale(1.7); opacity:0; }
+  }
+  /* фольгированные конверты */
+  .env.foil .face.front {
+    background: linear-gradient(115deg, #ffe9f2, #e6f2ff 28%, #eaffef 52%, #fff7e2 76%, #ffe9f2);
+    background-size: 300% 300%;
+    animation: foilShift 5s linear infinite;
+    border-color: rgba(255,255,255,.95);
+  }
+  @keyframes foilShift { to { background-position: 300% 0; } }
+  /* волна по сетке */
+  .env.rippleFx { animation: envRipple .42s ease !important; }
+  @keyframes envRipple { 35% { transform: translateY(-4px) scale(1.045); } }
+  /* глубокое нажатие */
+  .add-btn, .extra-row button, .chip, .tab, .m-ok, .m-cancel, .cat { transition: transform .12s, filter .12s, box-shadow .12s; }
+  .add-btn:active, .extra-row button:active, .chip:active, .tab:active,
+  .m-ok:active, .m-cancel:active, .cat:active {
+    transform: scale(.94);
+    filter: brightness(.94);
+    box-shadow: inset 0 2px 6px rgba(0,0,0,.10);
+  }
+  /* живые иконки категорий */
+  .cat.sel .cbadge svg { animation: icoLive .55s ease; }
+  .cat.sel .cbadge.cb-transport svg { animation: icoDrive .6s ease; }
+  .cat.sel .cbadge.cb-health svg { animation: icoHeart .8s ease; }
+  @keyframes icoLive { 30% { transform: scale(1.28) rotate(-9deg); } 62% { transform: scale(.92) rotate(6deg); } }
+  @keyframes icoDrive { 25% { transform: translateX(-4px); } 60% { transform: translateX(4px); } }
+  @keyframes icoHeart { 20%, 55% { transform: scale(1.3); } 38%, 75% { transform: scale(.95); } }
+  /* скелетон-блик при появлении карточек */
+  .view.animin .card::after {
+    content:''; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+    background: linear-gradient(100deg, transparent 32%, rgba(255,255,255,.65) 50%, transparent 68%);
+    background-size: 240% 100%;
+    animation: shimmerSweep .9s ease .15s both;
+  }
+  @keyframes shimmerSweep {
+    from { background-position: 130% 0; opacity:1; }
+    to   { background-position: -130% 0; opacity:0; }
+  }
+
   /* ---- тост ---- */
   #toast {
     position:fixed; left:50%; bottom:32px; transform:translate(-50%,20px);
@@ -1006,6 +1085,13 @@
           <text class="zz z2" x="164" y="22" font-size="12" fill="#7e88e8" font-weight="800">Z</text>
           <text class="zz z3" x="174" y="13" font-size="9"  fill="#98a2f2" font-weight="800">Z</text>
         </g>
+        <!-- пыль после долгого отсутствия -->
+        <g id="dust" style="display:none">
+          <ellipse cx="100" cy="68" rx="17" ry="6" fill="rgba(150,150,162,.45)"/>
+          <ellipse cx="152" cy="58" rx="12" ry="5" fill="rgba(150,150,162,.4)"/>
+          <ellipse cx="125" cy="92" rx="21" ry="7" fill="rgba(150,150,162,.32)"/>
+          <ellipse cx="80"  cy="110" rx="13" ry="5" fill="rgba(150,150,162,.35)"/>
+        </g>
 
       </svg>
 
@@ -1204,6 +1290,8 @@ const KEY = 'kopilkaEnv2026';
 const SYNC_DB_URL = 'https://kopilka-11601-default-rtdb.europe-west1.firebasedatabase.app';
 
 // ---------- конверты: суммы (итог ровно 15000) ----------
+const FOIL = [13, 44, 77, 111, 152];   // фольгированные конверты (+1⭐)
+
 const ENV = (() => {
   const min = 20, max = 155;
   const a = [];
@@ -1230,7 +1318,8 @@ function load() {
     startDate: todayStr(), closed: [], unlocked: [],
     stars: 0, qAwarded: [], bought: [], worn: [],
     celebrated: false, lastBackup: null, wallet: 0,
-    expenses: [], customCats: [], limit: 0, milestones: [], lastLevel: 1
+    expenses: [], customCats: [], limit: 0, milestones: [], lastLevel: 1,
+    lastVisit: null
   }, s);
 }
 let spendDirty = true;     // расходы пересобираются только если данные менялись
@@ -1559,6 +1648,28 @@ function closeEnv(idx, el, quiet) {
   save();
   if (el) {
     el.onclick = null;
+    // волна по сетке: соседи вздрагивают
+    const kids = [...el.parentElement.children];
+    const pos = kids.indexOf(el);
+    [pos - 1, pos + 1, pos - 4, pos + 4].forEach(j => {
+      const n = kids[j];
+      if (n && n !== el) {
+        setTimeout(() => {
+          n.classList.add('rippleFx');
+          setTimeout(() => n.classList.remove('rippleFx'), 460);
+        }, 80);
+      }
+    });
+    // фольгированный: бонусная звезда
+    if (FOIL.includes(idx)) {
+      setTimeout(() => {
+        state.stars += 1;
+        localStorage.setItem(KEY, JSON.stringify(state));
+        toast('✨ Фольгированный конверт! +1⭐');
+        sndStar();
+        render();
+      }, 1900);
+    }
     el.classList.add('animate');                 // 3D-переворот, как раньше
     sndFlip();
     sparkBurst(el);
@@ -2005,6 +2116,124 @@ document.getElementById('pigSvg').addEventListener('click', () => {
   setTempHappy(800);
 });
 
+// ---------- приветствие / пыль и чих ----------
+function pigWelcome() {
+  setTimeout(() => {
+    const pig = document.getElementById('pigSvg');
+    pig.classList.add('hi');
+    pig.classList.remove('bounce'); void pig.offsetWidth; pig.classList.add('bounce');
+    setTimeout(() => { pig.classList.remove('bounce', 'hi'); }, 950);
+    setTempHappy(1200);
+    toast('🐷 С возвращением!');
+  }, 700);
+}
+function dustSneeze() {
+  const dust = document.getElementById('dust');
+  dust.style.display = '';
+  setTimeout(() => {
+    const pig = document.getElementById('pigSvg');
+    pig.classList.add('sneeze');
+    setTimeout(() => pig.classList.remove('sneeze'), 700);
+    flick(0, .07);
+    dust.style.display = 'none';
+    // пылинки разлетаются
+    const r = pig.getBoundingClientRect();
+    for (let i = 0; i < 9; i++) {
+      const d = document.createElement('div');
+      d.className = 'dust-p';
+      const ang = Math.random() * Math.PI * 2;
+      const dist = 35 + Math.random() * 50;
+      d.style.setProperty('--x', (r.left + r.width * .45) + 'px');
+      d.style.setProperty('--y', (r.top + r.height * .4) + 'px');
+      d.style.setProperty('--dx', Math.cos(ang) * dist + 'px');
+      d.style.setProperty('--dy', Math.sin(ang) * dist + 'px');
+      document.body.appendChild(d);
+      setTimeout(() => d.remove(), 900);
+    }
+    toast('Апчхи! 🐷 Сто лет не виделись');
+    setTempHappy(1200);
+  }, 1400);
+}
+function greetCheck() {
+  const t = todayStr();
+  if (state.lastVisit && state.lastVisit !== t) {
+    const gap = Math.round((parseD(t) - parseD(state.lastVisit)) / 864e5);
+    if (gap >= 3) dustSneeze();
+    else pigWelcome();
+  }
+  state.lastVisit = t;
+  localStorage.setItem(KEY, JSON.stringify(state));
+}
+
+// ---------- зевота при бездействии ----------
+let lastActivity = Date.now();
+['pointerdown', 'scroll', 'keydown', 'touchstart'].forEach(ev =>
+  document.addEventListener(ev, () => lastActivity = Date.now(), { passive: true }));
+setInterval(() => {
+  if (Date.now() - lastActivity < 30000) return;
+  if (document.hidden || document.body.classList.contains('sleep')) return;
+  const pig = document.getElementById('pigSvg');
+  if (pig.classList.contains('yawn')) return;
+  pig.classList.add('yawn');
+  document.getElementById('eyeSleep').style.display = '';
+  document.getElementById('eyeOpen').style.display = 'none';
+  setTimeout(() => { pig.classList.remove('yawn'); refreshEyes(); }, 1850);
+}, 30000);
+
+// ---------- пар изо рта зимой ----------
+setInterval(() => {
+  if (!window.winterMode || document.hidden) return;
+  const area = document.querySelector('.pig-area');
+  const pig = document.getElementById('pigSvg');
+  const pr = pig.getBoundingClientRect(), ar = area.getBoundingClientRect();
+  if (!pr.width) return;
+  const b = document.createElement('div');
+  b.className = 'breath';
+  b.style.left = (pr.left - ar.left + pr.width * (228 / 260)) + 'px';
+  b.style.top = (pr.top - ar.top + pr.height * (118 / 212)) + 'px';
+  area.appendChild(b);
+  setTimeout(() => b.remove(), 2200);
+}, 5500);
+
+// ---------- глаз следит за прокруткой ----------
+let lastScrollY = window.scrollY, scrollEyeTimer = null;
+window.addEventListener('scroll', () => {
+  if (document.body.classList.contains('sleep')) return;
+  const dy = window.scrollY - lastScrollY;
+  lastScrollY = window.scrollY;
+  const py = Math.max(-2.4, Math.min(2.4, dy * .2));
+  pupils[0].setAttribute('cy', 90 + py);
+  pupils[1].setAttribute('cy', 87.5 + py * .8);
+  clearTimeout(scrollEyeTimer);
+  scrollEyeTimer = setTimeout(() => {
+    pupils[0].setAttribute('cy', 90);
+    pupils[1].setAttribute('cy', 87.5);
+  }, 350);
+}, { passive: true });
+
+// ---------- магнит: рекомендованный конверт тянется к пальцу ----------
+let magRaf = null;
+document.getElementById('envGrid').addEventListener('pointermove', e => {
+  if (magRaf) return;
+  magRaf = requestAnimationFrame(() => {
+    magRaf = null;
+    const reco = document.querySelector('.env.reco');
+    if (!reco) return;
+    const r = reco.getBoundingClientRect();
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    const dx = e.clientX - cx, dy = e.clientY - cy;
+    const dist = Math.hypot(dx, dy);
+    if (dist < 100 && dist > 1) {
+      const k = (1 - dist / 100) * 5;
+      reco.style.transform = 'translate(' + (dx / dist * k) + 'px,' + (dy / dist * k) + 'px)';
+    } else reco.style.transform = '';
+  });
+});
+document.getElementById('envGrid').addEventListener('pointerleave', () => {
+  const reco = document.querySelector('.env.reco');
+  if (reco) reco.style.transform = '';
+});
+
 let dispSum = null;
 function countTo(el, to) {
   const from = dispSum === null ? to : dispSum;
@@ -2055,7 +2284,8 @@ window.addEventListener('drop', e => {
         startDate: todayStr(), closed: [], unlocked: [],
         stars: 0, qAwarded: [], bought: [], worn: [],
         celebrated: false, lastBackup: null, wallet: 0,
-        expenses: [], customCats: [], limit: 0, milestones: [], lastLevel: 1
+        expenses: [], customCats: [], limit: 0, milestones: [], lastLevel: 1,
+        lastVisit: null
       }, s);
       localStorage.setItem(KEY, JSON.stringify(state));
       dispSum = null; render();
@@ -2070,6 +2300,7 @@ window.addEventListener('drop', e => {
 function xmasMode() {
   const m = new Date().getMonth();
   const on = m === 11 || m === 0 || m === 1;   // вся зима: декабрь–февраль
+  window.winterMode = on;                       // пар изо рта
   document.body.classList.toggle('xmas', on);
   document.getElementById('xmasHat').style.display = on ? '' : 'none';
   if (on && !window._snowTimer) {
@@ -2129,10 +2360,12 @@ function renderGrid() {
     const closed = isClosed(i);
     if (filter === 'open' && closed) continue;
     if (filter === 'closed' && !closed) continue;
+    const foil = FOIL.includes(i);
     const el = document.createElement('div');
     el.className = 'env' + (closed ? ' closed' : '') + (i === reco && !closed ? ' reco' : '')
-      + (!closed && ENV[i] >= 140 && i !== reco ? ' rich' : '')    // дорогой светится
-      + ((i * 7 + 3) % 13 === 0 ? ' fid' : '');                    // ёрзает ~каждый 13-й
+      + (foil && !closed ? ' foil' : '')                           // фольгированный
+      + (!closed && !foil && ENV[i] >= 140 && i !== reco ? ' rich' : '')
+      + ((i * 7 + 3) % 13 === 0 && i !== reco ? ' fid' : '');      // ёрзает ~каждый 13-й
     el.dataset.idx = i;
     el.style.animationDelay = ((i * 1.3) % 5).toFixed(1) + 's';
     el.innerHTML =
@@ -2326,7 +2559,7 @@ function catById(id) {
   return allCats().find(c => c.id === id) || CATS[CATS.length - 1];
 }
 function catBadge(c, lg) {
-  return '<div class="cbadge' + (lg ? ' lg' : '') + '" style="background:' + c.color + '26; color:' + c.color + '">' +
+  return '<div class="cbadge' + (lg ? ' lg' : '') + ' cb-' + (c.id || 'x') + '" style="background:' + c.color + '26; color:' + c.color + '">' +
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + c.svg + '</svg></div>';
 }
 function monthKey(s) { return (s || todayStr()).slice(0, 7); }
@@ -3063,6 +3296,7 @@ sleepCheck();
 render();
 renderCats();
 document.getElementById('viewSave').classList.add('animin');
+greetCheck();
 maybeBackup();
 </script>
 <script>
