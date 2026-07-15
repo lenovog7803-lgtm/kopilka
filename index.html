@@ -1263,56 +1263,39 @@ function tone(freq, dur, delay, type, vol) {
     o.start(t); o.stop(t + dur + .05);
   } catch(e) {}
 }
-// ---- Стиль iOS: чистые мягкие тоны, дорого и спокойно ----
-function softTone(f, delay, dur, vol) {   // бархатный тон с мягкой атакой (как Apple Pay)
+// ---- Звуки первой версии ----
+function flick(delay, vol) {              // бумажный щелчок (для переворота конверта)
   try {
     const ctx = ac(), t = ctx.currentTime + (delay || 0);
-    dur = dur || .3; vol = vol || .09;
-    [[f, 1], [f * 2.001, .18]].forEach(([fq, gm]) => {   // лёгкая октава для «дорогого» тембра
-      const o = ctx.createOscillator(), g = ctx.createGain();
-      o.type = 'sine'; o.frequency.value = fq;
-      g.gain.setValueAtTime(.0001, t);
-      g.gain.exponentialRampToValueAtTime(vol * gm, t + .012);   // мягкая атака
-      g.gain.exponentialRampToValueAtTime(.0001, t + dur);
-      o.connect(g); g.connect(ctx.destination);
-      o.start(t); o.stop(t + dur + .05);
-    });
-  } catch(e) {}
-}
-function pop(f, delay, vol) {             // короткий деликатный «пик» (как клавиатура iOS)
-  try {
-    const ctx = ac(), t = ctx.currentTime + (delay || 0);
-    const o = ctx.createOscillator(), g = ctx.createGain();
-    o.type = 'sine'; o.frequency.value = f;
-    g.gain.setValueAtTime(vol || .05, t);
-    g.gain.exponentialRampToValueAtTime(.0001, t + .05);
-    o.connect(g); g.connect(ctx.destination);
-    o.start(t); o.stop(t + .08);
-  } catch(e) {}
-}
-function swoosh(delay, dur, vol) {        // мягкий «свуш» (как отправка сообщения)
-  try {
-    const ctx = ac(), t = ctx.currentTime + (delay || 0);
-    dur = dur || .28;
-    const b = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate);
+    const b = ctx.createBuffer(1, ctx.sampleRate * .016, ctx.sampleRate);
     const d = b.getChannelData(0);
-    for (let i = 0; i < d.length; i++) {
-      const p = i / d.length;
-      d[i] = (Math.random() * 2 - 1) * Math.sin(p * Math.PI);
-    }
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length);
     const s = ctx.createBufferSource(); s.buffer = b;
-    const f = ctx.createBiquadFilter(); f.type = 'lowpass';
-    f.frequency.setValueAtTime(1400, t);
-    f.frequency.exponentialRampToValueAtTime(350, t + dur);
-    const g = ctx.createGain(); g.gain.value = vol || .07;
+    const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 2400; f.Q.value = 1.2;
+    const g = ctx.createGain(); g.gain.value = vol || .05;
     s.connect(f); f.connect(g); g.connect(ctx.destination);
     s.start(t);
   } catch(e) {}
 }
-const sndCoin = () => { softTone(880, 0, .22, .09); softTone(1318, .09, .3, .09); };          // двухтоновый «успех»
-const sndStar = () => { softTone(1568, 0, .35, .07); pop(2093, .02, .03); };                  // тонкий «динь»
-const sndAch  = () => { softTone(987, 0, .28, .08); softTone(1318, .13, .28, .08); softTone(1760, .26, .5, .08); }; // трезвучие
-const sndBuy  = () => { pop(1046, 0, .05); pop(1318, .08, .05); };
+const sndFlip = () => { flick(0, .05); tone(980, .08, .02, 'triangle', .06); };
+const sndCoin = () => { tone(1320, .18, 0, 'triangle', .14); tone(1760, .22, .07, 'triangle', .1); };
+const sndStar = () => { tone(880, .12, 0, 'sine', .12); tone(1174, .14, .09, 'sine', .12); tone(1568, .2, .18, 'sine', .12); };
+const sndAch  = () => { [523, 659, 784, 1046].forEach((f, i) => tone(f, .25, i * .11, 'triangle', .13)); };
+const sndBuy  = () => { tone(600, .09, 0, 'square', .06); tone(900, .12, .08, 'square', .06); };
+const sndBoing = () => {                  // тап по свинке: упругий «бойнг»
+  try {
+    const ctx = ac(), t = ctx.currentTime;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(380, t);
+    o.frequency.exponentialRampToValueAtTime(640, t + .09);
+    o.frequency.exponentialRampToValueAtTime(300, t + .3);
+    g.gain.setValueAtTime(.13, t);
+    g.gain.exponentialRampToValueAtTime(.0001, t + .34);
+    o.connect(g); g.connect(ctx.destination);
+    o.start(t); o.stop(t + .4);
+  } catch(e) {}
+};
 
 // ---------- ачивки ----------
 const ACH = [
@@ -1510,6 +1493,7 @@ function closeEnv(idx, el, quiet) {
   if (el) {
     el.onclick = null;
     el.classList.add('animate');                 // 3D-переворот, как раньше
+    sndFlip();
     sparkBurst(el);
     // как только переворот закончился — переводим в статичное закрытое
     // состояние без 3D (фикс секундного «зеркала» в Safari)
@@ -1694,8 +1678,8 @@ function sndTear() {
     const d = buf.getChannelData(0);
     for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length);
     const src = ctx.createBufferSource(); src.buffer = buf;
-    const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 1800;   // едва слышный «шурх»
-    const g = ctx.createGain(); g.gain.value = .05;
+    const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 1400;
+    const g = ctx.createGain(); g.gain.value = .14;
     src.connect(f); f.connect(g); g.connect(ctx.destination);
     src.start(t);
   } catch(e) {}
@@ -1854,7 +1838,7 @@ function sndOink() {
   } catch(e) {}
 }
 document.getElementById('pigSvg').addEventListener('click', () => {
-  sndOink();
+  sndBoing();
   vib(20);
   goldRipple();                              // волна по золоту от тапа
   const pig = document.getElementById('pigSvg');
@@ -2259,7 +2243,7 @@ document.getElementById('pieCv').addEventListener('click', e => {
   const hit = pieGeom.entries.find(en => a >= en.start && a < en.end);
   pieSel = (hit && pieSel !== hit.cat) ? hit.cat : null;
   drawPie(curMonthExps, 1);
-  pop(1200, 0, .04);
+  tone(760, .07, 0, 'sine', .05);
 });
 
 function renderCats() {
@@ -2321,7 +2305,7 @@ function addExpense() {
   lastAddedTs = ts;
   save();
   inp.value = ''; document.getElementById('expNote').value = '';
-  swoosh(0, .26, .07); pop(660, .16, .04);    // мягкий свуш, как отправка
+  tone(500, .1, 0, 'triangle', .1); tone(380, .12, .07, 'triangle', .08);
 
   flyBills(inp, v, () => renderSpend());   // стайка купюр летит в сводку
 
@@ -2384,7 +2368,7 @@ function flyBills(fromEl, amount, onDone) {
       stat.classList.remove('bump');       // лёгкий толчок на каждое «попадание»
       void stat.offsetWidth;
       stat.classList.add('bump');
-      pop(760 - finished * 30, 0, .035);      // деликатный тик на каждое попадание
+      tone(300 - finished * 12, .08, 0, 'triangle', .05);
       if (++finished === n && onDone) onDone();
     };
   }
