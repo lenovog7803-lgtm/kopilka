@@ -252,7 +252,7 @@
 
   /* ---- свинка ---- */
   .hero { display:flex; flex-direction:column; align-items:center; gap:14px; }
-  .pig-area { display:flex; align-items:center; justify-content:center; gap:16px; width:100%; }
+  .pig-area { position:relative; display:flex; align-items:center; justify-content:center; gap:16px; width:100%; }
 
   .pig {
     overflow:visible; flex-shrink:0;
@@ -316,6 +316,49 @@
   .jar-info .sum { font-size:36px; font-weight:800; letter-spacing:-1px; margin:2px 0; font-variant-numeric: tabular-nums; }
   .jar-info .goal { font-size:13px; color:var(--text2); }
   .jar-info .stars { margin-top:8px; font-size:14px; font-weight:700; color:#c78a00; }
+  .lvl { margin-top:7px; font-size:12px; font-weight:600; color:var(--text2); }
+  .lvl b { color:var(--text); }
+  .xp-bar {
+    width:130px; height:5px; border-radius:3px; margin-top:4px;
+    background: rgba(255,255,255,.55); overflow:hidden;
+  }
+  .xp-bar i {
+    display:block; height:100%; border-radius:3px;
+    background: linear-gradient(90deg, #f08bab, #ffd35c);
+    transition: width .9s cubic-bezier(.22,1,.36,1);
+  }
+  /* лёгкий рост + медальон уровня */
+  .pig { position:relative; z-index:2; transition: width .9s cubic-bezier(.22,1,.36,1), height .9s cubic-bezier(.22,1,.36,1); }
+
+  /* аура уровня за свинкой */
+  .pig-aura {
+    position:absolute; z-index:0; border-radius:50%; pointer-events:none;
+    opacity:0;
+    transition: opacity 1.2s, background 1.2s, width 1s, height 1s, left 1s, top 1s;
+    animation: auraPulse 4.5s ease-in-out infinite;
+    filter: blur(14px);
+  }
+  @keyframes auraPulse { 50% { transform: scale(1.08); } }
+  .pig-aura.rays::before {
+    content:''; position:absolute; inset:-16%;
+    border-radius:50%;
+    background: repeating-conic-gradient(rgba(255,208,90,.42) 0 5deg, transparent 5deg 17deg);
+    filter: blur(7px);
+    animation: raysSpin 26s linear infinite;
+  }
+  @keyframes raysSpin { to { transform: rotate(360deg); } }
+
+  /* живые искорки вокруг свинки */
+  .lvl-spark {
+    position:absolute; z-index:3; pointer-events:none;
+    color:#e8b23a; text-shadow: 0 0 6px rgba(255,210,100,.9);
+    animation: twinkle .95s ease-out forwards;
+  }
+  @keyframes twinkle {
+    0%   { transform: scale(0) rotate(0deg); opacity:0; }
+    30%  { transform: scale(1.15) rotate(20deg); opacity:1; }
+    100% { transform: scale(.25) rotate(50deg); opacity:0; }
+  }
 
   .hero-stats { display:flex; width:100%; gap:10px; }
   .stat {
@@ -854,6 +897,7 @@
   <div class="card hero">
     <div class="garland"></div>
     <div class="pig-area">
+      <div class="pig-aura" id="pigAura"></div>
       <svg class="pig" id="pigSvg" viewBox="0 0 260 212" width="215" height="176">
         <defs>
           <linearGradient id="goldG" x1="0" y1="0" x2="0" y2="1">
@@ -866,7 +910,7 @@
         <rect x="72" y="176" width="24" height="26" rx="11" fill="#f29db4"/>
         <rect x="152" y="176" width="24" height="26" rx="11" fill="#f29db4"/>
 
-        <ellipse cx="125" cy="115" rx="92" ry="75" fill="rgba(255,190,205,.34)" stroke="rgba(255,255,255,.9)" stroke-width="2.5"/>
+        <ellipse id="pigBody" cx="125" cy="115" rx="92" ry="75" fill="rgba(255,190,205,.34)" stroke="rgba(255,255,255,.9)" stroke-width="2.5"/>
 
         <g clip-path="url(#bodyClip)">
           <g id="liquid" style="transform: translateY(150px)">
@@ -962,6 +1006,7 @@
           <text class="zz z2" x="164" y="22" font-size="12" fill="#7e88e8" font-weight="800">Z</text>
           <text class="zz z3" x="174" y="13" font-size="9"  fill="#98a2f2" font-weight="800">Z</text>
         </g>
+
       </svg>
 
       <div class="jar-info">
@@ -969,6 +1014,8 @@
         <div class="sum" id="saved">0</div>
         <div class="goal">из 15 000 BYN</div>
         <div class="stars">⭐ <span id="starCount">0</span></div>
+        <div class="lvl" id="pigLvl">Ур. 1 · <b>Поросёнок</b></div>
+        <div class="xp-bar"><i id="xpBar"></i></div>
       </div>
     </div>
     <div class="hero-stats">
@@ -1183,7 +1230,7 @@ function load() {
     startDate: todayStr(), closed: [], unlocked: [],
     stars: 0, qAwarded: [], bought: [], worn: [],
     celebrated: false, lastBackup: null, wallet: 0,
-    expenses: [], customCats: [], limit: 0, milestones: []
+    expenses: [], customCats: [], limit: 0, milestones: [], lastLevel: 1
   }, s);
 }
 let spendDirty = true;     // расходы пересобираются только если данные менялись
@@ -1789,6 +1836,97 @@ function renderPig(pct) {
   document.getElementById('liquid').style.transform = 'translateY(' + t + 'px)';
 }
 
+// ---------- аура и искорки уровня ----------
+const AURA = [null, null,
+  'rgba(255,175,200,.30)',   // ур.2 — нежно-розовая
+  'rgba(255,145,190,.40)',   // ур.3 — розовая ярче
+  'rgba(185,200,235,.48)',   // ур.4 — серебристая
+  'rgba(255,205,110,.48)',   // ур.5 — золотая
+  'rgba(255,198,85,.58)',    // ур.6 — золотая с лучами
+];
+function positionAura(lvl, pigW, pigH) {
+  const aura = document.getElementById('pigAura');
+  const pig = document.getElementById('pigSvg');
+  const c = AURA[Math.min(lvl, 6)];
+  if (!c) { aura.style.opacity = 0; aura.classList.remove('rays'); return; }
+  const size = Math.round(pigW * 1.22);
+  aura.style.width = size + 'px';
+  aura.style.height = size + 'px';
+  aura.style.left = (pig.offsetLeft + (pigW - size) / 2) + 'px';
+  aura.style.top = (pig.offsetTop + (pigH - size) / 2 - 6) + 'px';
+  aura.style.background = 'radial-gradient(circle, ' + c + ' 0%, transparent 68%)';
+  aura.style.opacity = 1;
+  aura.classList.toggle('rays', lvl >= 6);
+}
+window.addEventListener('resize', () => renderLevel());
+
+let sparkTimer = null;
+function startLvlSparks(lvl) {
+  clearInterval(sparkTimer);
+  if (lvl < 2) return;
+  const period = [0, 0, 9000, 6500, 4500, 3200, 2200][Math.min(lvl, 6)];
+  sparkTimer = setInterval(() => {
+    if (document.hidden || document.body.classList.contains('sleep')) return;
+    const area = document.querySelector('.pig-area');
+    const pig = document.getElementById('pigSvg');
+    const ar = area.getBoundingClientRect(), pr = pig.getBoundingClientRect();
+    if (!pr.width) return;
+    const s = document.createElement('span');
+    s.className = 'lvl-spark';
+    s.textContent = '✦';
+    s.style.fontSize = (9 + Math.random() * 9) + 'px';
+    s.style.left = (pr.left - ar.left + Math.random() * pr.width) + 'px';
+    s.style.top = (pr.top - ar.top + Math.random() * pr.height * .85) + 'px';
+    area.appendChild(s);
+    setTimeout(() => s.remove(), 1000);
+  }, period);
+}
+
+// ---------- уровни свинки ----------
+const LEVELS = [
+  { xp: 0,    name: 'Поросёнок' },
+  { xp: 100,  name: 'Свинка' },
+  { xp: 250,  name: 'Свин-копитель' },
+  { xp: 450,  name: 'Бизнес-свин' },
+  { xp: 700,  name: 'Свин-магнат' },
+  { xp: 1000, name: 'Золотой кабан' },
+];
+function pigXP() {   // конверт = 10, звезда заданий = 5/15, ачивка = 25
+  const starXP = state.qAwarded.reduce((s, k) => s + (k.startsWith('w') ? 15 : 5), 0);
+  return state.closed.length * 10 + starXP + state.unlocked.length * 25;
+}
+function renderLevel() {
+  const xp = pigXP();
+  let lvl = 1;
+  for (let i = 0; i < LEVELS.length; i++) if (xp >= LEVELS[i].xp) lvl = i + 1;
+  const cur = LEVELS[lvl - 1], next = LEVELS[lvl];
+  document.getElementById('pigLvl').innerHTML = 'Ур. ' + lvl + ' · <b>' + cur.name + '</b>';
+  document.getElementById('xpBar').style.width = next
+    ? Math.min(100, (xp - cur.xp) / (next.xp - cur.xp) * 100) + '%' : '100%';
+
+  const pig = document.getElementById('pigSvg');
+  const w = 206 + lvl * 4;                        // лёгкий рост: 210 → 230
+  const h = Math.round(w * 212 / 260);
+  pig.style.width = w + 'px';
+  pig.style.height = h + 'px';
+
+  positionAura(lvl, w, h);
+  startLvlSparks(lvl);
+
+  if (lvl > (state.lastLevel || 1)) {             // левел-ап!
+    state.lastLevel = lvl;
+    localStorage.setItem(KEY, JSON.stringify(state));
+    setTimeout(() => {
+      toast('🎉 Свинка выросла: ' + cur.name + '!');
+      sndAch(); vib([30, 40, 30, 40, 80]);
+      pigFireworks();
+    }, 1300);
+  } else if (lvl < (state.lastLevel || 1)) {      // откат (undo)
+    state.lastLevel = lvl;
+    localStorage.setItem(KEY, JSON.stringify(state));
+  }
+}
+
 // ---------- рубежи 25/50/75% ----------
 function checkMilestones(beforePct, afterPct) {
   for (const m of [25, 50, 75]) {
@@ -1917,7 +2055,7 @@ window.addEventListener('drop', e => {
         startDate: todayStr(), closed: [], unlocked: [],
         stars: 0, qAwarded: [], bought: [], worn: [],
         celebrated: false, lastBackup: null, wallet: 0,
-        expenses: [], customCats: [], limit: 0, milestones: []
+        expenses: [], customCats: [], limit: 0, milestones: [], lastLevel: 1
       }, s);
       localStorage.setItem(KEY, JSON.stringify(state));
       dispSum = null; render();
@@ -2126,6 +2264,7 @@ function render() {
 
   document.getElementById('starCount').textContent = state.stars;
   document.getElementById('starCount2').textContent = state.stars;
+  renderLevel();
 
   const achGrid = document.getElementById('achGrid');
   achGrid.innerHTML = '';
@@ -2313,6 +2452,42 @@ function renderCats() {
   grid.appendChild(add);
 }
 
+// свинка комментирует траты (с характером)
+function pigComment(amount, cat) {
+  const tDay = todayStr();
+  const today = state.expenses.filter(e => e.date === tDay);
+  const sameCat = today.filter(e => e.cat === cat);
+  const catName = catById(cat).name.toLowerCase();
+  const env = Math.round(amount / DAY_TARGET * 10) / 10;
+  const h = new Date().getHours();
+  const pick = a => a[Math.floor(Math.random() * a.length)];
+
+  if (amount >= DAY_TARGET * 2) return pick([
+    'Ого, ' + fmt2(amount) + '! Это же ' + env + ' моих конвертов... 🐷💔',
+    fmt2(amount) + '?! Я столько за ' + Math.ceil(env) + ' дня коплю 😮',
+    'Солидно. Минус ' + env + ' конверта из мечты 😔',
+  ]);
+  if (sameCat.length >= 3) return pick([
+    'Опять ' + catName + '? ' + sameCat.length + '-й раз за день! 😤',
+    catName.charAt(0).toUpperCase() + catName.slice(1) + ' сегодня явно в фаворитах... а я? 🥺',
+    sameCat.length + ' раза «' + catName + '» за день — я считаю, между прочим 👀',
+  ]);
+  if (h >= 23 || h < 6) return pick([
+    'Ночные траты — самые коварные 🌙',
+    'Не спится и тратится? Я вот сплю обычно 😴',
+  ]);
+  if (amount >= DAY_TARGET) return pick([
+    'Это был целый конверт на ' + DAY_TARGET + '... 😤',
+    'Хм. Конверт улетел не туда 🐷',
+  ]);
+  if (Math.random() < .25) return pick([
+    'Записала. Я всё помню 📝',
+    'Ладно, бывает. Но конверт сегодня закрой 😌',
+    'Мелочь, а неприятно. Шучу. Почти 🐷',
+  ]);
+  return null;
+}
+
 let lastAddedTs = 0;
 function addExpense() {
   const inp = document.getElementById('expAmount');
@@ -2331,6 +2506,10 @@ function addExpense() {
   flyBills(inp, v, () => renderSpend());   // стайка купюр летит в сводку
 
   const after = monthSpent(), L = state.limit;
+  // реплика свинки — чуть позже основного тоста
+  const remark = pigComment(v, selCat);
+  if (remark) setTimeout(() => toast('🐷 ' + remark), 2900);
+
   if (L > 0 && before < L && after >= L) { toast('🚨 Лимит месяца превышен!'); sndAch(); vib([60, 50, 60, 50, 120]); }
   else if (L > 0 && before < L * .8 && after >= L * .8) toast('⚠️ Уже 80% лимита месяца');
   else if (v >= DAY_TARGET) {
