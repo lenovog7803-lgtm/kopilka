@@ -843,12 +843,21 @@
   .env.rippleFx { animation: envRipple .42s ease !important; }
   @keyframes envRipple { 35% { transform: translateY(-4px) scale(1.045); } }
   /* глубокое нажатие */
-  .add-btn, .extra-row button, .chip, .tab, .m-ok, .m-cancel, .cat { transition: transform .12s, filter .12s, box-shadow .12s; }
+  .add-btn, .extra-row button, .chip, .tab, .m-ok, .m-cancel, .cat,
+  .q-tile, .limit-box, .hist-head, .shop-item, .undo button, .h-del {
+    transition: transform .12s, filter .12s, box-shadow .12s;
+  }
   .add-btn:active, .extra-row button:active, .chip:active, .tab:active,
-  .m-ok:active, .m-cancel:active, .cat:active {
-    transform: scale(.94);
-    filter: brightness(.94);
-    box-shadow: inset 0 2px 6px rgba(0,0,0,.10);
+  .m-ok:active, .m-cancel:active, .cat:active,
+  .q-tile:active, .limit-box:active, .hist-head:active, .undo button:active, .h-del:active {
+    transform: scale(.94) translateY(1px);
+    filter: brightness(.93);
+    box-shadow: inset 0 3px 8px rgba(0,0,0,.12);
+  }
+
+  /* гиро-параллакс: карточки наклоняются за телефоном */
+  body.gyro .card {
+    transform: perspective(1000px) rotateX(var(--grx, 0deg)) rotateY(var(--gry, 0deg));
   }
   /* живые иконки категорий */
   .cat.sel .cbadge svg { animation: icoLive .55s ease; }
@@ -2164,6 +2173,40 @@ function greetCheck() {
   state.lastVisit = t;
   localStorage.setItem(KEY, JSON.stringify(state));
 }
+
+// ---------- гиро-параллакс (наклон телефона) ----------
+let gyroTX = 0, gyroTY = 0, gyroCX = 0, gyroCY = 0, gyroLoop = null;
+function enableGyro() {
+  if (gyroLoop) return;
+  window.addEventListener('deviceorientation', e => {
+    const gx = Math.max(-25, Math.min(25, e.gamma || 0));        // влево-вправо
+    const gy = Math.max(-25, Math.min(25, (e.beta || 45) - 45)); // от «держу в руке»
+    gyroTY = gx * .055;   // максимум ~1.4°
+    gyroTX = -gy * .055;
+  }, { passive: true });
+  document.body.classList.add('gyro');
+  const step = () => {
+    gyroCX += (gyroTX - gyroCX) * .08;   // плавное догоняние
+    gyroCY += (gyroTY - gyroCY) * .08;
+    document.body.style.setProperty('--grx', gyroCX.toFixed(3) + 'deg');
+    document.body.style.setProperty('--gry', gyroCY.toFixed(3) + 'deg');
+    gyroLoop = requestAnimationFrame(step);
+  };
+  step();
+}
+// iOS требует разрешение на датчики — спрашиваем при первом касании
+document.addEventListener('touchend', function gyroReq() {
+  document.removeEventListener('touchend', gyroReq);
+  try {
+    if (typeof DeviceOrientationEvent !== 'undefined' && DeviceOrientationEvent.requestPermission) {
+      DeviceOrientationEvent.requestPermission()
+        .then(s => { if (s === 'granted') enableGyro(); })
+        .catch(() => {});
+    } else if ('DeviceOrientationEvent' in window && 'ontouchstart' in window) {
+      enableGyro();   // Android — без разрешения
+    }
+  } catch(e) {}
+}, { once: true, passive: true });
 
 // ---------- зевота при бездействии ----------
 let lastActivity = Date.now();
