@@ -953,9 +953,27 @@
     box-shadow: inset 0 3px 8px rgba(0,0,0,.12);
   }
 
-  /* гиро-параллакс: карточки наклоняются за телефоном */
-  body.gyro .card {
-    transform: perspective(1000px) rotateX(var(--grx, 0deg)) rotateY(var(--gry, 0deg));
+  /* ---- оптимизация для телефона ---- */
+  .env-grid { content-visibility: auto; contain-intrinsic-size: auto 440px; }
+  .ach-grid { content-visibility: auto; contain-intrinsic-size: auto 300px; }
+  @media (max-width: 700px) {
+    .card, .tabbar {
+      -webkit-backdrop-filter: blur(10px) saturate(140%);
+      backdrop-filter: blur(10px) saturate(140%);
+      background: rgba(255,255,255,.68);
+    }
+    .blobs { filter: blur(46px); }
+    /* анимации теней — самое дорогое: на телефоне статичный вариант */
+    .env.rich .face.front {
+      animation: none;
+      box-shadow: 0 0 14px rgba(255,200,60,.55), inset 0 1px 0 #fff;
+    }
+    .env.reco .face.front {
+      animation: none;
+      box-shadow: 0 0 0 2px rgba(10,132,255,.45), 0 6px 16px rgba(10,132,255,.25);
+    }
+    .limit-bar i.warn { animation: none; }
+    .pig-aura { filter: blur(9px); }
   }
   /* живые иконки категорий */
   .cat.sel .cbadge svg { animation: icoLive .55s ease; }
@@ -2337,25 +2355,22 @@ function greetCheck() {
   localStorage.setItem(KEY, JSON.stringify(state));
 }
 
-// ---------- гиро-параллакс (наклон телефона) ----------
-let gyroTX = 0, gyroTY = 0, gyroCX = 0, gyroCY = 0, gyroLoop = null;
+// ---------- гиро-параллакс: наклон телефона двигает фон (дёшево — один слой) ----------
+let gyroOn = false;
 function enableGyro() {
-  if (gyroLoop) return;
+  if (gyroOn) return;
+  gyroOn = true;
+  let lastT = 0;
   window.addEventListener('deviceorientation', e => {
-    const gx = Math.max(-25, Math.min(25, e.gamma || 0));        // влево-вправо
-    const gy = Math.max(-25, Math.min(25, (e.beta || 45) - 45)); // от «держу в руке»
-    gyroTY = gx * .055;   // максимум ~1.4°
-    gyroTX = -gy * .055;
+    const now = Date.now();
+    if (now - lastT < 90) return;                 // ~11 обновлений/сек достаточно
+    lastT = now;
+    const gx = Math.max(-25, Math.min(25, e.gamma || 0));
+    const gy = Math.max(-25, Math.min(25, (e.beta || 45) - 45));
+    parX = gx * .9;
+    parY = gy * .7;
+    applyParallax();                              // .blobs с transition сгладит
   }, { passive: true });
-  document.body.classList.add('gyro');
-  const step = () => {
-    gyroCX += (gyroTX - gyroCX) * .08;   // плавное догоняние
-    gyroCY += (gyroTY - gyroCY) * .08;
-    document.body.style.setProperty('--grx', gyroCX.toFixed(3) + 'deg');
-    document.body.style.setProperty('--gry', gyroCY.toFixed(3) + 'deg');
-    gyroLoop = requestAnimationFrame(step);
-  };
-  step();
 }
 // iOS требует разрешение на датчики — спрашиваем при первом касании
 document.addEventListener('touchend', function gyroReq() {
