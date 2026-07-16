@@ -409,7 +409,12 @@
   .wave-move2 { animation: waveSlide 5.2s linear infinite reverse; }
   @keyframes waveSlide { to { transform: translateX(-130px); } }
 
-  .jar-info { display:flex; flex-direction:column; align-items:flex-start; }
+  .jar-info { position:relative; z-index:7; display:flex; flex-direction:column; align-items:flex-start; }
+  #goalLabel {
+    padding:3px 0; cursor:pointer;
+    border-bottom:1px dashed rgba(28,28,46,.3);
+  }
+  #goalLabel:active { opacity:.6; }
   .jar-info .pct { font-size:15px; font-weight:600; color:var(--text2); }
   .jar-info .sum { font-size:36px; font-weight:800; letter-spacing:-1px; margin:2px 0; font-variant-numeric: tabular-nums; }
   .jar-info .goal { font-size:13px; color:var(--text2); }
@@ -1071,6 +1076,110 @@
   .m-cancel { background: rgba(120,130,160,.15); color:var(--text2); }
   .m-ok { background: linear-gradient(135deg,#0a84ff,#5e9dff); color:#fff; box-shadow: 0 6px 16px rgba(10,132,255,.35); }
 
+  /* ---- интерактивное знакомство ---- */
+  #onb {
+    position:fixed; inset:0; z-index:120; display:none;
+    align-items:center; justify-content:center;
+    background: linear-gradient(160deg, #dbe7ff, #f6e3ef 55%, #fdeee0);
+    transition: background 1.6s ease, opacity .8s ease;
+  }
+  #onb.show { display:flex; }
+  #onb.night { background: linear-gradient(160deg, #3d4568, #5c4c72 55%, #6e5470); }
+  #onb.night .story-bubble { background: rgba(255,255,255,.94); }
+  /* свинка в сказке живая: моргает */
+  #opEyeO { animation: blink 5.2s infinite; transform-origin: 184px 90px; }
+  .onb-card {
+    width:min(370px, 92vw); text-align:center;
+    background: rgba(255,255,255,.75);
+    -webkit-backdrop-filter: blur(30px); backdrop-filter: blur(30px);
+    border:1px solid rgba(255,255,255,.9);
+    border-radius:32px; padding:24px 22px 16px; margin:16px;
+    box-shadow: 0 24px 60px rgba(90,100,150,.25);
+    animation: finaleIn .5s cubic-bezier(.22,1.4,.36,1);
+  }
+  .story-stage {
+    position:relative; min-height:190px;
+    display:flex; align-items:center; justify-content:center;
+    user-select:none; touch-action:none;
+  }
+  .story-stage svg { overflow:visible; cursor:pointer; }
+  .story-bubble {
+    position:relative; text-align:left;
+    background:#fff; border-radius:20px; padding:14px 16px;
+    font-size:15px; line-height:1.5; min-height:70px;
+    box-shadow: 0 6px 18px rgba(60,70,110,.12);
+  }
+  .story-bubble::before {
+    content:''; position:absolute; top:-8px; left:46px;
+    border:9px solid transparent; border-bottom-color:#fff; border-top:none;
+  }
+  .story-caret {
+    display:inline-block; width:2px; height:1em; margin-left:2px;
+    background:var(--accent); vertical-align:-2px;
+    animation: caretBlink .8s step-end infinite;
+  }
+  @keyframes caretBlink { 50% { opacity:0; } }
+  .story-ui { min-height:64px; padding-top:12px; }
+  .story-ui input {
+    width:100%; border:1px solid rgba(120,130,160,.3); background:#fff;
+    border-radius:14px; padding:11px 14px; margin-bottom:8px;
+    font-size:15px; font-family:inherit; outline:none;
+  }
+  .story-ui .m-ok { width:100%; padding:12px 0; border:none; border-radius:16px; cursor:pointer; font-family:inherit; font-size:15px; font-weight:700; }
+  .story-ui .preset-row { margin:0 0 8px; }
+  .story-skip {
+    background:none; border:none; cursor:pointer; font-family:inherit;
+    font-size:12px; color:var(--text2); text-decoration:underline; margin-top:10px;
+  }
+  .op-shake { animation: opShake .4s ease; }
+  @keyframes opShake { 25% { transform: rotate(-3deg); } 60% { transform: rotate(3deg); } }
+  .op-hop { animation: onbHop .55s cubic-bezier(.3,1.6,.4,1); }
+  @keyframes onbHop { 40% { transform: translateY(-14px) scale(1.06); } }
+  .drag-coin {
+    position:fixed; z-index:130; width:40px; height:40px; border-radius:50%;
+    margin:-20px 0 0 -20px; cursor:grab; touch-action:none;
+    background: radial-gradient(circle at 36% 30%, #ffeeb0, #ffd35c 48%, #e39d15);
+    box-shadow: inset 0 -3px 5px rgba(160,105,10,.5), 0 6px 16px rgba(180,120,20,.45);
+  }
+  .drag-coin::after { content:''; position:absolute; inset:6px; border-radius:50%; border:2px solid rgba(180,125,20,.5); }
+  .onb-bill {
+    display:inline-block; width:64px; height:36px; border-radius:8px; cursor:pointer;
+    background: linear-gradient(135deg, #ff7d7d, #e2404f);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 4px 12px rgba(226,64,79,.4);
+    color:#fff; font-weight:800; line-height:36px; font-size:15px;
+    transition: transform .15s;
+  }
+  .onb-bill:active { transform: scale(.9); }
+  .story-heart {
+    position:absolute; z-index:5; pointer-events:none; font-size:18px;
+    animation: heartUp 1.2s ease-out forwards;
+  }
+  @keyframes heartUp {
+    0% { transform: translateY(0) scale(.5); opacity:0; }
+    25% { opacity:1; }
+    100% { transform: translateY(-52px) scale(1.15); opacity:0; }
+  }
+
+  /* мастер цели */
+  #goalModal {
+    position:fixed; inset:0; z-index:100; display:none;
+    align-items:flex-start; justify-content:center; padding-top:10vh;
+    background: rgba(30,32,50,.35);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  }
+  #goalModal.show { display:flex; }
+  .preset-row { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:12px; }
+  .pchip {
+    border:1px solid rgba(120,130,160,.3); cursor:pointer;
+    background:#fff; color:var(--text2);
+    font-family:inherit; font-size:13px; font-weight:600;
+    padding:10px 4px; border-radius:14px; transition: all .2s;
+  }
+  .pchip.sel {
+    background: rgba(10,132,255,.12); color:var(--accent);
+    border-color: rgba(10,132,255,.55);
+  }
+
   .drop-hint {
     position:fixed; inset:14px; z-index:85; display:none;
     align-items:center; justify-content:center;
@@ -1223,14 +1332,14 @@
       <div class="jar-info">
         <div class="pct" id="pct">0%</div>
         <div class="sum" id="saved">0</div>
-        <div class="goal">из 15 000 BYN</div>
+        <div class="goal" id="goalLabel">из 15 000 BYN ✎</div>
         <div class="stars">⭐ <span id="starCount">0</span></div>
         <div class="lvl" id="pigLvl">Ур. 1 · <b>Поросёнок</b></div>
         <div class="xp-bar"><i id="xpBar"></i></div>
       </div>
     </div>
     <div class="hero-stats">
-      <div class="stat"><div class="v" id="stDays">—</div><div class="l">дней до НГ</div></div>
+      <div class="stat"><div class="v" id="stDays">—</div><div class="l">дней до цели</div></div>
       <div class="stat"><div class="v" id="stEnv">—</div><div class="l">конвертов закрыто</div></div>
       <div class="stat"><div class="v" id="stLeft">—</div><div class="l">осталось BYN</div></div>
     </div>
@@ -1445,6 +1554,16 @@
 <div id="toast"></div>
 <div class="drop-hint">📥 Отпусти файл бэкапа, чтобы восстановить</div>
 
+<!-- интерактивное знакомство -->
+<div id="onb">
+  <div class="onb-card">
+    <div class="story-stage" id="onbStage"></div>
+    <div class="story-bubble"><span id="onbTxt"></span><span class="story-caret" id="onbCaret"></span></div>
+    <div class="story-ui" id="onbUI"></div>
+    <button class="story-skip" id="onbSkip">пропустить знакомство</button>
+  </div>
+</div>
+
 <div id="modal">
   <div class="modal-card">
     <h3 id="modalTitle"></h3>
@@ -1456,10 +1575,40 @@
   </div>
 </div>
 
+<!-- мастер цели -->
+<div id="goalModal">
+  <div class="modal-card">
+    <h3>Цель накопления</h3>
+    <input id="gName" placeholder="Название (например, Отпуск)" maxlength="20" autocomplete="off">
+    <input id="gAmount" type="number" inputmode="decimal" min="1" placeholder="Сумма, BYN" style="margin-top:10px">
+    <div class="preset-row">
+      <button class="pchip" data-p="w">Неделя</button>
+      <button class="pchip" data-p="m">Месяц</button>
+      <button class="pchip" data-p="h">Полгода</button>
+      <button class="pchip" data-p="y">Год</button>
+      <button class="pchip" data-p="ny">До НГ</button>
+      <button class="pchip" data-p="c">Дата…</button>
+    </div>
+    <input id="gDate" type="date" style="margin-top:10px; display:none">
+    <div id="gTransfer" style="display:none">
+      <div class="hint" style="margin:12px 0 8px">Уже накоплено <b id="gHave"></b> BYN — что с ним?</div>
+      <div class="preset-row" style="grid-template-columns:1fr 1fr">
+        <button class="pchip sel" data-t="keep">Перенести в новую цель</button>
+        <button class="pchip" data-t="zero">Начать с нуля</button>
+      </div>
+    </div>
+    <div class="today-line" id="gPreview" style="margin-top:12px"></div>
+    <div class="modal-btns">
+      <button class="m-cancel" onclick="closeGoalWizard()">Отмена</button>
+      <button class="m-ok" onclick="saveGoal()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
 <div id="finale" onclick="this.classList.remove('show')">
   <div class="finale-card">
     <div style="font-size:56px">🎄🐷🎉</div>
-    <h2>15 000 BYN!</h2>
+    <h2 id="finaleSum">15 000 BYN!</h2>
     <p>Цель достигнута. Ты сделал это — с Новым годом!</p>
     <div class="finale-stats">
       <div class="stat"><div class="v" id="fDays">—</div><div class="l">дней копил</div></div>
@@ -1470,30 +1619,52 @@
 </div>
 
 <script>
-const GOAL = 15000;
-const N = 171;
-const DEADLINE = new Date(2026, 11, 31);
 const KEY = 'kopilkaEnv2026';
 
 // URL базы Firebase Realtime Database (для синхронизации между устройствами)
 const SYNC_DB_URL = 'https://kopilka-11601-default-rtdb.europe-west1.firebasedatabase.app';
 
-// ---------- конверты: суммы (итог ровно 15000) ----------
-const FOIL = [13, 44, 77, 111, 152];   // фольгированные конверты (+1⭐)
+// ---------- гибкая цель: всё пересчитывается из state.goal ----------
+let GOAL = 15000, DEADLINE = new Date(2026, 11, 31), N = 171, ENV = [], FOIL = [];
+let DAY_TARGET = 88, WEEK_TARGET = 616;
 
-const ENV = (() => {
-  const min = 20, max = 155;
+function genEnv(n, sum) {                 // лесенка конвертов ровно в сумму
+  if (n <= 1) return [Math.round(sum)];
+  const avg = sum / n;
+  const min = Math.max(1, Math.floor(avg * .25));
+  const max = Math.max(min + 1, Math.ceil(avg * 1.75));
   const a = [];
-  for (let i = 0; i < N; i++) a.push(Math.round(min + (max - min) * i / (N - 1)));
-  let diff = GOAL - a.reduce((s, x) => s + x, 0);
-  let i = N - 1;
-  while (diff !== 0) {
-    a[i] += Math.sign(diff);
-    diff -= Math.sign(diff);
-    i = (i - 1 + N) % N;
+  for (let i = 0; i < n; i++) a.push(Math.round(min + (max - min) * i / (n - 1)));
+  let diff = Math.round(sum) - a.reduce((s, x) => s + x, 0);
+  let i = n - 1, guard = 200000;
+  while (diff !== 0 && guard-- > 0) {
+    if (a[i] + Math.sign(diff) >= 1) { a[i] += Math.sign(diff); diff -= Math.sign(diff); }
+    i = (i - 1 + n) % n;
   }
   return a;
-})();
+}
+
+function ensureGoal() {
+  if (!state.goal) state.goal = {
+    name: 'Новый год', amount: 15000, deadline: '2026-12-31',
+    startDate: state.startDate || todayStr(), carried: 0
+  };
+}
+
+function applyGoal() {
+  ensureGoal();
+  const g = state.goal;
+  GOAL = g.amount;
+  DEADLINE = parseD(g.deadline);
+  const target = Math.max(1, Math.round(g.amount - (g.carried || 0)));
+  let days = Math.round((DEADLINE - parseD(g.startDate)) / 864e5) + 1;
+  N = Math.max(7, Math.min(366, days));
+  if (target < N) N = Math.max(3, target);  // микро-цель: конвертов не больше суммы
+  ENV = genEnv(N, target);
+  DAY_TARGET = Math.max(1, Math.ceil(target / N));
+  WEEK_TARGET = DAY_TARGET * 7;
+  FOIL = [...new Set([.08, .26, .45, .65, .89].map(f => Math.floor(N * f)))];
+}
 
 // ---------- state ----------
 let state = load();
@@ -1508,7 +1679,7 @@ function load() {
     stars: 0, qAwarded: [], bought: [], worn: [],
     celebrated: false, lastBackup: null, wallet: 0,
     expenses: [], customCats: [], limit: 0, milestones: [], lastLevel: 1,
-    lastVisit: null
+    lastVisit: null, onboarded: false, pigName: '', hamboarded: false
   }, s);
 }
 let spendDirty = true;     // расходы пересобираются только если данные менялись
@@ -1527,7 +1698,9 @@ function todayStr(d = new Date()) {
 function parseD(s) { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); }
 function fmt(n) { return n.toLocaleString('ru-RU', { maximumFractionDigits: 0 }); }
 
-function total() { return state.closed.reduce((s, c) => s + c.amount, 0); }
+function total() {
+  return ((state.goal && state.goal.carried) || 0) + state.closed.reduce((s, c) => s + c.amount, 0);
+}
 function isClosed(idx) { return state.closed.some(c => c.idx === idx); }
 function daysLeft() {
   const t = parseD(todayStr());
@@ -1659,7 +1832,7 @@ const ACH = [
   { id:'m75',   icon:'⭐', name:'7 500 BYN',      test: () => total() >= 7500 },
   { id:'m10k',  icon:'👑', name:'10 000 BYN',     test: () => total() >= 10000 },
   { id:'big',   icon:'💎', name:'Самый большой',  test: () => isClosed(N - 1) },
-  { id:'goal',  icon:'🎄', name:'ЦЕЛЬ! 15 000',   test: () => total() >= GOAL },
+  { id:'goal',  icon:'🎄', name:'ЦЕЛЬ! 100%',     test: () => total() >= GOAL },
 ];
 
 function checkAchievements() {
@@ -1675,8 +1848,7 @@ function checkAchievements() {
 }
 
 // ---------- задания ----------
-const DAY_TARGET = Math.ceil(GOAL / N);
-const WEEK_TARGET = DAY_TARGET * 7;
+// DAY_TARGET и WEEK_TARGET считаются в applyGoal()
 
 function weekDates() {
   const monday = mondayOf(parseD(todayStr()));
@@ -1712,8 +1884,12 @@ function quests() {
 
   const morning = today.filter(c => new Date(c.ts).getHours() < 12).length;
   const evening = today.filter(c => new Date(c.ts).getHours() >= 18).length;
-  const bigToday = today.filter(c => c.amount >= 100).length;
-  const smallToday = today.filter(c => c.amount <= 60).length;
+  const BIGV = Math.ceil(DAY_TARGET * 1.15);      // пороги масштабируются под цель
+  const SMALLV = Math.max(1, Math.floor(DAY_TARGET * .7));
+  const HIGHV = Math.ceil(DAY_TARGET * 1.7);
+  const WBIGV = Math.ceil(WEEK_TARGET * 1.3);
+  const bigToday = today.filter(c => c.amount >= BIGV).length;
+  const smallToday = today.filter(c => c.amount <= SMALLV).length;
   const evenToday = today.filter(c => c.amount % 2 === 0).length;
 
   const week = weekDates();
@@ -1728,9 +1904,9 @@ function quests() {
     { id:'d2',  icon:'🎯', name:DAY_TARGET + '+ BYN за день', cur: Math.min(daySum, DAY_TARGET), max: DAY_TARGET },
     { id:'d3',  icon:'⚡', name:'Два конверта за день',   cur: Math.min(dayCnt, 2), max: 2 },
     { id:'d4',  icon:'🔱', name:'Три конверта за день',   cur: Math.min(dayCnt, 3), max: 3 },
-    { id:'d5',  icon:'💎', name:'Конверт от 100 BYN',     cur: Math.min(bigToday, 1), max: 1 },
-    { id:'d6',  icon:'🪶', name:'Конверт до 60 BYN',      cur: Math.min(smallToday, 1), max: 1 },
-    { id:'d7',  icon:'💰', name:'150+ BYN за день',       cur: Math.min(daySum, 150), max: 150 },
+    { id:'d5',  icon:'💎', name:'Конверт от ' + BIGV + ' BYN',  cur: Math.min(bigToday, 1), max: 1 },
+    { id:'d6',  icon:'🪶', name:'Конверт до ' + SMALLV + ' BYN', cur: Math.min(smallToday, 1), max: 1 },
+    { id:'d7',  icon:'💰', name:HIGHV + '+ BYN за день',   cur: Math.min(daySum, HIGHV), max: HIGHV },
     { id:'d8',  icon:'📈', name:'Больше, чем вчера (' + fmt(beatTarget) + ')', cur: Math.min(daySum, beatTarget), max: beatTarget },
     { id:'d9',  icon:'🌅', name:'Взнос до полудня',       cur: Math.min(morning, 1), max: 1 },
     { id:'d10', icon:'🌙', name:'Взнос после 18:00',      cur: Math.min(evening, 1), max: 1 },
@@ -1742,8 +1918,8 @@ function quests() {
     { id:'w2', icon:'💰', name:WEEK_TARGET + ' BYN за неделю', cur: Math.min(wSum, WEEK_TARGET), max: WEEK_TARGET },
     { id:'w3', icon:'🔥', name:'Без пропусков',          cur: wDays, max: 7 },
     { id:'w4', icon:'📮', name:'7 конвертов за неделю',  cur: Math.min(wCnt, 7), max: 7 },
-    { id:'w5', icon:'💎', name:'Два конверта от 100 BYN', cur: Math.min(wBig, 2), max: 2 },
-    { id:'w6', icon:'🚀', name:'800 BYN за неделю',      cur: Math.min(wSum, 800), max: 800 },
+    { id:'w5', icon:'💎', name:'Два конверта от ' + BIGV + ' BYN', cur: Math.min(wBig, 2), max: 2 },
+    { id:'w6', icon:'🚀', name:WBIGV + ' BYN за неделю', cur: Math.min(wSum, WBIGV), max: WBIGV },
   ];
 
   const daySeed = Math.floor(parseD(tDay).getTime() / 864e5);
@@ -2314,7 +2490,7 @@ function pigWelcome() {
     pig.classList.remove('bounce'); void pig.offsetWidth; pig.classList.add('bounce');
     setTimeout(() => { pig.classList.remove('bounce', 'hi'); }, 950);
     setTempHappy(1200);
-    toast('🐷 С возвращением!');
+    toast('🐷 ' + (state.pigName ? state.pigName + ' скучала! С возвращением' : 'С возвращением!'));
   }, 700);
 }
 function dustSneeze() {
@@ -2506,9 +2682,10 @@ window.addEventListener('drop', e => {
         stars: 0, qAwarded: [], bought: [], worn: [],
         celebrated: false, lastBackup: null, wallet: 0,
         expenses: [], customCats: [], limit: 0, milestones: [], lastLevel: 1,
-        lastVisit: null
+        lastVisit: null, onboarded: true, pigName: s.pigName || '', hamboarded: true
       }, s);
       localStorage.setItem(KEY, JSON.stringify(state));
+      ensureGoal(); applyGoal();
       dispSum = null; render();
       toast('✅ Прогресс восстановлен из бэкапа!');
       sndAch();
@@ -2550,6 +2727,7 @@ function celebrate() {
   const bestDay = Math.max(0, ...Object.values(byDay));
   const daysTotal = Object.keys(byDay).length;
 
+  document.getElementById('finaleSum').textContent = fmt(GOAL) + ' BYN!';
   document.getElementById('fDays').textContent = daysTotal;
   document.getElementById('fStreak').textContent = bestStreak();
   document.getElementById('fBest').textContent = fmt(bestDay);
@@ -2585,7 +2763,7 @@ function renderGrid() {
     const el = document.createElement('div');
     el.className = 'env' + (closed ? ' closed' : '') + (i === reco && !closed ? ' reco' : '')
       + (foil && !closed ? ' foil' : '')                           // фольгированный
-      + (!closed && !foil && ENV[i] >= 140 && i !== reco ? ' rich' : '')
+      + (!closed && !foil && ENV[i] >= ENV[N - 1] * .92 && i !== reco ? ' rich' : '')
       + ((i * 7 + 3) % 13 === 0 && i !== reco ? ' fid' : '');      // ёрзает ~каждый 13-й
     el.dataset.idx = i;
     el.style.animationDelay = ((i * 1.3) % 5).toFixed(1) + 's';
@@ -2685,6 +2863,8 @@ function render() {
 
   document.getElementById('pct').textContent = pct.toFixed(pct < 10 ? 1 : 0) + '%';
   countTo(document.getElementById('saved'), sum);
+  document.getElementById('goalLabel').innerHTML =
+    'из ' + fmt(GOAL) + ' BYN · <b>' + (state.goal.name || 'Цель') + '</b> ✎';
   document.getElementById('stDays').textContent = daysLeft();
   document.getElementById('stEnv').textContent = state.closed.length + '/' + N;
   document.getElementById('stLeft').textContent = fmt(Math.max(0, GOAL - sum));
@@ -2815,6 +2995,114 @@ document.getElementById('modal').addEventListener('click', e => {
   if (e.target.id === 'modal') modalClose(false);
 });
 
+// ---------- мастер цели ----------
+let gPreset = 'ny', gTransferMode = 'keep';
+
+function goalDeadlineFromPreset() {
+  const t = new Date();
+  const d = new Date(t);
+  if (gPreset === 'w') d.setDate(t.getDate() + 7);
+  else if (gPreset === 'm') d.setMonth(t.getMonth() + 1);
+  else if (gPreset === 'h') d.setMonth(t.getMonth() + 6);
+  else if (gPreset === 'y') d.setFullYear(t.getFullYear() + 1);
+  else if (gPreset === 'ny') {
+    d.setMonth(11, 31);
+    if (d <= t) d.setFullYear(t.getFullYear() + 1);
+  } else {
+    const v = document.getElementById('gDate').value;
+    return v || null;
+  }
+  return todayStr(d);
+}
+
+function updateGoalPreview() {
+  const amount = parseFloat((document.getElementById('gAmount').value || '').replace(',', '.'));
+  const dl = goalDeadlineFromPreset();
+  const p = document.getElementById('gPreview');
+  if (!amount || amount <= 0 || !dl || parseD(dl) <= new Date()) { p.textContent = ''; return; }
+  const days = Math.round((parseD(dl) - parseD(todayStr())) / 864e5) + 1;
+  const carried = gTransferMode === 'keep' ? total() : 0;
+  const left = Math.max(0, amount - carried);
+  p.innerHTML = days + ' ' + plural(days, 'день', 'дня', 'дней') + ' · ~<b>' +
+    fmt(Math.max(1, Math.ceil(left / Math.max(1, Math.min(366, days))))) + ' BYN/день</b>' +
+    (carried > 0 ? ' · перенос ' + fmt(carried) : '');
+}
+
+function openGoalWizard() {
+  const g = state.goal;
+  document.getElementById('gName').value = g.name || '';
+  document.getElementById('gAmount').value = g.amount;
+  gPreset = 'c'; gTransferMode = 'keep';
+  document.getElementById('gDate').value = g.deadline;
+  document.getElementById('gDate').style.display = '';
+  document.querySelectorAll('.pchip[data-p]').forEach(c =>
+    c.classList.toggle('sel', c.dataset.p === 'c'));
+  const has = total() > 0;
+  document.getElementById('gTransfer').style.display = has ? '' : 'none';
+  document.getElementById('gHave').textContent = fmt2(total());
+  document.querySelectorAll('.pchip[data-t]').forEach(c =>
+    c.classList.toggle('sel', c.dataset.t === 'keep'));
+  updateGoalPreview();
+  document.getElementById('goalModal').classList.add('show');
+}
+function closeGoalWizard() { document.getElementById('goalModal').classList.remove('show'); }
+
+document.querySelectorAll('.pchip[data-p]').forEach(c => c.onclick = () => {
+  gPreset = c.dataset.p;
+  document.querySelectorAll('.pchip[data-p]').forEach(x => x.classList.toggle('sel', x === c));
+  document.getElementById('gDate').style.display = gPreset === 'c' ? '' : 'none';
+  updateGoalPreview();
+});
+document.querySelectorAll('.pchip[data-t]').forEach(c => c.onclick = () => {
+  gTransferMode = c.dataset.t;
+  document.querySelectorAll('.pchip[data-t]').forEach(x => x.classList.toggle('sel', x === c));
+  updateGoalPreview();
+});
+['gAmount', 'gDate'].forEach(id => document.getElementById(id).addEventListener('input', updateGoalPreview));
+document.getElementById('goalModal').addEventListener('click', e => {
+  if (e.target.id === 'goalModal') closeGoalWizard();
+});
+// дублируем обработчик программно — на случай перекрытий и потери inline-атрибута
+document.getElementById('goalLabel').addEventListener('click', e => {
+  e.stopPropagation();
+  openGoalWizard();
+});
+
+function saveGoal() {
+  const name = (document.getElementById('gName').value || '').trim() || 'Моя цель';
+  const amount = Math.round(parseFloat((document.getElementById('gAmount').value || '').replace(',', '.')) || 0);
+  const dl = goalDeadlineFromPreset();
+  if (!amount || amount <= 0) { toast('Введи сумму цели'); return; }
+  if (!dl || parseD(dl) <= new Date()) { toast('Срок должен быть в будущем'); return; }
+
+  const g = state.goal;
+  // поменяли только название — конверты не трогаем
+  if (amount === g.amount && dl === g.deadline) {
+    g.name = name;
+    save(); render(); closeGoalWizard();
+    toast('Название обновлено');
+    return;
+  }
+
+  const carried = (gTransferMode === 'keep') ? Math.round(total() * 100) / 100 : 0;
+  state.goal = { name, amount, deadline: dl, startDate: todayStr(), carried };
+  state.closed = [];
+  applyGoal();
+  const pctNow = total() / GOAL * 100;
+  state.milestones = [25, 50, 75].filter(m => pctNow >= m);
+  state.celebrated = total() >= GOAL;
+  state.unlocked = state.unlocked.filter(id => {
+    const a = ACH.find(x => x.id === id);
+    try { return a && a.test(); } catch(e) { return false; }
+  });
+  save();
+  dispSum = null;
+  render();
+  closeGoalWizard();
+  toast('🎯 Новая цель: ' + name + ' — ' + fmt(amount) + ' BYN');
+  sndAch();
+}
+
 function switchTab(t) {
   const show = document.getElementById(t === 'save' ? 'viewSave' : 'viewSpend');
   const hide = document.getElementById(t === 'save' ? 'viewSpend' : 'viewSave');
@@ -2823,6 +3111,12 @@ function switchTab(t) {
   document.getElementById('tabSave').classList.toggle('active', t === 'save');
   document.getElementById('tabSpend').classList.toggle('active', t === 'spend');
   if (t === 'spend' && spendDirty) renderSpend();   // пересобираем только при изменениях
+  // первое посещение расходов — знакомство с хомяком
+  if (t === 'spend' && state.onboarded && !state.hamboarded && !onbPreview && !hamPreview) {
+    state.hamboarded = true;
+    localStorage.setItem(KEY, JSON.stringify(state));
+    setTimeout(() => runHamStory(false), 400);
+  }
   // мягкое проявление, как в iOS
   show.classList.remove('animin', 'fadeIn');
   void show.offsetWidth;
@@ -3727,6 +4021,7 @@ function syncPull(force) {
           expenses: [], customCats: [], limit: 0, milestones: []
         }, data.state);
         localStorage.setItem(KEY, JSON.stringify(state));
+        ensureGoal(); applyGoal();
         dispSum = null;
         render(); renderSpend();
         toast('🔄 Данные синхронизированы');
@@ -3775,9 +4070,377 @@ if (SYNC_DB_URL && syncCfg) {
 }
 renderSync();
 
+// ================== ИНТЕРАКТИВНОЕ ЗНАКОМСТВО ==================
+const onbPreview = location.search.includes('onb');   // ?onb — сказка свинки без сохранения
+const hamPreview = location.search.includes('ham');   // ?ham — сказка хомяка без сохранения
+
+const $s = id => document.getElementById(id);
+function storyShow() { $s('onb').classList.add('show'); }
+function storyHide() { $s('onb').classList.remove('show'); }
+
+let typeFast = false;
+document.querySelector('.story-bubble').addEventListener('click', () => typeFast = true);
+function say(txt) {
+  const el = $s('onbTxt');
+  el.textContent = ''; typeFast = false;
+  $s('onbCaret').style.display = '';
+  return new Promise(res => {
+    let i = 0;
+    const t = setInterval(() => {
+      if (typeFast) { el.textContent = txt; i = txt.length; }
+      else {
+        el.textContent = txt.slice(0, ++i);
+        const ch = txt[i - 1];
+        if (ch && ch !== ' ' && i % 2 === 0)     // тихий «тик» печатания
+          tone(1000 + Math.random() * 350, .025, 0, 'square', .016);
+      }
+      if (i >= txt.length) {
+        clearInterval(t);
+        $s('onbCaret').style.display = 'none';
+        setTimeout(res, 900);
+      }
+    }, 48);
+  });
+}
+function ui(html) { $s('onbUI').innerHTML = html || ''; }
+function choice(opts) {
+  ui('<div class="preset-row">' + opts.map(o =>
+    '<button class="pchip" data-v="' + o.v + '">' + o.l + '</button>').join('') + '</div>');
+  return new Promise(r => $s('onbUI').querySelectorAll('.pchip').forEach(b =>
+    b.onclick = () => { ui(''); r(b.dataset.v); }));
+}
+function tapsOn(el, n, onTap) {
+  return new Promise(r => {
+    let c = 0;
+    const h = e => { e.stopPropagation(); c++; onTap && onTap(c); if (c >= n) { el.removeEventListener('click', h); r(); } };
+    el.addEventListener('click', h);
+  });
+}
+function longPressOn(el, ms) {
+  return new Promise(r => {
+    let t = null;
+    const down = e => { e.preventDefault(); t = setTimeout(() => { cleanup(); r(); }, ms); };
+    const up = () => clearTimeout(t);
+    function cleanup() {
+      el.removeEventListener('pointerdown', down);
+      el.removeEventListener('pointerup', up);
+      el.removeEventListener('pointerleave', up);
+    }
+    el.addEventListener('pointerdown', down);
+    el.addEventListener('pointerup', up);
+    el.addEventListener('pointerleave', up);
+  });
+}
+function dragCoinTo(targetEl) {
+  return new Promise(res => {
+    const c = document.createElement('div');
+    c.className = 'drag-coin';
+    const startX = innerWidth / 2, startY = innerHeight - 80;
+    let x = startX, y = startY;
+    const put = () => { c.style.left = x + 'px'; c.style.top = y + 'px'; };
+    put(); document.body.appendChild(c);
+    let drag = false, moved = false, taps = 0;
+    const win = () => { c.remove(); res(); };
+    c.addEventListener('pointerdown', e => {
+      drag = true; moved = false;
+      try { c.setPointerCapture(e.pointerId); } catch(err) {}
+    });
+    c.addEventListener('pointermove', e => {
+      if (!drag) return;
+      if (Math.abs(e.clientX - x) + Math.abs(e.clientY - y) > 6) moved = true;
+      x = e.clientX; y = e.clientY; put();
+    });
+    c.addEventListener('pointerup', () => {
+      drag = false;
+      const t = targetEl.getBoundingClientRect();
+      if (x > t.left - 30 && x < t.right + 30 && y > t.top - 30 && y < t.bottom + 30) { win(); return; }
+      if (!moved && ++taps >= 2) {          // запасной путь: два тапа — летит сама
+        if (c.animate) {
+          c.animate([
+            { left: x + 'px', top: y + 'px' },
+            { left: (t.left + t.width / 2) + 'px', top: (t.top + t.height / 2) + 'px' }
+          ], { duration: 600, easing: 'ease-in-out' }).onfinish = win;
+        } else win();
+        return;
+      }
+      x = startX; y = startY;
+      c.style.transition = 'left .3s, top .3s'; put();
+      setTimeout(() => c.style.transition = '', 320);
+    });
+  });
+}
+function stageHearts() {
+  const stage = $s('onbStage');
+  for (let i = 0; i < 5; i++) setTimeout(() => {
+    const h = document.createElement('span');
+    h.className = 'story-heart'; h.textContent = '❤️';
+    h.style.left = (28 + Math.random() * 55) + '%';
+    h.style.top = (32 + Math.random() * 28) + '%';
+    stage.appendChild(h);
+    setTimeout(() => h.remove(), 1300);
+  }, i * 180);
+}
+
+const OP_PIG = '<svg id="opPig" viewBox="0 0 260 212" width="205" height="167">' +
+ '<defs><linearGradient id="goldG2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe289"/><stop offset="1" stop-color="#efa724"/></linearGradient></defs>' +
+ '<path d="M36 110 q-18 -4 -14 -18 q4 -12 17 -8" fill="none" stroke="#f5a8bc" stroke-width="7" stroke-linecap="round"/>' +
+ '<rect x="72" y="176" width="24" height="26" rx="11" fill="#f29db4"/>' +
+ '<rect x="152" y="176" width="24" height="26" rx="11" fill="#f29db4"/>' +
+ '<ellipse cx="125" cy="115" rx="92" ry="75" fill="rgba(255,190,205,.34)" stroke="rgba(255,255,255,.9)" stroke-width="2.5"/>' +
+ '<ellipse id="opGold" cx="125" cy="168" rx="58" ry="16" fill="url(#goldG2)" style="display:none"/>' +
+ '<ellipse cx="92" cy="76" rx="32" ry="15" fill="rgba(255,255,255,.45)" transform="rotate(-24 92 76)"/>' +
+ '<path d="M162 50 q12 -22 32 -14 q0 20 -16 27 Z" fill="#f29db4" stroke="rgba(255,255,255,.7)" stroke-width="1.5"/>' +
+ '<g id="opEyeO" style="display:none"><circle cx="184" cy="90" r="6.5" fill="#2c2c3e"/><circle cx="186.5" cy="87.5" r="2.2" fill="#fff"/></g>' +
+ '<path id="opEyeS" d="M176 90 q8 7 16 0" fill="none" stroke="#2c2c3e" stroke-width="3.2" stroke-linecap="round"/>' +
+ '<path id="opEyeH" d="M176 91 q8 -9 16 0" fill="none" stroke="#2c2c3e" stroke-width="3.5" stroke-linecap="round" style="display:none"/>' +
+ '<ellipse cx="198" cy="107" rx="9" ry="5.5" fill="rgba(255,110,145,.35)"/>' +
+ '<ellipse cx="216" cy="116" rx="21" ry="17" fill="#f7b9c9" stroke="rgba(255,255,255,.85)" stroke-width="2"/>' +
+ '<ellipse cx="209" cy="116" rx="3.2" ry="5" fill="#d97b95"/><ellipse cx="222" cy="116" rx="3.2" ry="5" fill="#d97b95"/>' +
+ '<rect id="opSlot" x="103" y="33" width="44" height="8" rx="4" fill="#2c2c3e" opacity=".55"/>' +
+ '<g id="opZz"><text x="150" y="34" font-size="16" fill="#5e6bd8" font-weight="800">Z</text><text x="164" y="22" font-size="11" fill="#7e88e8" font-weight="800">Z</text></g>' +
+ '</svg>';
+
+const OH_HAM = '<svg id="ohHam" viewBox="58 50 116 90" width="190" height="147">' +
+ '<circle cx="145" cy="112" r="5" fill="#e6b988"/>' +
+ '<ellipse cx="115" cy="104" rx="36" ry="27" fill="rgba(236,196,150,.38)" stroke="rgba(255,255,255,.9)" stroke-width="2.5"/>' +
+ '<ellipse cx="111" cy="112" rx="21" ry="15" fill="rgba(255,241,218,.5)"/>' +
+ '<ellipse cx="100" cy="88" rx="14" ry="6.5" fill="rgba(255,255,255,.45)" transform="rotate(-22 100 88)"/>' +
+ '<circle cx="97" cy="79" r="8" fill="#e6b988" stroke="rgba(255,255,255,.7)" stroke-width="1.5"/><circle cx="97" cy="79" r="4.5" fill="#f2c9cf"/>' +
+ '<circle cx="130" cy="77" r="8" fill="#e6b988" stroke="rgba(255,255,255,.7)" stroke-width="1.5"/><circle cx="130" cy="77" r="4.5" fill="#f2c9cf"/>' +
+ '<g id="ohCheeks"><ellipse cx="92" cy="101" rx="10" ry="9" fill="rgba(244,215,175,.55)" stroke="rgba(255,255,255,.55)" stroke-width="1.2"/><ellipse cx="138" cy="101" rx="10" ry="9" fill="rgba(244,215,175,.55)" stroke="rgba(255,255,255,.55)" stroke-width="1.2"/></g>' +
+ '<g id="ohEyes"><circle cx="105" cy="92" r="4.5" fill="#2c2c3e"/><circle cx="124" cy="92" r="4.5" fill="#2c2c3e"/><circle cx="106.7" cy="90.3" r="1.6" fill="#fff"/><circle cx="125.7" cy="90.3" r="1.6" fill="#fff"/></g>' +
+ '<g id="ohHappy" style="display:none"><path d="M100 93 q5 -5.5 10 0" stroke="#2c2c3e" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="M119 93 q5 -5.5 10 0" stroke="#2c2c3e" stroke-width="2.6" fill="none" stroke-linecap="round"/></g>' +
+ '<ellipse cx="114.5" cy="100" rx="3.4" ry="2.7" fill="#f7b9c9" stroke="rgba(255,255,255,.7)" stroke-width="1"/>' +
+ '<path d="M114.5 102.5 q0 4 -4 5 M114.5 102.5 q0 4 4 5" stroke="#b98a5f" stroke-width="1.4" fill="none" stroke-linecap="round"/>' +
+ '<ellipse cx="103" cy="129" rx="7" ry="4" fill="#e6b988"/><ellipse cx="127" cy="129" rx="7" ry="4" fill="#e6b988"/>' +
+ '</svg>';
+
+async function runPigStory(preview) {
+  storyShow(); ui('');
+  $s('onb').classList.add('night');            // ночь: свинка спит
+  $s('onbStage').innerHTML = OP_PIG;
+  const pig = $s('opPig');
+
+  await say('Хрр-хрр... хрр-фью-ю-ю...');
+  await say('Кажется, кто-то спит без задних копыт. Потапай по ней — буди!');
+  await tapsOn(pig, 3, () => {
+    pig.classList.remove('op-shake'); void pig.getBBox; pig.classList.add('op-shake');
+    flick(0, .05); vib(10);
+  });
+  $s('onb').classList.remove('night');         // рассвело!
+  $s('opZz').style.display = 'none';
+  $s('opEyeS').style.display = 'none';
+  $s('opEyeO').style.display = '';
+  pig.classList.add('op-hop'); sndBoing();
+  await say('Ой!.. Привет! Я — твоя копилка. Внутри меня пусто и ужасно одиноко...');
+  await say('Видишь прорезь на спинке? Внизу экрана монетка — перетащи её в меня!');
+  await dragCoinTo(pig);
+  sndCoin(); vib(15);
+  $s('opGold').style.display = '';
+  $s('opEyeO').style.display = 'none'; $s('opEyeH').style.display = '';
+  pig.classList.remove('op-hop'); void pig.getBBox; pig.classList.add('op-hop');
+  await say('Дзы-ы-ынь! ✨ Какое чувство! Каждый закрытый конверт — вот такая монетка внутри меня.');
+  $s('opEyeH').style.display = 'none'; $s('opEyeO').style.display = '';
+  await say('А ещё я обожаю, когда мне чешут пузико... Зажми меня пальцем и подержи!');
+  await longPressOn(pig, 900);
+  stageHearts(); sndStar(); vib([15, 40, 15]);
+  $s('opEyeO').style.display = 'none'; $s('opEyeH').style.display = '';
+  await say('Ур-р-р-р... 💕 Всё. Теперь мы друзья навеки.');
+  $s('opEyeH').style.display = 'none'; $s('opEyeO').style.display = '';
+  await say('Как ты меня назовёшь?');
+  const raw = await new Promise(r => {
+    ui('<input id="opName" maxlength="14" placeholder="Например, Боня"><button class="m-ok">Вот так!</button>');
+    $s('onbUI').querySelector('button').onclick = () => {
+      r(($s('opName').value || '').trim()); ui('');
+    };
+  });
+  const nm = raw || 'Свинка';
+  const low = nm.toLowerCase();
+  const funny = ['хрю', 'свин', 'бекон', 'пятач', 'сало', 'шпик', 'кабан'];
+  if (!raw) await say('Без имени?.. Ну и ла-адно, буду просто Свинка. 😤 ...Шучу, я не обидчивая!');
+  else if (funny.some(f => low.includes(f))) await say(nm + '?! 😂 Хрю-хрю-хрю! Одобряю всеми четырьмя копытами!');
+  else await say(nm + '? ' + ['Хрю! Обожаю это имя!', 'Звучит богато. Мне подходит!', 'Идеально. Я — ' + nm + '!'][Math.floor(Math.random() * 3)]);
+  await say('И последнее: на что копим, сколько и к какому сроку?');
+  const goal = await new Promise(r => {
+    ui('<input id="opGName" maxlength="20" placeholder="Название (Новый год)">' +
+       '<input id="opGAmt" type="number" inputmode="decimal" placeholder="Сумма, BYN">' +
+       '<div class="preset-row">' +
+         [['w','Неделя'],['m','Месяц'],['h','Полгода'],['y','Год'],['ny','До НГ']].map(p =>
+           '<button class="pchip' + (p[0] === 'ny' ? ' sel' : '') + '" data-op="' + p[0] + '">' + p[1] + '</button>').join('') +
+       '</div><button class="m-ok">Начать копить! 🚀</button>');
+    let pv = 'ny';
+    $s('onbUI').querySelectorAll('.pchip').forEach(c => c.onclick = () => {
+      pv = c.dataset.op;
+      $s('onbUI').querySelectorAll('.pchip').forEach(x => x.classList.toggle('sel', x === c));
+    });
+    $s('onbUI').querySelector('.m-ok').onclick = () => {
+      const a = Math.round(parseFloat(($s('opGAmt').value || '').replace(',', '.')) || 0);
+      if (a <= 0) { toast('Введи сумму цели'); return; }
+      r({ name: ($s('opGName').value || '').trim() || 'Моя цель', amount: a, preset: pv });
+      ui('');
+    };
+  });
+  if (preview) { fadeStoryOut(); toast('Это был предпросмотр 😉 Данные не тронуты'); return; }
+  gPreset = goal.preset;
+  state.pigName = nm;
+  state.goal = { name: goal.name, amount: goal.amount, deadline: goalDeadlineFromPreset(), startDate: todayStr(), carried: 0 };
+  state.onboarded = true;
+  applyGoal(); save();
+  dispSum = null; render();
+  fadeStoryOut(() => {                       // финальный кадр: настоящая свинка машет
+    const p = $s('pigSvg');
+    p.classList.add('hi');
+    p.classList.remove('bounce'); void p.offsetWidth; p.classList.add('bounce');
+    setTimeout(() => p.classList.remove('bounce', 'hi'), 950);
+    setTempHappy(1500);
+    coinRain(16); sndAch();
+    toast('🐷 ' + nm + ' готова! Цель: ' + goal.name + ' — ' + fmt(goal.amount) + ' BYN');
+  });
+}
+
+// плавное растворение сказки
+function fadeStoryOut(after) {
+  const onb = $s('onb');
+  onb.style.opacity = 0;
+  setTimeout(() => {
+    onb.classList.remove('show', 'night');
+    onb.style.opacity = '';
+    after && after();
+  }, 820);
+}
+
+// зрачок сказочной свинки следит за пальцем
+let opEyeRaf = null;
+document.addEventListener('pointermove', e => {
+  if (opEyeRaf) return;
+  opEyeRaf = requestAnimationFrame(() => {
+    opEyeRaf = null;
+    const p = document.getElementById('opPig');
+    if (!p) return;
+    const eyeG = document.getElementById('opEyeO');
+    if (!eyeG || eyeG.style.display === 'none') return;
+    const r = p.getBoundingClientRect();
+    if (!r.width) return;
+    const ex = r.left + r.width * (184 / 260), ey = r.top + r.height * (90 / 212);
+    const dx = e.clientX - ex, dy = e.clientY - ey;
+    const d = Math.hypot(dx, dy) || 1;
+    const k = Math.min(1, d / 50) * 2.2;
+    const cs = eyeG.querySelectorAll('circle');
+    cs[0].setAttribute('cx', 184 + dx / d * k);
+    cs[0].setAttribute('cy', 90 + dy / d * k);
+    cs[1].setAttribute('cx', 186.5 + dx / d * k * .8);
+    cs[1].setAttribute('cy', 87.5 + dy / d * k * .8);
+  });
+}, { passive: true });
+
+async function runHamStory(preview) {
+  storyShow(); ui('');
+  $s('onbStage').innerHTML = OH_HAM;
+  const ham = $s('ohHam');
+  ham.addEventListener('click', () => { sndSqueak(); vib(10); });
+
+  await say('О. Новенький. Я — хомяк. Я ЕМ твои траты.');
+  await say('Ну а что такого? Кто-то же должен вести учёт. Скорми мне тестовую трату!');
+  await new Promise(r => {
+    ui('<div class="onb-bill">−10</div>');
+    $s('onbUI').querySelector('.onb-bill').onclick = e => {
+      const b = e.target.getBoundingClientRect();
+      const h = ham.getBoundingClientRect();
+      e.target.style.visibility = 'hidden';
+      const fly = document.createElement('div');
+      fly.className = 'fly-bill';
+      document.body.appendChild(fly);
+      const done = () => {
+        fly.remove(); flick(0, .06); vib(10);
+        const g = $s('ohCheeks');
+        if (g.animate) g.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.35)' }, { transform: 'scale(1)' }], { duration: 500 });
+        r();
+      };
+      if (fly.animate) {
+        fly.animate([
+          { transform: 'translate(' + (b.left + b.width / 2) + 'px,' + (b.top + b.height / 2) + 'px) rotate(0)' },
+          { transform: 'translate(' + (h.left + h.width * .49) + 'px,' + (h.top + h.height * .58) + 'px) rotate(-200deg) scale(.35)' }
+        ], { duration: 700, easing: 'ease-in-out' }).onfinish = done;
+      } else done();
+    };
+  });
+  ui('');
+  $s('ohEyes').style.display = 'none'; $s('ohHappy').style.display = '';
+  await say('Ням! 😋 Каждую записанную трату я прячу за щёку — так ты видишь, куда утекают деньги.');
+  $s('ohHappy').style.display = 'none'; $s('ohEyes').style.display = '';
+  await say('Кстати. На что у тебя чаще всего улетают деньги?');
+  const cat = await choice([
+    { v: 'cafe', l: 'Кафе' }, { v: 'food', l: 'Еда' },
+    { v: 'transport', l: 'Транспорт' }, { v: 'fun', l: 'Развлечения' }
+  ]);
+  try { selCat = cat; renderCats(); } catch(e) {}
+  await say('Записал. За «' + catById(cat).name + '» буду следить особенно пристально 👀');
+  await say('И главное — поставь лимит на месяц. Перейдёшь его, и я растолстею. Буквально.');
+  const lim = await new Promise(r => {
+    ui('<input id="ohLim" type="number" inputmode="decimal" placeholder="Например, 2000">' +
+       '<button class="m-ok">Поставить лимит</button>' +
+       '<button class="story-skip" style="margin-top:6px">решу позже</button>');
+    $s('onbUI').querySelector('.m-ok').onclick = () => {
+      const v = Math.round(parseFloat(($s('ohLim').value || '').replace(',', '.')) || 0);
+      if (v <= 0) { toast('Введи число'); return; }
+      ui(''); r(v);
+    };
+    $s('onbUI').querySelector('.story-skip').onclick = () => { ui(''); r(0); };
+  });
+  if (lim > 0 && !preview) state.limit = lim;
+  if (lim > 0 && lim < 300)
+    await say(fmt(lim) + '?! Ты серьёзно? Я столько СЕМЕЧЕК за день съедаю... Ну, дисциплина так дисциплина. 🐹');
+  else if (lim > 5000)
+    await say('Ого, ' + fmt(lim) + ' BYN! Живём на широкую лапу. Прослежу, чтобы не шире. 😎');
+  else if (lim > 0)
+    await say('Принято: ' + fmt(lim) + ' BYN в месяц. Слежу за формой. За твоей и своей. 🐹');
+  else
+    await say('Ла-адно. Но учти: я всё равно всё вижу...');
+  if (!preview) { state.hamboarded = true; save(); renderSpend(); }
+  fadeStoryOut();
+}
+
+// пропуск — с подтверждением (свинка расстроится!)
+let skipArmed = false, skipTimer = null;
+document.getElementById('onbSkip').onclick = () => {
+  const b = document.getElementById('onbSkip');
+  if (!skipArmed) {
+    skipArmed = true;
+    b.textContent = 'Точно? Свинка расстроится 🥺 (нажми ещё раз)';
+    clearTimeout(skipTimer);
+    skipTimer = setTimeout(() => {
+      skipArmed = false;
+      b.textContent = 'пропустить знакомство';
+    }, 3500);
+    return;
+  }
+  clearTimeout(skipTimer);
+  skipArmed = false;
+  b.textContent = 'пропустить знакомство';
+  state.onboarded = true;
+  state.hamboarded = true;
+  localStorage.setItem(KEY, JSON.stringify(state));
+  fadeStoryOut();
+};
+
+ensureGoal();
+applyGoal();
 xmasMode();
 sleepCheck();
 render();
+// сказки: свинка — при первом запуске, предпросмотры — через ?onb и ?ham
+if (onbPreview) runPigStory(true);
+else if (hamPreview) runHamStory(true);
+else if (!state.onboarded) {
+  if (state.closed.length || state.expenses.length) {
+    state.onboarded = true;
+    localStorage.setItem(KEY, JSON.stringify(state));
+  } else runPigStory(false);
+}
+if (!state.hamboarded && state.expenses.length) {
+  state.hamboarded = true;
+  localStorage.setItem(KEY, JSON.stringify(state));
+}
 renderCats();
 document.getElementById('viewSave').classList.add('animin');
 greetCheck();
