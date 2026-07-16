@@ -174,6 +174,104 @@
   .cc-arrow.up { color:#d63a3a; }
   .cc-arrow.down { color:#26a349; }
 
+  /* порядок карточек расходов: хомяк первым */
+  #viewSpend > .card:nth-child(1) { order:2; }
+  #viewSpend > .card:nth-child(2) { order:1; }
+  #viewSpend > .card:nth-child(n+3) { order:3; }
+
+  /* ---- хомяк ---- */
+  .ham-wrap { display:flex; justify-content:center; padding:6px 0 2px; }
+  #hamSvg { overflow:visible; cursor:pointer; filter: drop-shadow(0 10px 20px rgba(205,165,105,.3)); }
+  /* бодрый хомяк: мягкое пружинистое дыхание-подскок */
+  #hamSvg.fit #hamAll { animation: hamBob 1.1s ease-in-out infinite alternate; }
+  @keyframes hamBob { to { transform: translateY(-3px) scale(1.015, .99); } }
+  #footL, #footR { transform-origin: center; }
+  #hamSvg.fit #footL { animation: stepA 1.1s ease-in-out infinite alternate; }
+  #hamSvg.fit #footR { animation: stepA 1.1s ease-in-out infinite alternate-reverse; }
+  @keyframes stepA {
+    from { transform: translateY(0); }
+    to   { transform: translateY(1.5px); }
+  }
+  #hamBodyGrp {
+    transform-origin: 115px 131px;
+    transition: transform .9s cubic-bezier(.22,1,.36,1);
+  }
+  #hamCheeks { transform-origin: 115px 101px; transition: transform .9s; }
+  #hamCheeks.cheekPop { animation: cheekP .5s ease; }
+  @keyframes cheekP { 40% { transform: scale(1.28); } }
+
+  /* моргание (на внутренней группе, дёрганье глаз — на обёртке) */
+  #hamEyes { animation: hamBlink 5.6s infinite; transform-origin: 114px 92px; }
+  @keyframes hamBlink { 0%, 93%, 100% { transform: scaleY(1); } 95%, 97% { transform: scaleY(.08); } }
+  /* тревога при 80% лимита: уши прижаты, глаза бегают */
+  #hamEarL, #hamEarR { transition: transform .6s ease; }
+  #hamEarL { transform-origin: 97px 87px; }
+  #hamEarR { transform-origin: 130px 85px; }
+  #hamSvg.alarm #hamEarL { transform: rotate(-26deg) scale(.92); }
+  #hamSvg.alarm #hamEarR { transform: rotate(26deg) scale(.92); }
+  #hamSvg.alarm #hamEyesW { animation: eyesDart 1.5s ease-in-out infinite; }
+  @keyframes eyesDart { 0%,100% { transform: translateX(0); } 28% { transform: translateX(-1.7px); } 72% { transform: translateX(1.7px); } }
+  /* усы и носик подёргиваются */
+  #hamWhisk { transform-origin: 114px 101px; animation: whiskTw 8s ease-in-out infinite; }
+  @keyframes whiskTw { 0%, 90%, 100% { transform: rotate(0); } 93% { transform: rotate(1.6deg); } 96% { transform: rotate(-1.4deg); } }
+  /* умывание */
+  #hamSvg.washing #hamPaws { display:block; animation: washMove 1.7s ease both; }
+  @keyframes washMove {
+    0%   { transform: translateY(16px); opacity:0; }
+    15%  { transform: translateY(0); opacity:1; }
+    30%  { transform: translate(-2.5px,-2px) rotate(-7deg); }
+    45%  { transform: translate(2.5px,0) rotate(7deg); }
+    60%  { transform: translate(-2.5px,-2px) rotate(-7deg); }
+    75%  { transform: translate(2.5px,0) rotate(7deg); }
+    100% { transform: translateY(16px); opacity:0; }
+  }
+  /* семечка */
+  #hamSvg.seeding #hamPaws { display:block; }
+  #hamSvg.seeding #hamSeed { display:block; animation: seedNib 1.5s ease both; transform-origin: 114px 107px; }
+  @keyframes seedNib {
+    0% { transform: scale(0); } 15% { transform: scale(1.1); }
+    30%, 50%, 70% { transform: scale(1) rotate(-26deg); }
+    40%, 60% { transform: scale(.92) rotate(-32deg); }
+    100% { transform: scale(0); }
+  }
+  .shell {
+    position:fixed; z-index:55; pointer-events:none;
+    width:5px; height:8px; background:#a5713a;
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+    animation: gdropFly .8s ease-out forwards;
+  }
+  /* урчание при почёсывании */
+  #hamSvg.purr #hamAll { animation: purrVibe .18s linear infinite; }
+  @keyframes purrVibe { 50% { transform: translateY(.7px) rotate(.4deg); } }
+  /* чавк при поедании купюры */
+  #hamSvg.chomp #hamAll { animation: chompA .28s ease; }
+  @keyframes chompA { 45% { transform: scale(1.06, .93) translateY(1.5px); } }
+  /* желейное пузо */
+  #hamBelly { transform-origin: 111px 112px; }
+  #hamSvg.jelly #hamBelly { animation: bellyJelly .75s cubic-bezier(.3,1.8,.4,1); }
+  @keyframes bellyJelly {
+    20% { transform: scale(1.22, .82); }
+    45% { transform: scale(.88, 1.15); }
+    70% { transform: scale(1.08, .94); }
+    100% { transform: scale(1); }
+  }
+  /* щека прячет трату */
+  #cheekL, #cheekR { transform-origin: center; transform-box: fill-box; }
+  #hamSvg.stashL #cheekL { animation: cheekStash .85s cubic-bezier(.3,1.6,.4,1); }
+  #hamSvg.stashR #cheekR { animation: cheekStash .85s cubic-bezier(.3,1.6,.4,1); }
+  @keyframes cheekStash { 30% { transform: scale(1.55); } 55% { transform: scale(1.15); } 75% { transform: scale(1.32); } }
+  /* праздник похудения: отряхивается */
+  #hamSvg.shakeoff #hamAll { animation: hamShakeOff .9s ease; }
+  @keyframes hamShakeOff {
+    15% { transform: rotate(-7deg); } 30% { transform: rotate(7deg); }
+    45% { transform: rotate(-5deg); } 60% { transform: rotate(5deg); }
+    75% { transform: rotate(-2deg); } 100% { transform: rotate(0); }
+  }
+  /* ночь */
+  body.sleep #hamSvg #hamAll, body.sleep #hamSvg #footL, body.sleep #hamSvg #footR,
+  body.sleep #hamSvg #hamWhisk { animation: none; }
+  body.sleep #hamSvg { filter: drop-shadow(0 10px 20px rgba(120,130,180,.3)) brightness(.82) saturate(.75); }
+
   .spend-canvas { width:100%; display:block; }
 
   /* летящая купюра при трате */
@@ -1200,28 +1298,6 @@
   </div><!-- /viewSave -->
 
   <div class="view" id="viewSpend" style="display:none">
-    <!-- сводка -->
-    <div class="card">
-      <div class="garland"></div>
-      <div class="section-title">Потрачено</div>
-      <div class="hero-stats">
-        <div class="stat"><div class="v" id="spToday">0</div><div class="l">сегодня, BYN</div></div>
-        <div class="stat"><div class="v" id="spWeek">0</div><div class="l">за неделю, BYN</div></div>
-        <div class="stat"><div class="v" id="spMonth">0</div><div class="l">за месяц, BYN</div></div>
-      </div>
-      <div class="daily-budget" id="dailyBudget" style="display:none">
-        <div class="db-label">Можно потратить сегодня</div>
-        <div class="db-sum" id="dbSum">—</div>
-        <div class="db-note" id="dbNote"></div>
-      </div>
-      <div class="limit-box" onclick="setLimit()" title="Нажми, чтобы изменить">
-        <div class="limit-head"><span>Лимит на месяц</span><span id="limitVal">задать →</span></div>
-        <div class="limit-bar" id="limitBarWrap" style="display:none"><i id="limitBar"></i></div>
-        <div class="today-line" id="limitHint" style="margin-top:8px; display:none"></div>
-      </div>
-      <div class="forecast-line" id="spForecast" style="display:none"></div>
-    </div>
-
     <!-- новая трата -->
     <div class="card">
       <div class="section-title">Новая трата</div>
@@ -1231,6 +1307,92 @@
       <input type="text" id="expNote" class="note-input" placeholder="Заметка (необязательно)" maxlength="40">
       <div class="cat-grid" id="catGrid"></div>
       <button class="add-btn" onclick="addExpense()">Добавить трату</button>
+    </div>
+
+    <!-- хомяк-транжира -->
+    <div class="card hero">
+      <div class="garland"></div>
+      <div class="pig-area">
+        <svg id="hamSvg" class="fit" viewBox="58 56 116 84" width="200" height="145">
+          <g id="hamAll">
+            <g id="hamLean">
+              <g id="hamBodyGrp">
+                <circle cx="145" cy="112" r="5" fill="#e6b988"/>
+                <!-- тело: стекло, как у свинки -->
+                <ellipse cx="115" cy="104" rx="36" ry="27" fill="rgba(236,196,150,.38)" stroke="rgba(255,255,255,.9)" stroke-width="2.5"/>
+                <ellipse cx="111" cy="112" rx="21" ry="15" fill="rgba(255,241,218,.5)"/>
+                <!-- блик стекла -->
+                <ellipse cx="100" cy="88" rx="14" ry="6.5" fill="rgba(255,255,255,.45)" transform="rotate(-22 100 88)"/>
+                <g id="hamEarL"><circle cx="97" cy="79" r="8" fill="#e6b988" stroke="rgba(255,255,255,.7)" stroke-width="1.5"/><circle cx="97" cy="79" r="4.5" fill="#f2c9cf"/></g>
+                <g id="hamEarR"><circle cx="130" cy="77" r="8" fill="#e6b988" stroke="rgba(255,255,255,.7)" stroke-width="1.5"/><circle cx="130" cy="77" r="4.5" fill="#f2c9cf"/></g>
+                <g id="hamCheeks">
+                  <ellipse id="cheekL" cx="92"  cy="101" rx="10" ry="9" fill="rgba(244,215,175,.55)" stroke="rgba(255,255,255,.55)" stroke-width="1.2"/>
+                  <ellipse id="cheekR" cx="138" cy="101" rx="10" ry="9" fill="rgba(244,215,175,.55)" stroke="rgba(255,255,255,.55)" stroke-width="1.2"/>
+                </g>
+                <!-- румянец, как у свинки -->
+                <ellipse cx="97"  cy="106" rx="6" ry="3.8" fill="rgba(255,110,145,.3)"/>
+                <ellipse cx="133" cy="106" rx="6" ry="3.8" fill="rgba(255,110,145,.3)"/>
+                <g id="hamEyesW">
+                  <g id="hamEyes">
+                    <circle id="hpL" cx="105" cy="92" r="4.5" fill="#2c2c3e"/><circle id="hpR" cx="124" cy="92" r="4.5" fill="#2c2c3e"/>
+                    <circle id="hhL" cx="106.7" cy="90.3" r="1.6" fill="#fff"/><circle id="hhR" cx="125.7" cy="90.3" r="1.6" fill="#fff"/>
+                  </g>
+                </g>
+                <g id="hamHappyE" style="display:none">
+                  <path d="M100 93 q5 -5.5 10 0" stroke="#2c2c3e" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+                  <path d="M119 93 q5 -5.5 10 0" stroke="#2c2c3e" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+                </g>
+                <g id="hamSleepE" style="display:none">
+                  <path d="M100 92 q5 4 10 0" stroke="#2c2c3e" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+                  <path d="M119 92 q5 4 10 0" stroke="#2c2c3e" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+                </g>
+                <g id="hamTired" style="display:none">
+                  <path d="M101 93 q4 3 8 0" stroke="#2c2c3e" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                  <path d="M120 93 q4 3 8 0" stroke="#2c2c3e" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                </g>
+                <path id="hamSweat" style="display:none" d="M142 76 q6 8 0 12 q-6 -4 0 -12" fill="#8fc6ff"/>
+                <ellipse cx="114.5" cy="100" rx="3.4" ry="2.7" fill="#f7b9c9" stroke="rgba(255,255,255,.7)" stroke-width="1"/>
+                <path d="M114.5 102.5 q0 4 -4 5 M114.5 102.5 q0 4 4 5" stroke="#b98a5f" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+                <g id="hamWhisk"><path d="M82 100 L70 96 M82 104 L70 106 M147 100 L159 96 M147 104 L159 106" stroke="rgba(120,90,50,.45)" stroke-width="1.4" stroke-linecap="round"/></g>
+                <ellipse id="footL" cx="103" cy="129" rx="7" ry="4" fill="#e6b988" stroke="rgba(255,255,255,.6)" stroke-width="1"/>
+                <ellipse id="footR" cx="127" cy="129" rx="7" ry="4" fill="#e6b988" stroke="rgba(255,255,255,.6)" stroke-width="1"/>
+                <!-- семечка -->
+                <ellipse id="hamSeed" style="display:none" cx="114" cy="107" rx="4.2" ry="2.6" fill="#8a5a2b" transform="rotate(-28 114 107)"/>
+                <!-- передние лапки (умывание/семечка) -->
+                <g id="hamPaws" style="display:none">
+                  <ellipse cx="106" cy="103" rx="6" ry="4.5" fill="#e6b988" stroke="rgba(255,255,255,.7)" stroke-width="1"/>
+                  <ellipse cx="123" cy="103" rx="6" ry="4.5" fill="#e6b988" stroke="rgba(255,255,255,.7)" stroke-width="1"/>
+                </g>
+                <!-- ночной колпачок -->
+                <g id="hamSleepG" style="display:none">
+                  <path d="M96 77 q12 -20 34 -16 q4 9 0 15 q-16 -6 -34 1 Z" fill="#5e6bd8"/>
+                  <ellipse cx="112" cy="76" rx="17" ry="4.5" fill="#8f9af0"/>
+                  <circle cx="133" cy="62" r="4.5" fill="#8f9af0"/>
+                  <text class="zz z1" x="139" y="74" font-size="11" fill="#5e6bd8" font-weight="800">Z</text>
+                  <text class="zz z2" x="147" y="65" font-size="8" fill="#7e88e8" font-weight="800">Z</text>
+                </g>
+              </g>
+            </g>
+          </g>
+        </svg>
+        <div class="jar-info">
+          <div class="pct" id="spPct">За месяц</div>
+          <div class="sum db-sum" id="dbSum">—</div>
+          <div class="goal" id="dbNote"></div>
+          <div class="lvl" id="hamLine"></div>
+        </div>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><div class="v" id="spToday">0</div><div class="l">сегодня, BYN</div></div>
+        <div class="stat"><div class="v" id="spWeek">0</div><div class="l">за неделю, BYN</div></div>
+        <div class="stat"><div class="v" id="spMonth">0</div><div class="l">за месяц, BYN</div></div>
+      </div>
+      <div class="limit-box" onclick="setLimit()" title="Нажми, чтобы изменить" style="width:100%">
+        <div class="limit-head"><span>Лимит на месяц</span><span id="limitVal">задать →</span></div>
+        <div class="limit-bar" id="limitBarWrap" style="display:none"><i id="limitBar"></i></div>
+        <div class="today-line" id="limitHint" style="margin-top:8px; display:none"></div>
+      </div>
+      <div class="forecast-line" id="spForecast" style="display:none; width:100%"></div>
     </div>
 
     <!-- по категориям -->
@@ -1923,6 +2085,7 @@ function sleepCheck() {
   document.body.classList.toggle('sleep', on);
   document.getElementById('sleepGroup').style.display = on ? '' : 'none';
   refreshEyes();
+  try { refreshHamEyes(); } catch(e) {}   // хомяк тоже спит
 }
 setInterval(sleepCheck, 60000);
 
@@ -2573,6 +2736,7 @@ function plural(n, one, few, many) {
 
 // ================== РАСХОДЫ ==================
 const CATS = [
+  { id:'cafe',      name:'Кафе',        color:'#b0713a', svg:'<path d="M5 9h11v6a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4V9z"/><path d="M16 10.5h1.3a2.5 2.5 0 0 1 0 5H16"/><path d="M8.5 4.5c0 1.2.9 1.3.9 2.5M12 4.5c0 1.2.9 1.3.9 2.5"/>' },
   { id:'food',      name:'Еда',         color:'#ff9500', svg:'<path d="M9 3v6a2 2 0 0 1-2 2 2 2 0 0 1-2-2V3"/><path d="M7 11v10"/><path d="M17 3c-2.4 1.2-3.4 4.2-3 7 .1.7.6 1 1.2 1H17"/><path d="M17 3v18"/>' },
   { id:'transport', name:'Транспорт',   color:'#0a84ff', svg:'<path d="M5 15l1.4-4.2A2 2 0 0 1 8.3 9.5h7.4a2 2 0 0 1 1.9 1.3L19 15"/><path d="M5 15h14a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-2a1 1 0 0 1 1-1z"/><path d="M7.5 16.8h.01M16.5 16.8h.01"/>' },
   { id:'home',      name:'Дом',         color:'#30d158', svg:'<path d="M4 11l8-7 8 7"/><path d="M6 9.5V19a1 1 0 0 0 1 1h3v-5.5h4V20h3a1 1 0 0 0 1-1V9.5"/>' },
@@ -2580,7 +2744,7 @@ const CATS = [
   { id:'clothes',   name:'Одежда',      color:'#ff375f', svg:'<path d="M8.5 4L4 7.5 6.5 10l1-0.7V20h9V9.3l1 .7L20 7.5 15.5 4a3.5 3.5 0 0 1-7 0z"/>' },
   { id:'health',    name:'Здоровье',    color:'#ff453a', svg:'<path d="M12 20s-7.2-4.6-9.2-9A5.2 5.2 0 0 1 12 6.6 5.2 5.2 0 0 1 21.2 11c-2 4.4-9.2 9-9.2 9z"/>' },
   { id:'phone',     name:'Связь',       color:'#64d2ff', svg:'<rect x="7" y="3" width="10" height="18" rx="2.2"/><path d="M11 17.5h2"/>' },
-  { id:'gifts',     name:'Подарки',     color:'#e8a820', svg:'<rect x="4" y="8" width="16" height="4"/><path d="M6 12v7a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-7"/><path d="M12 8v12"/><path d="M12 8c-3 0-4.8-1-4.8-2.7C7.2 3.8 9 3.3 10 4.2c1 .9 2 3.8 2 3.8z"/><path d="M12 8c3 0 4.8-1 4.8-2.7C16.8 3.8 15 3.3 14 4.2c-1 .9-2 3.8-2 3.8z"/>' },
+  { id:'sport',     name:'Спорт',       color:'#00b8a2', svg:'<path d="M6.5 8.5v7M3.8 10v4M17.5 8.5v7M20.2 10v4M6.5 12h11"/>' },
   { id:'other',     name:'Другое',      color:'#8e8e93', svg:'<path d="M21 8l-9-5-9 5v8l9 5 9-5V8z"/><path d="M3.4 8.4L12 13l8.6-4.6"/><path d="M12 13v8"/>' },
 ];
 const CUSTOM_COLORS = ['#5e5ce6','#00b8a2','#d4667a','#7a9a3e','#b8742c'];
@@ -2772,8 +2936,25 @@ function addExpense() {
   const note = document.getElementById('expNote').value.trim();
 
   const before = monthSpent();
+  // для реплики хомяка: пересекли ли дневной бюджет этой тратой
+  const nd0 = new Date();
+  const dInM0 = new Date(nd0.getFullYear(), nd0.getMonth() + 1, 0).getDate();
+  const allow0 = state.limit > 0 ? state.limit / dInM0 : 0;
+  const todayBefore = state.expenses.filter(e => e.date === todayStr()).reduce((s, e) => s + e.amount, 0);
+
   const ts = Date.now();
   state.expenses.push({ ts, date: todayStr(), amount: Math.round(v * 100) / 100, cat: selCat, note });
+
+  // реплика хомяка при переборе дневного бюджета
+  if (allow0 > 0 && todayBefore <= allow0 && todayBefore + v > allow0) {
+    const HAM_LINES = [
+      '🐹 Я не жалуюсь, но я уже не влезаю в норку...',
+      '🐹 Ещё одна такая трата — и мне нужен второй стул',
+      '🐹 Дневной бюджет всхлипнул. Я тоже.',
+      '🐹 Толстею тут я, а стыдно должно быть тебе!'
+    ];
+    setTimeout(() => toast(HAM_LINES[Math.floor(Math.random() * HAM_LINES.length)]), 4600);
+  }
   lastAddedTs = ts;
   save();
   inp.value = ''; document.getElementById('expNote').value = '';
@@ -2799,14 +2980,24 @@ function addExpense() {
 }
 
 function flyBills(fromEl, amount, onDone) {
+  const ham = document.getElementById('hamSvg');
+  // если хомяк за экраном — сперва плавно подъезжаем к нему
+  const hr = ham.getBoundingClientRect();
+  if (hr.top < 0 || hr.bottom > innerHeight) {
+    ham.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => launchBills(fromEl, amount, onDone), 450);
+  } else {
+    launchBills(fromEl, amount, onDone);
+  }
+}
+function launchBills(fromEl, amount, onDone) {
   const f = fromEl.getBoundingClientRect();
-  const t = document.getElementById('spToday').getBoundingClientRect();
+  const t = document.getElementById('hamSvg').getBoundingClientRect();   // летят хомяку в рот
   const x0 = f.left + f.width / 2, y0 = f.top + f.height / 2;
-  const x1 = t.left + t.width / 2, y1 = t.top + t.height / 2;
+  const x1 = t.left + t.width * .49, y1 = t.top + t.height * .56;
 
   // чем больше сумма — тем больше купюр (3–8)
   const n = amount < 10 ? 3 : amount < 50 ? 4 : amount < 150 ? 5 : amount < 300 ? 6 : amount < 600 ? 7 : 8;
-  const stat = document.getElementById('spToday').parentElement;
   let finished = 0;
 
   for (let i = 0; i < n; i++) {
@@ -2841,11 +3032,11 @@ function flyBills(fromEl, amount, onDone) {
 
     anim.onfinish = () => {
       bill.remove();
-      stat.classList.remove('bump');       // лёгкий толчок на каждое «попадание»
-      void stat.offsetWidth;
-      stat.classList.add('bump');
-      tone(300 - finished * 12, .08, 0, 'triangle', .05);
-      if (++finished === n && onDone) onDone();
+      hamEat(finished);                    // хомяк жуёт купюру
+      if (++finished === n) {
+        hamHappy(900);
+        if (onDone) onDone();
+      }
     };
   }
 }
@@ -2921,22 +3112,26 @@ function renderSpend() {
     hint.style.display = 'none';
   }
 
-  // дневной бюджет: (лимит − потрачено до сегодня) / оставшиеся дни − траты сегодня
-  const db = document.getElementById('dailyBudget');
+  // колонка у хомяка: «можно сегодня» (или траты месяца, если лимита нет)
+  const sumEl = document.getElementById('dbSum');
   if (L > 0) {
     const nd = new Date();
     const daysLeftM = new Date(nd.getFullYear(), nd.getMonth() + 1, 0).getDate() - nd.getDate() + 1;
     const allowance = (L - (sumMonth - sumToday)) / daysLeftM;
     const todayLeft = Math.round((allowance - sumToday) * 100) / 100;
-    db.style.display = '';
-    const sumEl = document.getElementById('dbSum');
+    document.getElementById('spPct').textContent = 'Можно сегодня';
     setOdometer(sumEl, (todayLeft >= 0 ? '' : '−') + fmt2(Math.abs(todayLeft)) + ' BYN');
-    sumEl.className = 'db-sum ' + (todayLeft > allowance * .3 ? 'ok' : todayLeft >= 0 ? 'mid' : 'bad');
+    sumEl.className = 'sum db-sum ' + (todayLeft > allowance * .3 ? 'ok' : todayLeft >= 0 ? 'mid' : 'bad');
     const tomorrow = daysLeftM > 1 ? Math.max(0, (L - sumMonth) / (daysLeftM - 1)) : 0;
     document.getElementById('dbNote').textContent = todayLeft >= 0
-      ? 'Не потратишь — завтра будет ~' + fmt2(Math.round(tomorrow * 100) / 100) + ' BYN'
-      : 'На сегодня всё 🙅 Завтра: ~' + fmt2(Math.round(tomorrow * 100) / 100) + ' BYN';
-  } else db.style.display = 'none';
+      ? 'не потратишь — завтра ~' + fmt2(Math.round(tomorrow * 100) / 100)
+      : 'на сегодня всё · завтра ~' + fmt2(Math.round(tomorrow * 100) / 100);
+  } else {
+    document.getElementById('spPct').textContent = 'Потрачено за месяц';
+    setOdometer(sumEl, fmt2(sumMonth) + ' BYN');
+    sumEl.className = 'sum db-sum';
+    document.getElementById('dbNote').textContent = 'задай лимит — появится дневной бюджет';
+  }
 
   // прогноз до конца месяца
   const now = new Date();
@@ -2952,6 +3147,7 @@ function renderSpend() {
       (over ? ' — лимит будет превышен' : (L > 0 ? ' — в лимит впишешься' : ''));
   } else fEl.style.display = 'none';
 
+  renderHamster(monthExps);
   renderCmp(monthExps);
   renderCats();
   curMonthExps = monthExps;
@@ -3031,6 +3227,236 @@ function startChartAnim(monthExps) {
     if (p < 1) chartRaf = requestAnimationFrame(tick);
   });
 }
+
+// ---------- хомяк-транжира ----------
+// толстеет от переборов дневного бюджета за последние 3 дня
+function renderHamster(monthExps) {
+  const svg = document.getElementById('hamSvg');
+  const line = document.getElementById('hamLine');
+  const body = document.getElementById('hamBodyGrp');
+  const cheeks = document.getElementById('hamCheeks');
+  const L = state.limit;
+
+  if (!(L > 0)) {
+    svg.classList.add('fit');
+    svg.classList.remove('alarm');
+    body.style.transform = '';
+    cheeks.style.transform = '';
+    document.getElementById('hamSweat').style.display = 'none';
+    hamFat = 0; hamPrevFat = 0;
+    refreshHamEyes();
+    line.innerHTML = 'Задай лимит месяца — и я буду следить за формой 🐹';
+    return;
+  }
+
+  const now = new Date();
+  const daysInM = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const allowance = L / daysInM;
+  const byDay = {};
+  for (const e of state.expenses) byDay[e.date] = (byDay[e.date] || 0) + e.amount;
+
+  let fat = 0;                                   // переборы за 3 дня: сегодня, вчера, позавчера
+  for (let off = 0; off < 3; off++) {
+    const d = new Date(now); d.setDate(now.getDate() - off);
+    if ((byDay[todayStr(d)] || 0) > allowance + .001) fat++;
+  }
+
+  // праздник похудения: был шариком — снова в форме
+  if (hamPrevFat >= 3 && fat === 0) {
+    setTimeout(() => {
+      svg.classList.add('shakeoff');
+      setTimeout(() => svg.classList.remove('shakeoff'), 950);
+      sndStar(); vib([15, 30, 15]);
+      toast('🐹 Снова огурчик! Спасибо, что притормозил');
+      const r = svg.getBoundingClientRect(), ar = svg.parentElement.getBoundingClientRect();
+      for (let i = 0; i < 6; i++) {
+        const s = document.createElement('span');
+        s.className = 'lvl-spark';
+        s.textContent = '✦';
+        s.style.fontSize = (9 + Math.random() * 8) + 'px';
+        s.style.left = (r.left - ar.left + Math.random() * r.width) + 'px';
+        s.style.top = (r.top - ar.top + Math.random() * r.height * .8) + 'px';
+        svg.parentElement.style.position = 'relative';
+        svg.parentElement.appendChild(s);
+        setTimeout(() => s.remove(), 1000);
+      }
+    }, 800);
+  }
+  hamPrevFat = fat;
+  hamFat = fat;
+
+  svg.classList.toggle('fit', fat === 0);
+  svg.classList.toggle('alarm', fat < 3 && monthSpent() >= L * .8);  // чует беду
+  body.style.transform = 'scale(' + (1 + fat * .13) + ',' + (1 + fat * .10) + ')';
+  cheeks.style.transform = 'scale(' + (1 + fat * .17) + ')';
+  document.getElementById('hamSweat').style.display = fat >= 2 ? '' : 'none';
+  refreshHamEyes();
+
+  line.innerHTML = [
+    'В отличной форме — бюджет под контролем! 🏃',
+    'Слегка отъелся... был перебор за последние 3 дня 🐹',
+    'Толстеет: два перебора за три дня. Притормози 😬',
+    'Еле ходит 🥵 Три перебора подряд!'
+  ][fat];
+}
+
+// глаза хомяка: сон > радость > усталость > обычные
+let hamFat = 0, hamPrevFat = -1, hamTempHappy = false, hamHappyT = null;
+function refreshHamEyes() {
+  const sleep = document.body.classList.contains('sleep');
+  document.getElementById('hamSleepE').style.display = sleep ? '' : 'none';
+  document.getElementById('hamHappyE').style.display = (!sleep && hamTempHappy) ? '' : 'none';
+  document.getElementById('hamTired').style.display = (!sleep && !hamTempHappy && hamFat >= 3) ? '' : 'none';
+  document.getElementById('hamEyesW').style.display = (!sleep && !hamTempHappy && hamFat < 3) ? '' : 'none';
+  document.getElementById('hamSleepG').style.display = sleep ? '' : 'none';
+}
+function hamHappy(ms) {
+  hamTempHappy = true; refreshHamEyes();
+  clearTimeout(hamHappyT);
+  hamHappyT = setTimeout(() => { hamTempHappy = false; refreshHamEyes(); }, ms);
+}
+
+// зрачки следят за пальцем
+const hamPup = ['hpL', 'hpR', 'hhL', 'hhR'].map(id => document.getElementById(id));
+const hamPupBase = [[105, 92], [124, 92], [106.7, 90.3], [125.7, 90.3]];
+let hamEyeRaf = null;
+document.addEventListener('pointermove', e => {
+  if (hamEyeRaf) return;
+  hamEyeRaf = requestAnimationFrame(() => {
+    hamEyeRaf = null;
+    if (document.body.classList.contains('sleep')) return;
+    const svg = document.getElementById('hamSvg');
+    const r = svg.getBoundingClientRect();
+    if (!r.width || document.getElementById('viewSpend').style.display === 'none') return;
+    const ex = r.left + r.width * .49, ey = r.top + r.height * .43;
+    const dx = e.clientX - ex, dy = e.clientY - ey;
+    const d = Math.hypot(dx, dy) || 1;
+    const k = Math.min(1, d / 50) * 1.7;
+    hamPup.forEach((p, i) => {
+      p.setAttribute('cx', hamPupBase[i][0] + dx / d * k * (i < 2 ? 1 : .8));
+      p.setAttribute('cy', hamPupBase[i][1] + dy / d * k * (i < 2 ? 1 : .8));
+    });
+  });
+}, { passive: true });
+
+// идл: умывается (~20 c) и грызёт семечку (~45 c)
+setInterval(() => {
+  if (document.hidden || document.body.classList.contains('sleep')) return;
+  if (document.getElementById('viewSpend').style.display === 'none') return;
+  const svg = document.getElementById('hamSvg');
+  if (svg.classList.contains('seeding')) return;
+  svg.classList.add('washing');
+  setTimeout(() => svg.classList.remove('washing'), 1750);
+}, 21000);
+
+setInterval(() => {
+  if (document.hidden || document.body.classList.contains('sleep')) return;
+  if (document.getElementById('viewSpend').style.display === 'none') return;
+  const svg = document.getElementById('hamSvg');
+  if (svg.classList.contains('washing')) return;
+  svg.classList.add('seeding');
+  flick(0, .04); flick(.35, .04); flick(.7, .04);       // хруст
+  const r = svg.getBoundingClientRect();
+  for (let i = 0; i < 3; i++) {                         // шелуха отлетает
+    setTimeout(() => {
+      const s = document.createElement('div');
+      s.className = 'shell';
+      s.style.setProperty('--x', (r.left + r.width * .5) + 'px');
+      s.style.setProperty('--y', (r.top + r.height * .62) + 'px');
+      s.style.setProperty('--dx', (Math.random() * 30 - 15) + 'px');
+      s.style.setProperty('--dy', (20 + Math.random() * 20) + 'px');
+      document.body.appendChild(s);
+      setTimeout(() => s.remove(), 900);
+    }, 300 + i * 320);
+  }
+  setTimeout(() => svg.classList.remove('seeding'), 1550);
+}, 47000);
+
+// урчание при почёсывании (долгий тап)
+let purrOsc = null, purrGain = null;
+function startPurr() {
+  try {
+    const ctx = ac(), t = ctx.currentTime;
+    purrOsc = ctx.createOscillator();
+    const lfo = ctx.createOscillator(), lfoG = ctx.createGain();
+    purrGain = ctx.createGain();
+    purrOsc.type = 'sawtooth'; purrOsc.frequency.value = 85;
+    lfo.frequency.value = 20; lfoG.gain.value = .03;
+    purrGain.gain.value = .045;
+    lfo.connect(lfoG); lfoG.connect(purrGain.gain);
+    purrOsc.connect(purrGain); purrGain.connect(ctx.destination);
+    purrOsc.start(t); lfo.start(t);
+    purrOsc._lfo = lfo;
+  } catch(e) {}
+}
+function stopPurr() {
+  try {
+    if (!purrOsc) return;
+    purrGain.gain.exponentialRampToValueAtTime(.0001, ac().currentTime + .15);
+    const o = purrOsc, l = purrOsc._lfo;
+    setTimeout(() => { try { o.stop(); l.stop(); } catch(e) {} }, 200);
+    purrOsc = null;
+  } catch(e) {}
+}
+
+// хомяк «съедает» купюру: чавк + щека прячет
+function hamEat(i) {
+  const hs = document.getElementById('hamSvg');
+  hs.classList.remove('chomp'); void hs.getBBox; hs.classList.add('chomp');
+  setTimeout(() => hs.classList.remove('chomp'), 300);
+  const side = i % 2 ? 'stashR' : 'stashL';
+  hs.classList.remove('stashL', 'stashR'); void hs.getBBox;
+  hs.classList.add(side);
+  setTimeout(() => hs.classList.remove(side), 860);
+  flick(0, .06); flick(.09, .04);          // хруст-чавканье
+}
+
+function sndSqueak() {
+  try {
+    const ctx = ac(), t = ctx.currentTime;
+    [[1250, 1900, 0, .09], [1400, 2100, .12, .08]].forEach(([f1, f2, dl, dur]) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(f1, t + dl);
+      o.frequency.exponentialRampToValueAtTime(f2, t + dl + dur);
+      g.gain.setValueAtTime(.08, t + dl);
+      g.gain.exponentialRampToValueAtTime(.0001, t + dl + dur + .04);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(t + dl); o.stop(t + dl + dur + .08);
+    });
+  } catch(e) {}
+}
+// тап — писк и желейное пузо; долгий тап — почесать пузико (урчит)
+let hamHoldT = null, hamWasHeld = false;
+const hamEl = document.getElementById('hamSvg');
+hamEl.addEventListener('pointerdown', () => {
+  hamWasHeld = false;
+  hamHoldT = setTimeout(() => {
+    hamWasHeld = true;
+    startPurr();
+    hamEl.classList.add('purr');
+    hamHappy(60000);
+    vib([10, 60, 10, 60, 10]);
+  }, 450);
+});
+['pointerup', 'pointerleave', 'pointercancel'].forEach(ev =>
+  hamEl.addEventListener(ev, () => {
+    clearTimeout(hamHoldT);
+    if (hamWasHeld) {
+      stopPurr();
+      hamEl.classList.remove('purr');
+      hamHappy(1200);
+    }
+  }));
+hamEl.addEventListener('click', () => {
+  if (hamWasHeld) return;                        // это было почёсывание
+  sndSqueak(); vib(12);
+  hamEl.classList.remove('jelly'); void hamEl.getBBox; hamEl.classList.add('jelly');
+  setTimeout(() => hamEl.classList.remove('jelly'), 800);
+  const cheeks = document.getElementById('hamCheeks');
+  cheeks.classList.remove('cheekPop'); void cheeks.getBBox; cheeks.classList.add('cheekPop');
+  setTimeout(() => cheeks.classList.remove('cheekPop'), 550);
+});
 
 // сравнение с прошлым месяцем
 function renderCmp(monthExps) {
