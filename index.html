@@ -409,7 +409,9 @@
   .wave-move2 { animation: waveSlide 5.2s linear infinite reverse; }
   @keyframes waveSlide { to { transform: translateX(-130px); } }
 
-  .jar-info { position:relative; z-index:7; display:flex; flex-direction:column; align-items:flex-start; }
+  .jar-info { position:relative; z-index:7; display:flex; flex-direction:column; align-items:flex-start; flex:1; min-width:0; }
+  .jar-info .sum { font-size: clamp(24px, 8vw, 36px); }
+  .db-sum { font-size: clamp(20px, 7vw, 34px) !important; }
   #goalLabel {
     padding:3px 0; cursor:pointer;
     border-bottom:1px dashed rgba(28,28,46,.3);
@@ -723,6 +725,26 @@
   .ach .name { font-size:9.5px; text-align:center; color:var(--text2); font-weight:600; padding:0 4px; line-height:1.15; }
   .ach.locked { opacity:.38; }
   .ach.locked .icon { filter: grayscale(1); }
+  /* эмодзи в цветных бейджах — единый стиль с категориями */
+  .q-emo {
+    width:38px; height:38px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:19px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.55), inset 0 -1px 2px rgba(0,0,0,.04);
+  }
+  .a-emo {
+    width:42px; height:42px; border-radius:14px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:22px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.55), inset 0 -1px 2px rgba(0,0,0,.04);
+  }
+  .ach .icon { display:flex; justify-content:center; }
+  .s-badge {
+    width:44px; height:44px; border-radius:14px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:23px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.55), inset 0 -1px 2px rgba(0,0,0,.04);
+  }
   .ach.unlocked { background: rgba(255,255,255,.62); box-shadow: 0 4px 14px rgba(255,190,60,.25); }
 
   /* ---- история ---- */
@@ -979,11 +1001,13 @@
     }
     .limit-bar i.warn { animation: none; }
     .pig-aura { filter: blur(9px); }
-    /* крупные суммы не вылезают за край */
-    .jar-info .sum { font-size: 29px; }
-    .db-sum { font-size: 26px; }
-    .jar-info { min-width: 0; }
     .pig-area { gap: 10px; }
+  }
+  /* узкие экраны: цифры меньше, звери в полный рост */
+  @media (max-width: 480px) {
+    .jar-info .sum { font-size: clamp(20px, 6vw, 27px); }
+    .db-sum { font-size: clamp(17px, 5.2vw, 24px) !important; }
+    .jar-info .goal, .jar-info .pct, .lvl, .jar-info .stars { font-size: 12px; }
   }
   /* живые иконки категорий */
   .cat.sel .cbadge svg { animation: icoLive .55s ease; }
@@ -1852,6 +1876,55 @@ function checkAchievements() {
   }
 }
 
+// ---------- фирменные иконки заданий и ачивок (SVG вместо эмодзи) ----------
+function qsvg(c, s) {
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="' + c + '" stroke-width="1.9" ' +
+    'stroke-linecap="round" stroke-linejoin="round" style="width:26px;height:26px;display:block">' + s + '</svg>';
+}
+const I_ENV = '<rect x="3.5" y="6" width="17" height="12" rx="2"/><path d="M4.5 7.5l7.5 5.5 7.5-5.5"/>';
+const I_BAG = '<path d="M9.5 7.5h5l2.3 3.2c2 3 .6 8.3-4.8 8.3s-6.8-5.3-4.8-8.3L9.5 7.5z"/><path d="M9.5 7.5L8 4.5h8l-1.5 3"/>';
+const I_STAR = '<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.9L12 16.9l-5.2 2.8 1-5.9-4.3-4.1 5.9-.9L12 3.5z"/>';
+const I_DIAM = '<path d="M7 4.5h10l3.8 4.8L12 20 3.2 9.3 7 4.5z"/><path d="M3.5 9.3h17M9.5 9.3L12 19l2.5-9.7"/>';
+const I_FIRE = '<path d="M12 3.5s5 4.4 5 9a5 5 0 0 1-10 0c0-4.6 5-9 5-9z"/><path d="M12 12.5s1.8 1.3 1.8 2.7a1.8 1.8 0 0 1-3.6 0c0-1.4 1.8-2.7 1.8-2.7z"/>';
+const I_RCKT = '<path d="M12 3c3 2 4.6 6 3.8 10.4L12 16l-3.8-2.6C7.4 9 9 5 12 3z"/><circle cx="12" cy="8.6" r="1.6"/><path d="M8.6 14.5L7 19l3.4-1.7M15.4 14.5L17 19l-3.4-1.7"/>';
+const QICONS = {
+  d1:  ['#0a84ff', I_ENV],
+  d2:  ['#ff9500', '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="M12 12h.01"/>'],
+  d3:  ['#5e5ce6', '<rect x="6.5" y="4" width="13.5" height="9.5" rx="2"/><rect x="4" y="9.5" width="13.5" height="9.5" rx="2"/>'],
+  d4:  ['#bf5af2', '<circle cx="7" cy="15.5" r="3.2"/><circle cx="17" cy="15.5" r="3.2"/><circle cx="12" cy="8" r="3.2"/>'],
+  d5:  ['#64d2ff', I_DIAM],
+  d6:  ['#30d158', '<path d="M20 4.5c-6 .3-11.5 5-12.7 11.5L4.5 20"/><path d="M20 4.5c.8 6-3.2 11.6-9 12.6H7.6"/>'],
+  d7:  ['#e8a820', I_BAG],
+  d8:  ['#ff375f', '<path d="M4 17l5-5 4 3 7-8"/><path d="M15 7h5v5"/>'],
+  d9:  ['#ff9500', '<path d="M4 17h16M7.5 13.5a4.5 4.5 0 0 1 9 0"/><path d="M12 4.5v3M5.5 8.5L7 10M18.5 8.5L17 10"/>'],
+  d10: ['#5e5ce6', '<path d="M19 14A8 8 0 1 1 10 5a6.5 6.5 0 0 0 9 9z"/>'],
+  d11: ['#8e8e93', '<rect x="4" y="4" width="16" height="16" rx="3.5"/><path d="M9 9h.01M15 15h.01M15 9h.01M9 15h.01M12 12h.01"/>'],
+  w1:  ['#0a84ff', '<rect x="4" y="5.5" width="16" height="15" rx="2.5"/><path d="M4 10h16M8 3.5v4M16 3.5v4"/>'],
+  w2:  ['#e8a820', I_BAG],
+  w3:  ['#ff6b35', I_FIRE],
+  w4:  ['#d4667a', '<rect x="5" y="6" width="14" height="8" rx="3.5"/><path d="M12 14v6.5M5 10h14"/>'],
+  w5:  ['#64d2ff', I_DIAM],
+  w6:  ['#bf5af2', I_RCKT],
+};
+const AICONS = {
+  first: ['#0a84ff', I_ENV],
+  s3:    ['#ff6b35', I_FIRE],
+  s7:    ['#e8a820', '<path d="M13 2.5L5.5 13h5.5l-1 8.5L18 10.5h-5.5l.5-8z"/>'],
+  s14:   ['#bf5af2', I_STAR],
+  s30:   ['#00b8a2', '<path d="M6.5 8.5v7M3.8 10v4M17.5 8.5v7M20.2 10v4M6.5 12h11"/>'],
+  s60:   ['#e8a820', '<path d="M8 4h8v5a4 4 0 0 1-8 0V4z"/><path d="M8 5H5a3 3 0 0 0 3 4M16 5h3a3 3 0 0 1-3 4M12 13v3M9 20h6M10.5 16.5h3V20h-3z"/>'],
+  e25:   ['#8e8e93', I_ENV],
+  e75:   ['#64d2ff', I_ENV],
+  e125:  ['#5e5ce6', I_ENV],
+  m1k:   ['#e8a820', I_BAG],
+  m25:   ['#30d158', '<rect x="3" y="7" width="18" height="10" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/>'],
+  m5k:   ['#bf5af2', I_RCKT],
+  m75:   ['#ff9500', I_STAR],
+  m10k:  ['#e8a820', '<path d="M4.5 17.5h15M4.5 17.5L3.5 8.5l5 4 3.5-7 3.5 7 5-4-1 9"/>'],
+  big:   ['#64d2ff', I_DIAM],
+  goal:  ['#ff375f', '<path d="M6 21V4"/><path d="M6 5c4-2 8 2 12 0v8c-4 2-8-2-12 0"/>'],
+};
+
 // ---------- задания ----------
 // DAY_TARGET и WEEK_TARGET считаются в applyGoal()
 
@@ -1961,12 +2034,12 @@ function awardStars(q) {
 
 // ---------- магазин ----------
 const SHOP = [
-  { id:'cap',    icon:'🧢', name:'Кепка',    cost:3 },
-  { id:'flower', icon:'🌺', name:'Цветок',   cost:3 },
-  { id:'hat',    icon:'👒', name:'Шляпка',   cost:4 },
-  { id:'phones', icon:'🎧', name:'Наушники', cost:5 },
-  { id:'grad',   icon:'🎓', name:'Магистр',  cost:6 },
-  { id:'medal',  icon:'🥇', name:'Медаль',   cost:8 },
+  { id:'cap',    icon:'🧢', name:'Кепка',    cost:3, color:'#0a84ff' },
+  { id:'flower', icon:'🌺', name:'Цветок',   cost:3, color:'#ff375f' },
+  { id:'hat',    icon:'👒', name:'Шляпка',   cost:4, color:'#e8a820' },
+  { id:'phones', icon:'🎧', name:'Наушники', cost:5, color:'#5e5ce6' },
+  { id:'grad',   icon:'🎓', name:'Магистр',  cost:6, color:'#30d158' },
+  { id:'medal',  icon:'🥇', name:'Медаль',   cost:8, color:'#bf5af2' },
 ];
 
 function shopClick(id) {
@@ -1996,7 +2069,7 @@ function renderShop() {
     const el = document.createElement('div');
     el.className = 'shop-item' + (owned ? ' owned' : (state.stars < item.cost ? ' locked' : '')) + (worn ? ' worn' : '');
     el.innerHTML =
-      '<div class="s-ico">' + item.icon + '</div>' +
+      '<div class="s-badge" style="background:' + item.color + '22">' + item.icon + '</div>' +
       '<div class="s-name">' + item.name + '</div>' +
       '<div class="s-cost">' + (owned ? (worn ? '✓ надето' : 'надеть') : '⭐' + item.cost) + '</div>';
     el.onclick = () => shopClick(item.id);
@@ -2801,7 +2874,8 @@ function renderQuests() {
             '<circle class="rfg" cx="33" cy="33" r="' + R + '" fill="none" stroke-width="5.5" ' +
               'stroke-dasharray="' + C + '" stroke-dashoffset="' + C * (1 - p) + '"/>' +
           '</svg>' +
-          '<div class="q-ico">' + item.icon + '</div>' +
+          '<div class="q-ico"><span class="q-emo" style="background:' +
+            ((QICONS[item.id] || ['#8e8e93'])[0]) + '26">' + item.icon + '</span></div>' +
           (done ? '<div class="q-check">✓</div>' : '') +
         '</div>' +
         '<div class="q-name">' + item.name + '</div>' +
@@ -2913,7 +2987,9 @@ function render() {
     if (ok) cnt++;
     const el = document.createElement('div');
     el.className = 'ach ' + (ok ? 'unlocked' : 'locked');
-    el.innerHTML = '<div class="icon">' + a.icon + '</div><div class="name">' + a.name + '</div>';
+    el.innerHTML = '<div class="icon"><span class="a-emo" style="background:' +
+      ((AICONS[a.id] || ['#8e8e93'])[0]) + '22">' + a.icon + '</span></div>' +
+      '<div class="name">' + a.name + '</div>';
     achGrid.appendChild(el);
   }
   document.getElementById('achCount').textContent = cnt + '/' + ACH.length;
@@ -3438,8 +3514,8 @@ function renderSpend() {
     sumEl.className = 'sum db-sum ' + (todayLeft > allowance * .3 ? 'ok' : todayLeft >= 0 ? 'mid' : 'bad');
     const tomorrow = daysLeftM > 1 ? Math.max(0, (L - sumMonth) / (daysLeftM - 1)) : 0;
     document.getElementById('dbNote').textContent = todayLeft >= 0
-      ? 'не потратишь — завтра ~' + fmt2(Math.round(tomorrow * 100) / 100)
-      : 'на сегодня всё · завтра ~' + fmt2(Math.round(tomorrow * 100) / 100);
+      ? 'не потратишь — завтра ~' + fmt(Math.round(tomorrow))
+      : 'на сегодня всё · завтра ~' + fmt(Math.round(tomorrow));
   } else {
     document.getElementById('spPct').textContent = 'Потрачено за месяц';
     setOdometer(sumEl, fmt2(sumMonth) + ' BYN');
