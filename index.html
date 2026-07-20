@@ -699,8 +699,24 @@
   .shop-item .s-ico { font-size:26px; }
   .shop-item .s-cost { font-size:11px; font-weight:700; color:#c78a00; }
   .shop-item.locked { opacity:.55; }
-  .shop-item.worn { background: rgba(255,255,255,.7); box-shadow: 0 4px 14px rgba(10,132,255,.2); border-color: rgba(10,132,255,.4); }
+  .shop-item.worn { background: rgba(255,255,255,.7); box-shadow: 0 4px 14px rgba(10,132,255,.2); }
   .shop-item.owned .s-cost { color:#26a349; }
+  /* редкости: бронза / серебро / золото */
+  .shop-item.r1 { border-color: rgba(201,141,95,.55); }
+  .shop-item.r2 {
+    border-color: rgba(150,163,183,.85);
+    box-shadow: 0 3px 12px rgba(150,163,183,.3);
+  }
+  .shop-item.r3 {
+    border-color: rgba(227,178,60,.85);
+    box-shadow: 0 0 14px rgba(255,200,60,.4);
+    background: linear-gradient(160deg, rgba(255,250,235,.6), rgba(255,240,200,.45));
+  }
+  .shop-item.r3 .s-badge { box-shadow: inset 0 1px 0 rgba(255,255,255,.55), 0 0 10px rgba(255,200,60,.45); }
+  .r-tag { font-size:9px; font-weight:800; letter-spacing:.4px; text-transform:uppercase; }
+  .r1 .r-tag { color:#a06a3c; }
+  .r2 .r-tag { color:#77839a; }
+  .r3 .r-tag { color:#b07f10; text-shadow: 0 0 6px rgba(255,210,90,.55); }
 
   /* ---- статистика ---- */
   .stats-grid { display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
@@ -1028,6 +1044,40 @@
     to   { background-position: -130% 0; opacity:0; }
   }
 
+  /* ---- сегодня / ещё / инсайт ---- */
+  .dc-phrase { font-size:15px; line-height:1.5; }
+  .dc-fact {
+    margin-top:10px; padding:10px 13px; border-radius:14px;
+    font-size:13.5px; font-weight:600; color:#8a6d1a;
+    background: rgba(255,211,92,.22);
+    border:1px solid rgba(232,168,32,.3);
+  }
+  .more-btn {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 22px !important; cursor:pointer;
+    font-size:14px; font-weight:700; color:var(--text2);
+  }
+  .more-arrow { transition: transform .3s; font-size:16px; }
+  .more-btn.open .more-arrow { transform: rotate(180deg); }
+  #moreWrap, #moreWrap2 { display:flex; flex-direction:column; gap:16px; }
+  .insight {
+    margin-top:12px; padding:13px 14px; border-radius:16px;
+    background: rgba(255,255,255,.45);
+    border:1px solid rgba(255,255,255,.6);
+    font-size:13.5px; line-height:1.45; text-align:left;
+  }
+  .insight button {
+    margin-top:9px; width:100%;
+    border:none; cursor:pointer; font-family:inherit;
+    font-size:13.5px; font-weight:700; color:#fff;
+    background: linear-gradient(135deg,#30d158,#5be07f);
+    padding:10px 0; border-radius:14px;
+    box-shadow: 0 4px 12px rgba(48,209,88,.3);
+  }
+  .insight .chal-on {
+    margin-top:9px; font-weight:700; color:#b07f10; text-align:center;
+  }
+
   /* ---- тост ---- */
   #toast {
     position:fixed; left:50%; bottom:32px; transform:translate(-50%,20px);
@@ -1189,6 +1239,68 @@
     100% { transform: translateY(-52px) scale(1.15); opacity:0; }
   }
 
+  /* вечерний итог дня — ночная карточка */
+  #evening {
+    position:fixed; inset:0; z-index:104; display:none;
+    align-items:flex-start; justify-content:center; padding-top:10vh;
+    background: rgba(20,22,40,.5);
+    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  }
+  #evening.show { display:flex; }
+  .ev-card {
+    position:relative; overflow:hidden;
+    width:min(350px, 90vw); text-align:center;
+    background: linear-gradient(168deg, #2c3252 0%, #453b62 55%, #5b4668 100%);
+    border:1px solid rgba(255,255,255,.18);
+    border-radius:30px; padding:26px 22px 20px; margin:16px;
+    box-shadow: 0 30px 70px rgba(10,12,30,.55), inset 0 1px 0 rgba(255,255,255,.15);
+    animation: finaleIn .55s cubic-bezier(.22,1.4,.36,1);
+  }
+  .ev-card::before {                       /* звёздное небо */
+    content:''; position:absolute; inset:0; pointer-events:none;
+    background:
+      radial-gradient(1.5px 1.5px at 12% 18%, rgba(255,255,255,.9), transparent 100%),
+      radial-gradient(1px 1px at 28% 8%,  rgba(255,255,255,.7), transparent 100%),
+      radial-gradient(2px 2px at 44% 22%, rgba(255,255,255,.55), transparent 100%),
+      radial-gradient(1px 1px at 62% 12%, rgba(255,255,255,.8), transparent 100%),
+      radial-gradient(1.5px 1.5px at 78% 24%, rgba(255,255,255,.6), transparent 100%),
+      radial-gradient(1px 1px at 90% 10%, rgba(255,255,255,.75), transparent 100%),
+      radial-gradient(1px 1px at 8%  40%, rgba(255,255,255,.4), transparent 100%),
+      radial-gradient(1.5px 1.5px at 92% 44%, rgba(255,255,255,.35), transparent 100%);
+    animation: starsTw 4s ease-in-out infinite alternate;
+  }
+  @keyframes starsTw { to { opacity:.55; } }
+  .ev-moon {
+    font-size:46px; line-height:1;
+    filter: drop-shadow(0 0 18px rgba(255,225,130,.7));
+    animation: moonFloat 5s ease-in-out infinite alternate;
+    display:inline-block;
+  }
+  @keyframes moonFloat { to { transform: translateY(-5px) rotate(-6deg); } }
+  .ev-title { color:#fff; font-size:21px; margin:8px 0 2px; }
+  .ev-date { color:rgba(255,255,255,.55); font-size:13px; margin-bottom:16px; text-transform:capitalize; }
+  .ev-row {
+    display:flex; align-items:center; gap:12px;
+    padding:11px 12px; margin-bottom:8px; text-align:left;
+    font-size:14px; color:rgba(255,255,255,.92);
+    background: rgba(255,255,255,.09);
+    border:1px solid rgba(255,255,255,.13);
+    border-radius:16px;
+  }
+  .ev-row b { color:#fff; font-variant-numeric: tabular-nums; }
+  .ev-badge {
+    width:36px; height:36px; flex-shrink:0; border-radius:12px;
+    display:flex; align-items:center; justify-content:center; font-size:18px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.25);
+  }
+  #evBtns { margin-top:14px; }
+  #evBtns .m-ok, #evBtns .m-cancel { width:100%; }
+  #evBtns .m-ok + .m-ok, #evBtns .m-cancel { margin-top:8px; }
+  #evening .m-cancel {
+    background: rgba(255,255,255,.13); color: rgba(255,255,255,.8);
+    border:1px solid rgba(255,255,255,.15);
+  }
+
   /* мастер цели */
   #goalModal {
     position:fixed; inset:0; z-index:100; display:none;
@@ -1197,17 +1309,57 @@
     -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
   }
   #goalModal.show { display:flex; }
-  .preset-row { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:12px; }
+  .preset-row { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:2px; }
   .pchip {
-    border:1px solid rgba(120,130,160,.3); cursor:pointer;
-    background:#fff; color:var(--text2);
-    font-family:inherit; font-size:13px; font-weight:600;
-    padding:10px 4px; border-radius:14px; transition: all .2s;
+    border:1px solid rgba(255,255,255,.75); cursor:pointer;
+    background: rgba(255,255,255,.55); color:var(--text2);
+    font-family:inherit; font-size:13px; font-weight:700;
+    padding:10px 4px; border-radius:15px; transition: all .2s;
+    box-shadow: 0 2px 6px rgba(60,70,110,.06);
   }
+  .pchip small { font-weight:500; font-size:10.5px; opacity:.75; }
   .pchip.sel {
-    background: rgba(10,132,255,.12); color:var(--accent);
-    border-color: rgba(10,132,255,.55);
+    background: linear-gradient(135deg, #0a84ff, #5e9dff);
+    color:#fff; border-color: transparent;
+    box-shadow: 0 5px 14px rgba(10,132,255,.35), inset 0 1px 0 rgba(255,255,255,.3);
   }
+  /* мастер цели — стеклянный */
+  .g-card {
+    background: linear-gradient(170deg, rgba(255,255,255,.92), rgba(240,244,255,.88)) !important;
+    -webkit-backdrop-filter: blur(30px); backdrop-filter: blur(30px);
+    border:1px solid rgba(255,255,255,.95) !important;
+    border-radius:30px !important;
+    box-shadow: 0 30px 70px rgba(60,70,120,.35), inset 0 1px 0 #fff !important;
+  }
+  .g-emoji { font-size:38px; text-align:center; margin-bottom:2px; }
+  .g-card h3 { margin-bottom:2px !important; }
+  .g-sub { font-size:12.5px; color:var(--text2); text-align:center; margin-bottom:14px; }
+  .g-label {
+    display:block; text-align:left;
+    font-size:11px; font-weight:700; color:var(--text2);
+    text-transform:uppercase; letter-spacing:.5px;
+    margin:12px 2px 5px;
+  }
+  .g-card input {
+    background: rgba(255,255,255,.75) !important;
+    border:1px solid rgba(190,200,220,.6) !important;
+    border-radius:15px !important;
+    box-shadow: inset 0 1px 3px rgba(60,70,110,.05);
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .g-card input:focus {
+    border-color: rgba(10,132,255,.65) !important;
+    box-shadow: 0 0 0 3px rgba(10,132,255,.14);
+  }
+  .g-preview {
+    margin-top:14px; padding:11px 14px; border-radius:15px;
+    font-size:13.5px; font-weight:600; color:#8a6d1a; text-align:center;
+    background: rgba(255,211,92,.24);
+    border:1px solid rgba(232,168,32,.32);
+    min-height:20px;
+  }
+  .g-preview:empty { display:none; }
+  .g-preview b { color:#6e5408; }
 
   .drop-hint {
     position:fixed; inset:14px; z-index:85; display:none;
@@ -1272,6 +1424,7 @@
 
         <ellipse id="shineEl" cx="92" cy="76" rx="32" ry="15" fill="rgba(255,255,255,.45)" transform="rotate(-24 92 76)"/>
 
+        <!-- аксессуары: головные под ухом -->
         <path id="ear" d="M162 50 q12 -22 32 -14 q0 20 -16 27 Z" fill="#f29db4" stroke="rgba(255,255,255,.7)" stroke-width="1.5"/>
         <g id="eyeOpen">
           <circle cx="184" cy="90" r="6.5" fill="#2c2c3e"/>
@@ -1289,50 +1442,8 @@
         <ellipse cx="222" cy="116" rx="3.2" ry="5" fill="#d97b95"/>
 
         <rect id="slot" x="103" y="33" width="44" height="8" rx="4" fill="#2c2c3e" opacity=".55"/>
-
-        <!-- аксессуары из магазина (нарисованы под форму головы) -->
-        <g id="acc-cap" style="display:none" transform="rotate(8 168 45)">
-          <path d="M140 52 Q144 20 170 18 Q195 22 197 50 Q168 38 140 52 Z" fill="#3b82f6" stroke="rgba(255,255,255,.7)" stroke-width="1.5"/>
-          <path d="M191 43 Q217 45 222 56 Q201 61 185 54 Z" fill="#2f6fd8"/>
-          <path d="M140 52 Q168 41 197 50 L197 55 Q168 46 140 57 Z" fill="#2f6fd8"/>
-          <circle cx="170" cy="19" r="3.5" fill="#2f6fd8"/>
-        </g>
-
-        <g id="acc-hat" style="display:none" transform="rotate(8 168 45)">
-          <ellipse cx="168" cy="49" rx="42" ry="9.5" fill="#f0cd8a" stroke="#d9a94f" stroke-width="1.5"/>
-          <path d="M142 47 Q146 18 168 16 Q190 18 194 47 Q168 38 142 47 Z" fill="#f0cd8a" stroke="#d9a94f" stroke-width="1.5"/>
-          <path d="M146 40 Q168 31 190 40 L190 47 Q168 38 146 47 Z" fill="#e2404f"/>
-          <circle cx="190" cy="44" r="3" fill="#c22e3d"/>
-        </g>
-
-        <g id="acc-grad" style="display:none" transform="rotate(6 168 40)">
-          <path d="M150 32 Q168 46 186 32 L186 26 L150 26 Z" fill="#26262f"/>
-          <polygon points="168,10 206,26 168,42 130,26" fill="#33333f" stroke="#1c1c24" stroke-width="1"/>
-          <path d="M168 26 L198 36" stroke="#ffd35c" stroke-width="2.5" fill="none"/>
-          <circle cx="199" cy="38" r="3" fill="#ffd35c"/>
-          <path d="M199 41 L199 50" stroke="#ffd35c" stroke-width="4" stroke-linecap="round"/>
-        </g>
-
-        <g id="acc-phones" style="display:none">
-          <path d="M116 80 Q112 22 180 28" stroke="#3a3a46" stroke-width="7" fill="none" stroke-linecap="round"/>
-          <ellipse cx="182" cy="47" rx="12" ry="14" fill="#3a3a46"/>
-          <ellipse cx="182" cy="47" rx="6.5" ry="8.5" fill="#e2404f"/>
-          <ellipse cx="115" cy="86" rx="9" ry="11" fill="#3a3a46"/>
-        </g>
-
-        <g id="acc-flower" style="display:none">
-          <circle cx="152" cy="46" r="6" fill="#ff7aa2"/><circle cx="164" cy="46" r="6" fill="#ff7aa2"/>
-          <circle cx="158" cy="40" r="6" fill="#ff8fb1"/><circle cx="153" cy="53" r="6" fill="#ff8fb1"/>
-          <circle cx="163" cy="53" r="6" fill="#ff7aa2"/>
-          <circle cx="158" cy="48" r="4.5" fill="#ffd35c" stroke="#e8a820" stroke-width="1"/>
-        </g>
-
-        <g id="acc-medal" style="display:none">
-          <polygon points="148,143 158,143 154,165 144,163" fill="#e2404f"/>
-          <polygon points="166,143 156,143 158,165 168,163" fill="#3b82f6"/>
-          <circle cx="156" cy="170" r="12" fill="url(#goldG)" stroke="#d9a12b" stroke-width="2"/>
-          <text x="156" y="175" font-size="13" font-weight="800" fill="#9a6d08" text-anchor="middle">1</text>
-        </g>
+        <!-- головные уборы: на макушке, поверх прорези -->
+        <!-- аксессуары: поверх -->
         <!-- новогодняя шапка (декабрь, бесплатно) -->
         <g id="xmasHat" style="display:none">
           <path d="M96 44 q22 -34 52 -22 q4 14 -2 22 q-24 -8 -50 0 Z" fill="#e2404f"/>
@@ -1374,6 +1485,12 @@
     </div>
   </div>
 
+  <!-- сегодня: сюрприз дня -->
+  <div class="card">
+    <div class="section-title">✨ Сегодня · <span id="dcDate"></span></div>
+    <div class="dc-fact" id="dcFact"></div>
+  </div>
+
   <!-- конверты -->
   <div class="card">
     <div class="garland"></div>
@@ -1394,8 +1511,8 @@
     <div class="undo"><button onclick="undoLast()">↩︎ отменить последний конверт</button></div>
   </div>
 
-  <!-- стрик -->
-  <div class="card">
+  <!-- стрик (тап — итог дня) -->
+  <div class="card" onclick="openEvening()" style="cursor:pointer" title="Итог дня">
     <div class="streak-row">
       <div class="flame" id="flame">🔥</div>
       <div class="streak-info">
@@ -1414,11 +1531,12 @@
     <div class="q-grid" id="qWeekly"></div>
   </div>
 
-  <!-- магазин -->
-  <div class="card">
-    <div class="section-title">Гардероб свинки · ⭐ <span id="starCount2">0</span></div>
-    <div class="shop-grid" id="shopGrid"></div>
+  <!-- ещё (свёрнуто) -->
+  <div class="card more-btn" onclick="toggleMore()">
+    <span id="moreLabel">Ещё: статистика, награды…</span>
+    <span class="more-arrow" id="moreArrow">▾</span>
   </div>
+  <div id="moreWrap" style="display:none">
 
   <!-- статистика -->
   <div class="card">
@@ -1451,6 +1569,7 @@
     </div>
     <div class="hist-body" id="histBody"></div>
   </div>
+  </div><!-- /moreWrap -->
   </div><!-- /viewSave -->
 
   <div class="view" id="viewSpend" style="display:none">
@@ -1556,8 +1675,15 @@
       <div class="section-title">Куда уходят деньги · месяц</div>
       <canvas id="pieCv" class="spend-canvas" height="170"></canvas>
       <div id="pieLegend"></div>
+      <div class="insight" id="pieInsight" style="display:none"></div>
     </div>
 
+    <!-- ещё (статистика, свёрнуто) -->
+    <div class="card more-btn" onclick="toggleMore2()">
+      <span id="moreLabel2">Ещё: статистика и история трат…</span>
+      <span class="more-arrow" id="moreArrow2">▾</span>
+    </div>
+    <div id="moreWrap2" style="display:none">
     <!-- по дням -->
     <div class="card">
       <div class="section-title">По дням · 2 недели</div>
@@ -1577,6 +1703,7 @@
       <div class="section-title">Траты месяца · <span id="expCount">0</span></div>
       <div id="expList"></div>
     </div>
+    </div><!-- /moreWrap2 -->
   </div><!-- /viewSpend -->
 </div>
 
@@ -1604,12 +1731,28 @@
   </div>
 </div>
 
+<!-- вечерний итог дня -->
+<div id="evening">
+  <div class="ev-card">
+    <div class="ev-moon">🌙</div>
+    <h3 class="ev-title">Итог дня</h3>
+    <div class="ev-date" id="evDate"></div>
+    <div id="evRows"></div>
+    <div class="modal-btns" id="evBtns" style="flex-direction:column"></div>
+  </div>
+</div>
+
 <!-- мастер цели -->
 <div id="goalModal">
-  <div class="modal-card">
+  <div class="modal-card g-card">
+    <div class="g-emoji">🎯</div>
     <h3>Цель накопления</h3>
-    <input id="gName" placeholder="Название (например, Отпуск)" maxlength="20" autocomplete="off">
-    <input id="gAmount" type="number" inputmode="decimal" min="1" placeholder="Сумма, BYN" style="margin-top:10px">
+    <div class="g-sub">На что копим и к какому сроку</div>
+    <label class="g-label">Название</label>
+    <input id="gName" placeholder="Например, Отпуск" maxlength="20" autocomplete="off">
+    <label class="g-label">Сумма, BYN</label>
+    <input id="gAmount" type="number" inputmode="decimal" min="1" placeholder="15 000">
+    <label class="g-label">Срок</label>
     <div class="preset-row">
       <button class="pchip" data-p="w">Неделя</button>
       <button class="pchip" data-p="m">Месяц</button>
@@ -1618,15 +1761,15 @@
       <button class="pchip" data-p="ny">До НГ</button>
       <button class="pchip" data-p="c">Дата…</button>
     </div>
-    <input id="gDate" type="date" style="margin-top:10px; display:none">
+    <input id="gDate" type="date" style="margin-top:8px; display:none">
     <div id="gTransfer" style="display:none">
-      <div class="hint" style="margin:12px 0 8px">Уже накоплено <b id="gHave"></b> BYN — что с ним?</div>
+      <label class="g-label">Уже накоплено <b id="gHave"></b> BYN — что с ним?</label>
       <div class="preset-row" style="grid-template-columns:1fr 1fr">
-        <button class="pchip sel" data-t="keep">Перенести в новую цель</button>
-        <button class="pchip" data-t="zero">Начать с нуля</button>
+        <button class="pchip sel" data-t="keep">Перенести<br><small>зачесть в новую цель</small></button>
+        <button class="pchip" data-t="zero">С нуля<br><small>чистый лист</small></button>
       </div>
     </div>
-    <div class="today-line" id="gPreview" style="margin-top:12px"></div>
+    <div class="g-preview" id="gPreview"></div>
     <div class="modal-btns">
       <button class="m-cancel" onclick="closeGoalWizard()">Отмена</button>
       <button class="m-ok" onclick="saveGoal()">Сохранить</button>
@@ -1708,7 +1851,8 @@ function load() {
     stars: 0, qAwarded: [], bought: [], worn: [],
     celebrated: false, lastBackup: null, wallet: 0,
     expenses: [], customCats: [], limit: 0, milestones: [], lastLevel: 1,
-    lastVisit: null, onboarded: false, pigName: '', hamboarded: false
+    lastVisit: null, onboarded: false, pigName: '', hamboarded: false,
+    pending: 0, eveningDay: '', chal: null, room: []
   }, s);
 }
 let spendDirty = true;     // расходы пересобираются только если данные менялись
@@ -2033,54 +2177,6 @@ function awardStars(q) {
 }
 
 // ---------- магазин ----------
-const SHOP = [
-  { id:'cap',    icon:'🧢', name:'Кепка',    cost:3, color:'#0a84ff' },
-  { id:'flower', icon:'🌺', name:'Цветок',   cost:3, color:'#ff375f' },
-  { id:'hat',    icon:'👒', name:'Шляпка',   cost:4, color:'#e8a820' },
-  { id:'phones', icon:'🎧', name:'Наушники', cost:5, color:'#5e5ce6' },
-  { id:'grad',   icon:'🎓', name:'Магистр',  cost:6, color:'#30d158' },
-  { id:'medal',  icon:'🥇', name:'Медаль',   cost:8, color:'#bf5af2' },
-];
-
-function shopClick(id) {
-  const item = SHOP.find(s => s.id === id);
-  if (!state.bought.includes(id)) {
-    if (state.stars < item.cost) { toast('Нужно ⭐' + item.cost + ' — выполняй задания!'); return; }
-    state.stars -= item.cost;
-    state.bought.push(id);
-    state.worn.push(id);
-    sndBuy();
-    toast(item.icon + ' Куплено! Свинка нарядилась');
-    coinRain(8);
-  } else {
-    const i = state.worn.indexOf(id);
-    if (i >= 0) state.worn.splice(i, 1); else state.worn.push(id);
-    sndBuy();
-  }
-  save(); render();
-}
-
-function renderShop() {
-  const grid = document.getElementById('shopGrid');
-  grid.innerHTML = '';
-  for (const item of SHOP) {
-    const owned = state.bought.includes(item.id);
-    const worn = state.worn.includes(item.id);
-    const el = document.createElement('div');
-    el.className = 'shop-item' + (owned ? ' owned' : (state.stars < item.cost ? ' locked' : '')) + (worn ? ' worn' : '');
-    el.innerHTML =
-      '<div class="s-badge" style="background:' + item.color + '22">' + item.icon + '</div>' +
-      '<div class="s-name">' + item.name + '</div>' +
-      '<div class="s-cost">' + (owned ? (worn ? '✓ надето' : 'надеть') : '⭐' + item.cost) + '</div>';
-    el.onclick = () => shopClick(item.id);
-    grid.appendChild(el);
-  }
-  for (const item of SHOP) {
-    const node = document.getElementById('acc-' + item.id);
-    if (node) node.style.display = state.worn.includes(item.id) ? '' : 'none';
-  }
-}
-
 // ---------- действия ----------
 function closeEnv(idx, el, quiet) {
   if (isClosed(idx)) return;
@@ -2760,7 +2856,8 @@ window.addEventListener('drop', e => {
         stars: 0, qAwarded: [], bought: [], worn: [],
         celebrated: false, lastBackup: null, wallet: 0,
         expenses: [], customCats: [], limit: 0, milestones: [], lastLevel: 1,
-        lastVisit: null, onboarded: true, pigName: s.pigName || '', hamboarded: true
+        lastVisit: null, onboarded: true, pigName: s.pigName || '', hamboarded: true,
+        pending: 0, eveningDay: '', chal: null, room: []
       }, s);
       localStorage.setItem(KEY, JSON.stringify(state));
       ensureGoal(); applyGoal();
@@ -2976,8 +3073,8 @@ function render() {
     ? '❄️ заморозка<br>использована' : '❄️ заморозка<br>1 пропуск/нед';
 
   document.getElementById('starCount').textContent = state.stars;
-  document.getElementById('starCount2').textContent = state.stars;
   renderLevel();
+  try { renderDayCard(); } catch(e) {}
 
   const achGrid = document.getElementById('achGrid');
   achGrid.innerHTML = '';
@@ -2996,7 +3093,6 @@ function render() {
 
   renderGrid();
   renderQuests();
-  renderShop();
   renderStats();
   renderHistory();
 
@@ -3544,7 +3640,61 @@ function renderSpend() {
   pieSel = null;
   startChartAnim(monthExps);
   renderExpList(monthExps);
+  renderInsight();
   spendDirty = false;
+}
+
+// ---------- инсайт с действием: «категория съела X% недели» ----------
+function renderInsight() {
+  const box = document.getElementById('pieInsight');
+  // сначала разрешаем вчерашний челлендж, если был
+  if (state.chal && state.chal.day < todayStr()) {
+    const spent = state.expenses
+      .filter(e => e.date === state.chal.day && e.cat === state.chal.cat)
+      .reduce((a, e) => a + e.amount, 0);
+    const cname = catById(state.chal.cat).name;
+    if (spent === 0) {
+      state.stars += 2;
+      toast('🏆 Челлендж выполнен: день без «' + cname + '»! +2⭐');
+      sndAch(); vib([20, 30, 20]);
+    } else {
+      toast('🐹 Челлендж «день без ' + cname + '» не удался. Бывает!');
+    }
+    state.chal = null;
+    localStorage.setItem(KEY, JSON.stringify(state));
+  }
+
+  const week = weekDates();
+  const wExps = state.expenses.filter(e => week.includes(e.date));
+  const wSum = wExps.reduce((a, e) => a + e.amount, 0);
+  if (wSum < 10) { box.style.display = 'none'; return; }
+
+  const byCat = {};
+  wExps.forEach(e => byCat[e.cat] = (byCat[e.cat] || 0) + e.amount);
+  const top = Object.entries(byCat).sort((a, b) => b[1] - a[1])[0];
+  const share = Math.round(top[1] / wSum * 100);
+  const c = catById(top[0]);
+  box.style.display = '';
+
+  if (state.chal) {
+    const cn = catById(state.chal.cat).name;
+    box.innerHTML = '«' + c.name + '» съедает <b>' + share + '%</b> трат этой недели.' +
+      '<div class="chal-on">🔥 Челлендж активен: ' +
+      (state.chal.day === todayStr() ? 'СЕГОДНЯ' : 'завтра') + ' — день без «' + cn + '»</div>';
+  } else if (share >= 25) {
+    box.innerHTML = '«' + c.name + '» съедает <b>' + share + '%</b> трат этой недели (' + fmt2(top[1]) + ' BYN).' +
+      '<button onclick="startChal(\'' + top[0] + '\')">Челлендж: завтра — день без «' + c.name + '» (+2⭐)</button>';
+  } else {
+    box.innerHTML = 'Траты ровно распределены — самая большая доля у «' + c.name + '» всего <b>' + share + '%</b>. Так держать!';
+  }
+}
+function startChal(cat) {
+  const d = new Date(); d.setDate(d.getDate() + 1);
+  state.chal = { cat, day: todayStr(d) };
+  localStorage.setItem(KEY, JSON.stringify(state));
+  toast('🐹 Принято! Завтра — день без «' + catById(cat).name + '». Я слежу.');
+  sndStar();
+  renderInsight();
 }
 
 // одометр: цифры прокручиваются как барабан счётчика
@@ -4504,6 +4654,153 @@ document.getElementById('onbSkip').onclick = () => {
   fadeStoryOut();
 };
 
+// ================== «СЕГОДНЯ»: фраза + факт дня ==================
+// фразы дня убраны по запросу
+function renderDayCard() {
+  const seed = Math.floor(parseD(todayStr()).getTime() / 864e5);
+  document.getElementById('dcDate').textContent =
+    new Date().toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' });
+
+  // микро-факты — что верно сегодня
+  const facts = [];
+  const pct = Math.min(100, total() / GOAL * 100);
+  facts.push('Пройдено ' + pct.toFixed(0) + '% пути к цели «' + (state.goal.name || 'цель') + '»');
+  const elapsed = Math.max(1, Math.round((parseD(todayStr()) - parseD(state.goal.startDate)) / 864e5) + 1);
+  const planNow = GOAL * Math.min(1, elapsed / N);
+  const diff = Math.round(total() - planNow);
+  if (diff > 5) facts.push('Ты опережаешь план на ' + fmt(diff) + ' BYN 🚀');
+  else if (diff < -5) facts.push('Отставание от плана ' + fmt(-diff) + ' BYN — сегодня можно сократить');
+  facts.push('Осталось ' + (N - state.closed.length) + ' ' + plural(N - state.closed.length, 'конверт', 'конверта', 'конвертов') + ' до финиша');
+  const s0 = streak();
+  if (s0 >= 3) facts.push('Серия ' + s0 + ' ' + plural(s0, 'день', 'дня', 'дней') + ' — не разрывай цепочку 🔥');
+  const next = [25, 50, 75, 100].find(m => pct < m);
+  if (next) facts.push('До рубежа ' + next + '% осталось ' + fmt(Math.ceil(GOAL * next / 100 - total())) + ' BYN');
+  document.getElementById('dcFact').textContent = '💡 ' + facts[seed % facts.length];
+}
+
+// блок «Ещё»
+function toggleMore() {
+  const w = document.getElementById('moreWrap');
+  const btn = document.querySelector('.more-btn');
+  const open = w.style.display === 'none';
+  w.style.display = open ? 'flex' : 'none';
+  btn.classList.toggle('open', open);
+  document.getElementById('moreLabel').textContent = open
+    ? 'Свернуть' : 'Ещё: статистика, награды…';
+}
+
+function toggleMore2() {
+  const w = document.getElementById('moreWrap2');
+  const btn = w.previousElementSibling;
+  const open = w.style.display === 'none';
+  w.style.display = open ? 'flex' : 'none';
+  btn.classList.toggle('open', open);
+  document.getElementById('moreLabel2').textContent = open
+    ? 'Свернуть' : 'Ещё: статистика и история трат…';
+  if (open) { try { drawBars(1); renderCmp(curMonthExps); } catch(e) {} }
+}
+
+// ================== ВЕЧЕРНИЙ РИТУАЛ «ИТОГ ДНЯ» ==================
+function sweepToPig(K) {                  // «Пронесло!»: остаток дня → конверты
+  const budget = Math.min(K, Math.max(0, GOAL - total()));
+  const picked = pickEnvelopes(budget);
+  if (!picked.length) { toast('На целый конверт не набралось'); return 0; }
+  const beforePct = total() / GOAL * 100;
+  let s = 0;
+  picked.forEach((idx, i) => {
+    state.closed.push({ idx, date: todayStr(), amount: ENV[idx], ts: Date.now() + i });
+    s += ENV[idx];
+  });
+  checkMilestones(beforePct, total() / GOAL * 100);
+  checkAchievements();
+  save();
+  dispSum = null; render();
+  coinRain(12); sndAch(); vib([15, 30, 15]);
+  toast('🎉 Пронесло! +' + fmt(s) + ' BYN в копилку');
+  return s;
+}
+
+function renderEvening() {
+  const tDay = todayStr();
+  const sumToday = state.expenses.filter(e => e.date === tDay).reduce((a, e) => a + e.amount, 0);
+  const envToday = state.closed.filter(c => c.date === tDay);
+  const envSum = envToday.reduce((a, c) => a + c.amount, 0);
+  const s = streak();
+  const L = state.limit;
+
+  let todayLeft = 0, allowance = 0;
+  if (L > 0) {
+    const nd = new Date();
+    const daysLeftM = new Date(nd.getFullYear(), nd.getMonth() + 1, 0).getDate() - nd.getDate() + 1;
+    const sumMonth = state.expenses.filter(e => monthKey(e.date) === monthKey()).reduce((a, e) => a + e.amount, 0);
+    allowance = (L - (sumMonth - sumToday)) / daysLeftM;
+    todayLeft = Math.floor(allowance - sumToday);
+  }
+
+  document.getElementById('evDate').textContent =
+    new Date().toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' });
+
+  // строгие белые пиктограммы на цветных бейджах
+  const G = p => '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" ' +
+    'stroke-linecap="round" stroke-linejoin="round" style="width:19px;height:19px;display:block">' + p + '</svg>';
+  const IC_OK   = G('<path d="M4.5 12.5l5 5L19.5 7"/>');
+  const IC_WARN = G('<path d="M12 4.5v9.5"/><circle cx="12" cy="18.5" r="1.7" fill="#fff" stroke="none"/>');
+  const IC_ENV  = G('<rect x="3.5" y="6" width="17" height="12" rx="2"/><path d="M4.5 7.5l7.5 5.5 7.5-5.5"/>');
+  const IC_NUM  = '<b style="color:#fff; font-size:15px">' + s + '</b>';
+
+  const rows = [];
+  if (L > 0) rows.push(sumToday <= allowance + .01
+    ? [IC_OK, '#30d158', 'В бюджете дня: <b>' + fmt2(sumToday) + '</b> из ' + fmt(Math.round(allowance))]
+    : [IC_WARN, '#ff9f43', 'Перебор: <b>' + fmt2(sumToday) + '</b> при бюджете ' + fmt(Math.round(allowance))]);
+  else rows.push([IC_OK, '#64d2ff', 'Потрачено сегодня: <b>' + fmt2(sumToday) + ' BYN</b>']);
+  rows.push(envToday.length
+    ? [IC_OK, '#e8a820', 'Конверт закрыт: <b>+' + fmt(envSum) + ' BYN</b> в копилку']
+    : [IC_ENV, '#64d2ff', 'Конверт сегодня ещё не закрыт']);
+  rows.push([IC_NUM, '#ff6b35', 'Стрик: <b>' + s + '</b> ' + plural(s, 'день', 'дня', 'дней') + ' подряд']);
+  document.getElementById('evRows').innerHTML =
+    rows.map(r => '<div class="ev-row"><span class="ev-badge" style="background:' + r[1] + '55">' +
+      r[0] + '</span><span>' + r[2] + '</span></div>').join('');
+
+  const btns = [];
+  const reco = recommendedIdx();
+  if (!envToday.length && reco >= 0)
+    btns.push('<button class="m-ok" onclick="evCloseReco()">Закрыть конверт · ~' + ENV[reco] + ' BYN</button>');
+  if (L > 0 && todayLeft > 0 && total() < GOAL)
+    btns.push('<button class="m-ok" style="background:linear-gradient(135deg,#30d158,#5be07f); box-shadow:0 6px 16px rgba(48,209,88,.35)" ' +
+      'onclick="evSweep(' + todayLeft + ')">Отложить остаток дня · ' + fmt(todayLeft) + ' BYN</button>');
+  btns.push('<button class="m-cancel" onclick="closeEvening()">Готово</button>');
+  document.getElementById('evBtns').innerHTML = btns.join('');
+}
+function evCloseReco() {
+  const reco = recommendedIdx();
+  if (reco >= 0) { closeEnv(reco, null, false); sndCoin(); }
+  renderEvening();
+}
+function evSweep(k) { sweepToPig(k); renderEvening(); }
+function closeEvening() { document.getElementById('evening').classList.remove('show'); }
+function openEvening() {                  // ручной вход: тап по карточке стрика
+  renderEvening();
+  document.getElementById('evening').classList.add('show');
+}
+
+function checkEvening() {
+  const h = new Date().getHours();
+  if (h < 20) return;
+  if (!state.onboarded) return;
+  if (state.eveningDay === todayStr()) return;
+  if (document.getElementById('onb').classList.contains('show')) return;
+  state.eveningDay = todayStr();
+  localStorage.setItem(KEY, JSON.stringify(state));
+  renderEvening();
+  document.getElementById('evening').classList.add('show');
+  sndStar();
+}
+window.addEventListener('focus', checkEvening);
+setInterval(checkEvening, 10 * 60 * 1000);
+document.getElementById('evening').addEventListener('click', e => {
+  if (e.target.id === 'evening') closeEvening();
+});
+
 ensureGoal();
 applyGoal();
 xmasMode();
@@ -4525,6 +4822,7 @@ if (!state.hamboarded && state.expenses.length) {
 renderCats();
 document.getElementById('viewSave').classList.add('animin');
 greetCheck();
+setTimeout(checkEvening, 2500);   // итог дня — после приветствий
 maybeBackup();
 </script>
 <script>
