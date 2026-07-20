@@ -178,6 +178,7 @@
   #viewSpend > .card:nth-child(1) { order:2; }
   #viewSpend > .card:nth-child(2) { order:1; }
   #viewSpend > .card:nth-child(n+3) { order:3; }
+  #viewSpend > #moreWrap2 { order:4; }
 
   /* ---- хомяк ---- */
   .ham-wrap { display:flex; justify-content:center; padding:6px 0 2px; }
@@ -1017,6 +1018,9 @@
     }
     .limit-bar i.warn { animation: none; }
     .pig-aura { filter: blur(9px); }
+    /* переключение вкладок без анимаций — мгновенно и плавно */
+    .view.fadeIn { animation: none; }
+    .env.fid { animation: none; }
     .pig-area { gap: 10px; }
   }
   /* узкие экраны: цифры меньше, звери в полный рост */
@@ -3294,10 +3298,12 @@ function switchTab(t) {
     localStorage.setItem(KEY, JSON.stringify(state));
     setTimeout(() => runHamStory(false), 400);
   }
-  // мягкое проявление, как в iOS
-  show.classList.remove('animin', 'fadeIn');
-  void show.offsetWidth;
-  show.classList.add('fadeIn');
+  // мягкое проявление — только на больших экранах (на телефоне мгновенно)
+  if (matchMedia('(min-width: 701px)').matches) {
+    show.classList.remove('animin', 'fadeIn');
+    void show.offsetWidth;
+    show.classList.add('fadeIn');
+  }
 }
 
 // параллакс фона
