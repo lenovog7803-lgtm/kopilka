@@ -548,7 +548,7 @@
     scrollbar-width: thin;
     perspective: 900px;
   }
-  .env { position:relative; aspect-ratio: 1 / .78; cursor:pointer; user-select:none; }
+  .env { position:relative; aspect-ratio: 1 / .78; cursor:pointer; user-select:none; contain: layout style; }
   .env-inner {
     position:absolute; inset:0;
     -webkit-transform-style: preserve-3d; transform-style: preserve-3d;
@@ -1021,6 +1021,16 @@
     /* переключение вкладок без анимаций — мгновенно и плавно */
     .view.fadeIn { animation: none; }
     .env.fid { animation: none; }
+    /* конверты: простые тени — 171 штука рисуется заметно быстрее */
+    .face.front { box-shadow: 0 2px 6px rgba(60,70,110,.10); }
+    .face.back { box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 2px 6px rgba(190,140,40,.16); }
+    /* hover-эффекты не нужны на таче (залипают после тапа) */
+    .env:not(.closed):hover { filter: none; }
+    .env:not(.closed):hover .face.front::before { transform: none; }
+    /* блеск-проход по карточкам при старте — дорогой, убираем */
+    .view.animin .card::after { display: none; }
+    .view.animin .card { animation-duration: .4s; }
+    .view.animin .card:nth-child(n+5) { animation-delay: .2s; }
     .pig-area { gap: 10px; }
   }
   /* узкие экраны: цифры меньше, звери в полный рост */
@@ -2210,7 +2220,7 @@ function closeEnv(idx, el, quiet) {
         localStorage.setItem(KEY, JSON.stringify(state));
         toast('✨ Фольгированный конверт! +1⭐');
         sndStar();
-        render();
+        render({ grid: false });
       }, 1900);
     }
     el.classList.add('animate');                 // 3D-переворот, как раньше
@@ -2219,8 +2229,12 @@ function closeEnv(idx, el, quiet) {
     // как только переворот закончился — переводим в статичное закрытое
     // состояние без 3D (фикс секундного «зеркала» в Safari)
     setTimeout(() => { el.classList.add('closed'); el.classList.remove('animate'); }, 720);
-    flyCoin(el, () => { pigHappy(); sndCoin(); vib(15); render(); });
-    setTimeout(render, 1600);
+    // во время анимации сетку не пересобираем — только цифры и свинку
+    flyCoin(el, () => { pigHappy(); sndCoin(); vib(15); render({ grid: false }); });
+    setTimeout(() => {
+      if (filter === 'all') { render({ grid: false }); updateReco(); }
+      else render();                            // в фильтрах нужна пересборка
+    }, 1600);
   } else render();
   if (!quiet) toast('✉️ +' + fmt(ENV[idx]) + ' BYN — конверт закрыт!');
 }
@@ -2770,8 +2784,10 @@ setInterval(() => {
   setTimeout(() => b.remove(), 2200);
 }, 5500);
 
-// ---------- глаз следит за прокруткой ----------
+// ---------- глаз следит за прокруткой (только с мышью: на телефоне
+// перерисовка свинки на каждом кадре скролла даёт лаги) ----------
 let lastScrollY = window.scrollY, scrollEyeTimer = null;
+if (window.matchMedia && matchMedia('(hover: hover) and (pointer: fine)').matches)
 window.addEventListener('scroll', () => {
   if (document.body.classList.contains('sleep')) return;
   const dy = window.scrollY - lastScrollY;
@@ -2786,8 +2802,10 @@ window.addEventListener('scroll', () => {
   }, 350);
 }, { passive: true });
 
-// ---------- магнит: рекомендованный конверт тянется к пальцу ----------
+// ---------- магнит: рекомендованный конверт тянется к курсору ----------
+// только там, где есть мышь: на телефоне это мешает скроллу и дёргает layout
 let magRaf = null;
+if (window.matchMedia && matchMedia('(hover: hover) and (pointer: fine)').matches)
 document.getElementById('envGrid').addEventListener('pointermove', e => {
   if (magRaf) return;
   magRaf = requestAnimationFrame(() => {
@@ -2932,29 +2950,42 @@ function celebrate() {
 // ---------- рендер ----------
 function renderGrid() {
   const grid = document.getElementById('envGrid');
-  grid.innerHTML = '';
   const reco = recommendedIdx();
+  let html = '';
   for (let i = 0; i < N; i++) {
     const closed = isClosed(i);
     if (filter === 'open' && closed) continue;
     if (filter === 'closed' && !closed) continue;
     const foil = FOIL.includes(i);
-    const el = document.createElement('div');
-    el.className = 'env' + (closed ? ' closed' : '') + (i === reco && !closed ? ' reco' : '')
+    const fid = (i * 7 + 3) % 13 === 0 && i !== reco;              // ёрзает ~каждый 13-й
+    html += '<div class="env' + (closed ? ' closed' : '') + (i === reco && !closed ? ' reco' : '')
       + (foil && !closed ? ' foil' : '')                           // фольгированный
       + (!closed && !foil && ENV[i] >= ENV[N - 1] * .92 && i !== reco ? ' rich' : '')
-      + ((i * 7 + 3) % 13 === 0 && i !== reco ? ' fid' : '');      // ёрзает ~каждый 13-й
-    el.dataset.idx = i;
-    el.style.animationDelay = ((i * 1.3) % 5).toFixed(1) + 's';
-    el.innerHTML =
-      '<div class="env-inner">' +
-        '<div class="face front"><div class="amt">' + ENV[i] + '</div><div class="cur">BYN</div></div>' +
-        '<div class="face back"><div class="amt">' + ENV[i] + '</div></div>' +
-      '</div>';
-    if (!closed) el.onclick = () => closeEnv(i, el);
-    grid.appendChild(el);
+      + (fid ? ' fid' : '') + '" data-idx="' + i + '"'
+      + (fid ? ' style="animation-delay:' + ((i * 1.3) % 5).toFixed(1) + 's"' : '') + '>'
+      + '<div class="env-inner">'
+      +   '<div class="face front"><div class="amt">' + ENV[i] + '</div><div class="cur">BYN</div></div>'
+      +   '<div class="face back"><div class="amt">' + ENV[i] + '</div></div>'
+      + '</div></div>';
   }
+  grid.innerHTML = html;                       // один вброс в DOM вместо 171
 }
+
+// лёгкое обновление подсветки «рекомендованного» без пересборки сетки
+function updateReco() {
+  const reco = recommendedIdx();
+  document.querySelectorAll('.env.reco').forEach(e => e.classList.remove('reco'));
+  if (reco < 0) return;
+  const el = document.querySelector('.env[data-idx="' + reco + '"]');
+  if (el && !el.classList.contains('closed')) el.classList.add('reco');
+}
+
+// делегирование кликов: один слушатель вместо onclick на каждом конверте
+document.getElementById('envGrid').addEventListener('click', e => {
+  const el = e.target.closest('.env');
+  if (!el || el.classList.contains('closed') || el.classList.contains('animate')) return;
+  closeEnv(+el.dataset.idx, el);
+});
 
 function renderQuests() {
   const q = quests();
@@ -3036,7 +3067,8 @@ function renderHistory() {
   if (!items.length) body.innerHTML = '<div class="today-line">Пока пусто</div>';
 }
 
-function render() {
+function render(opts) {
+  opts = opts || {};
   const sum = total();
   const pct = Math.min(100, sum / GOAL * 100);
   renderPig(pct);
@@ -3080,27 +3112,28 @@ function render() {
   renderLevel();
   try { renderDayCard(); } catch(e) {}
 
-  const achGrid = document.getElementById('achGrid');
-  achGrid.innerHTML = '';
-  let cnt = 0;
+  if (opts.grid !== false) renderGrid();
+  renderQuests();
+  // тяжёлые блоки в «Ещё» рендерим только когда они раскрыты
+  if (document.getElementById('moreWrap').style.display !== 'none') {
+    renderAch(); renderStats(); renderHistory();
+  }
+
+  if (sum >= GOAL) celebrate();
+}
+
+function renderAch() {
+  let html = '', cnt = 0;
   for (const a of ACH) {
     const ok = state.unlocked.includes(a.id);
     if (ok) cnt++;
-    const el = document.createElement('div');
-    el.className = 'ach ' + (ok ? 'unlocked' : 'locked');
-    el.innerHTML = '<div class="icon"><span class="a-emo" style="background:' +
+    html += '<div class="ach ' + (ok ? 'unlocked' : 'locked') + '">' +
+      '<div class="icon"><span class="a-emo" style="background:' +
       ((AICONS[a.id] || ['#8e8e93'])[0]) + '22">' + a.icon + '</span></div>' +
-      '<div class="name">' + a.name + '</div>';
-    achGrid.appendChild(el);
+      '<div class="name">' + a.name + '</div></div>';
   }
+  document.getElementById('achGrid').innerHTML = html;
   document.getElementById('achCount').textContent = cnt + '/' + ACH.length;
-
-  renderGrid();
-  renderQuests();
-  renderStats();
-  renderHistory();
-
-  if (sum >= GOAL) celebrate();
 }
 
 function plural(n, one, few, many) {
@@ -4693,6 +4726,7 @@ function toggleMore() {
   btn.classList.toggle('open', open);
   document.getElementById('moreLabel').textContent = open
     ? 'Свернуть' : 'Ещё: статистика, награды…';
+  if (open) { try { renderAch(); renderStats(); renderHistory(); } catch(e) {} }
 }
 
 function toggleMore2() {
