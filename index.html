@@ -303,9 +303,19 @@
     0%   { background: rgba(226,64,79,.14); }
     100% { background: transparent; }
   }
+  .pie-summary {
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:9px 2px; margin-top:2px; cursor:pointer; user-select:none;
+    font-size:13.5px; font-weight:600; color:var(--text2);
+    border-top:1px solid rgba(120,130,160,.14);
+  }
+  .pie-summary .more-arrow { transition: transform .3s ease; flex-shrink:0; }
+  .pie-summary.open .more-arrow { transform: rotate(180deg); }
   .pl-row { display:flex; align-items:center; gap:9px; font-size:13.5px; padding:5.5px 0; }
   .pl-dot { width:11px; height:11px; border-radius:4px; flex-shrink:0; }
-  .pl-name { flex:1; font-weight:600; }
+  .pl-name-wrap { flex:1; min-width:0; }
+  .pl-name { font-weight:600; }
+  .pl-avg { font-size:11px; color:var(--text2); font-weight:500; margin-top:1px; }
   .pl-sum { font-weight:700; font-variant-numeric:tabular-nums; }
   .pl-pct { color:var(--text2); font-size:12px; width:38px; text-align:right; }
 
@@ -1109,8 +1119,14 @@
     padding:13px 22px; border-radius:22px; font-size:15px; font-weight:600;
     opacity:0; pointer-events:none; transition: all .35s cubic-bezier(.22,1,.36,1);
     box-shadow: 0 10px 30px rgba(0,0,0,.25); z-index:80; max-width:85vw; text-align:center;
+    display:flex; align-items:center; gap:14px; justify-content:center;
   }
-  #toast.show { opacity:1; transform:translate(-50%,0); }
+  #toast.show { opacity:1; transform:translate(-50%,0); pointer-events:auto; }
+  #toast .t-undo {
+    background:none; border:none; color:#7ab8ff; font-size:15px; font-weight:700;
+    cursor:pointer; padding:0; flex-shrink:0; display:none;
+  }
+  #toast.has-undo .t-undo { display:block; }
 
   /* ---- финал ---- */
   #finale {
@@ -1697,7 +1713,11 @@
     <div class="card">
       <div class="section-title">Куда уходят деньги · месяц</div>
       <canvas id="pieCv" class="spend-canvas" height="170"></canvas>
-      <div id="pieLegend"></div>
+      <div class="pie-summary" id="pieSummary" onclick="togglePieLegend()">
+        <span id="pieSummaryText"></span>
+        <span class="more-arrow" id="pieLegendArrow">▾</span>
+      </div>
+      <div id="pieLegendWrap" style="display:none"><div id="pieLegend"></div></div>
       <div class="insight" id="pieInsight" style="display:none"></div>
     </div>
 
@@ -1730,7 +1750,7 @@
   </div><!-- /viewSpend -->
 </div>
 
-<div id="toast"></div>
+<div id="toast"><span id="toastMsg"></span><button class="t-undo" id="toastUndo">Вернуть</button></div>
 <div class="drop-hint">📥 Отпусти файл бэкапа, чтобы восстановить</div>
 
 <!-- интерактивное знакомство -->
@@ -2332,12 +2352,21 @@ function setFilter(f) {
 
 // ---------- эффекты ----------
 let toastTimer;
-function toast(msg) {
+function toast(msg, onUndo) {
   const t = document.getElementById('toast');
-  t.textContent = msg;
+  document.getElementById('toastMsg').textContent = msg;
   t.classList.add('show');
+  t.classList.toggle('has-undo', !!onUndo);
+  const btn = document.getElementById('toastUndo');
+  btn.onclick = null;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+  const hide = () => t.classList.remove('show');
+  if (onUndo) {
+    btn.onclick = () => { clearTimeout(toastTimer); hide(); onUndo(); };
+    toastTimer = setTimeout(hide, 5000);        // побольше времени — нужно успеть тапнуть
+  } else {
+    toastTimer = setTimeout(hide, 2600);
+  }
 }
 function coinRain(n) {
   const icons = ['🪙','💰','✨'];
@@ -3578,9 +3607,13 @@ function launchBills(fromEl, amount, onDone) {
 function delExpense(ts) {
   const i = state.expenses.findIndex(e => e.ts === ts);
   if (i < 0) return;
-  state.expenses.splice(i, 1);
+  const removed = state.expenses.splice(i, 1)[0];
   save(); renderSpend();
-  toast('Трата удалена');
+  toast('Трата удалена', () => {
+    state.expenses.push(removed);
+    save(); renderSpend();
+    toast('Возвращено');
+  });
 }
 
 function setLimit() {
@@ -3804,7 +3837,7 @@ function countSp(el, to) {
 }
 
 // анимация отрисовки графиков
-let chartRaf = 0, pieSel = null, pieGeom = null, curMonthExps = [], prevLimitOver = null;
+let chartRaf = 0, pieSel = null, pieGeom = null, curMonthExps = [], prevLimitOver = null, pieLegendOpen = false;
 function startChartAnim(monthExps) {
   cancelAnimationFrame(chartRaf);
   const t0 = performance.now(), dur = 850;
@@ -4109,21 +4142,31 @@ function drawPie(monthExps, prog = 1) {
   ctx.scale(dpr, dpr);
   ctx.clearRect(0, 0, W, H);
 
-  const byCat = {};
-  for (const e of monthExps) byCat[e.cat] = (byCat[e.cat] || 0) + e.amount;
+  const byCat = {}, cntCat = {};
+  for (const e of monthExps) {
+    byCat[e.cat] = (byCat[e.cat] || 0) + e.amount;
+    cntCat[e.cat] = (cntCat[e.cat] || 0) + 1;
+  }
   const entries = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
   const totalS = entries.reduce((s, e) => s + e[1], 0);
 
   const legend = document.getElementById('pieLegend');
   legend.innerHTML = '';
 
+  const summaryEl = document.getElementById('pieSummary');
   if (!totalS) {
     ctx.fillStyle = 'rgba(28,28,46,.4)';
     ctx.font = '14px -apple-system, sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('Пока нет трат в этом месяце', W / 2, H / 2);
+    summaryEl.style.display = 'none';
+    document.getElementById('pieLegendWrap').style.display = 'none';
     return;
   }
+  summaryEl.style.display = 'flex';
+  const top3 = entries.slice(0, 3).map(([cat, sum]) => catById(cat).name + ' ' + Math.round(sum / totalS * 100) + '%');
+  document.getElementById('pieSummaryText').textContent = top3.join(' · ') +
+    (entries.length > 3 ? ' и ещё ' + (entries.length - 3) : '');
 
   const cx = W / 2, cy = H / 2, R = 66, r = 40;
   const limitAng = -Math.PI / 2 + Math.PI * 2 * prog;   // сектор «дорисован» до сюда
@@ -4173,15 +4216,27 @@ function drawPie(monthExps, prog = 1) {
 
   entries.slice(0, 7).forEach(([cat, sum]) => {
     const c = catById(cat);
+    const n = cntCat[cat] || 1;
     const row = document.createElement('div');
     row.className = 'pl-row';
     row.innerHTML =
       catBadge(c) +
-      '<div class="pl-name">' + c.name + '</div>' +
+      '<div class="pl-name-wrap">' +
+        '<div class="pl-name">' + c.name + '</div>' +
+        '<div class="pl-avg">в среднем ' + fmt2(sum / n) + ' за раз</div>' +
+      '</div>' +
       '<div class="pl-sum">' + fmt2(sum) + '</div>' +
       '<div class="pl-pct">' + Math.round(sum / totalS * 100) + '%</div>';
     legend.appendChild(row);
   });
+
+  document.getElementById('pieLegendWrap').style.display = pieLegendOpen ? 'block' : 'none';
+  summaryEl.classList.toggle('open', pieLegendOpen);
+}
+
+function togglePieLegend() {
+  pieLegendOpen = !pieLegendOpen;
+  drawPie(curMonthExps, 1);
 }
 
 function drawBars(prog = 1) {
