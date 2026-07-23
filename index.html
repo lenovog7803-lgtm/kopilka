@@ -9,6 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Копилка">
 <link rel="apple-touch-icon" href="icon-192.png">
+
 <title>Копилка · 15 000 к НГ</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -4559,11 +4560,18 @@ function pushNotifTags() {
     const s = streak();
     const lastVisitDays = state.lastVisit ? Math.round((parseD(todayStr()) - parseD(state.lastVisit)) / 864e5) : 0;
     const leaks = detectLeakCats();
+    const tDay = todayStr();
+    const envToday = state.closed.some(c => c.date === tDay);
+    const expToday = state.expenses.some(e => e.date === tDay);
+    const goalPct = GOAL > 0 ? Math.min(100, Math.round(total() / GOAL * 100)) : 0;
     OneSignal.User.addTags({
       streak: String(s),
       days_since_visit: String(lastVisitDays),
       leak_cat: leaks.length ? catById(leaks[0].cat).name : '',
-      pig_name: state.pigName || 'Свинка'
+      pig_name: state.pigName || 'Свинка',
+      today_env: envToday ? '1' : '0',    // закрыл ли конверт сегодня
+      today_exp: expToday ? '1' : '0',    // вносил ли трату сегодня
+      goal_pct: String(goalPct)           // % выполнения общей цели копилки
     });
   } catch(e) {}
 }
