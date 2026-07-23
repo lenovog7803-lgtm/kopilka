@@ -1085,6 +1085,7 @@
     background: rgba(255,211,92,.22);
     border:1px solid rgba(232,168,32,.3);
   }
+
   .more-btn {
     display:flex; align-items:center; justify-content:space-between;
     padding:16px 22px !important; cursor:pointer;
@@ -1099,16 +1100,27 @@
     border:1px solid rgba(255,255,255,.6);
     font-size:13.5px; line-height:1.45; text-align:left;
   }
-  .insight button {
-    margin-top:9px; width:100%;
-    border:none; cursor:pointer; font-family:inherit;
-    font-size:13.5px; font-weight:700; color:#fff;
-    background: linear-gradient(135deg,#30d158,#5be07f);
-    padding:10px 0; border-radius:14px;
-    box-shadow: 0 4px 12px rgba(48,209,88,.3);
+  /* живые задания: карточки-строки с бейджем категории */
+  .chal-list { display:flex; flex-direction:column; gap:9px; }
+  .chal-row {
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    padding:9px 10px; border-radius:14px;
+    background: rgba(255,255,255,.5); border:1px solid rgba(255,255,255,.6);
   }
-  .insight .chal-on {
-    margin-top:9px; font-weight:700; color:#b07f10; text-align:center;
+  .chal-row.active { background: rgba(255,205,80,.18); border-color:rgba(255,205,80,.4); }
+  .chal-txt { flex:1; min-width:140px; font-size:13px; }
+  .chal-txt b { font-weight:700; }
+  .chal-sub { font-size:11.5px; color:var(--text2); margin-top:2px; }
+  .chal-reward { font-weight:800; color:#c78a00; font-size:13px; flex-shrink:0; }
+  .chal-row button {
+    flex-shrink:0; border:none; cursor:pointer; font-family:inherit;
+    font-size:12px; font-weight:700; color:#fff; white-space:nowrap;
+    background: linear-gradient(135deg,#30d158,#5be07f);
+    padding:9px 13px; border-radius:12px;
+    box-shadow: 0 3px 8px rgba(48,209,88,.3);
+  }
+  @media (max-width: 420px) {
+    .chal-row button { width:100%; }
   }
 
   /* ---- тост ---- */
@@ -1411,6 +1423,21 @@
   }
   body.dragging .drop-hint { display:flex; }
 </style>
+<!-- OneSignal: push-уведомления. Свой воркер (sw.js) не трогаем —
+     у OneSignal отдельная зона /push/onesignal/, чтобы не спорить за scope -->
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+      appId: "908c161a-3b23-44f4-a4ba-1c7b5e8193c4",
+      serviceWorkerPath: "push/onesignal/OneSignalSDKWorker.js",
+      serviceWorkerParam: { scope: "./push/onesignal/" }
+    });
+    window.onesignalReady = true;
+    try { renderNotifCard(); } catch(e) {}
+  });
+</script>
 </head>
 <body>
 
@@ -1592,6 +1619,12 @@
   <div class="card">
     <div class="section-title">Достижения · <span id="achCount">0/16</span></div>
     <div class="ach-grid" id="achGrid"></div>
+  </div>
+
+  <!-- уведомления -->
+  <div class="card" id="notifCard" style="display:none">
+    <div class="section-title">🔔 Уведомления</div>
+    <div id="notifBody"></div>
   </div>
 
   <!-- синхронизация -->
@@ -1889,14 +1922,21 @@ function load() {
   let s = null;
   try { s = JSON.parse(localStorage.getItem(KEY)); } catch(e) {}
   if (!s || !Array.isArray(s.closed)) s = {};
-  return Object.assign({
+  const merged = Object.assign({
     startDate: todayStr(), closed: [], unlocked: [],
     stars: 0, qAwarded: [], bought: [], worn: [],
     celebrated: false, lastBackup: null, wallet: 0,
     expenses: [], customCats: [], limit: 0, milestones: [], lastLevel: 1,
     lastVisit: null, onboarded: false, pigName: '', hamboarded: false,
-    pending: 0, eveningDay: '', chal: null, room: []
+    pending: 0, eveningDay: '', chal: null, chals: [], room: []
   }, s);
+  // миграция со старой одиночной модели челленджа на массив
+  if (merged.chal && (!merged.chals || !merged.chals.length)) {
+    merged.chals = [{ cat: merged.chal.cat, day: merged.chal.day, reward: 2 }];
+  }
+  merged.chal = null;
+  if (!Array.isArray(merged.chals)) merged.chals = [];
+  return merged;
 }
 let spendDirty = true;     // расходы пересобираются только если данные менялись
 function save() {
@@ -2917,8 +2957,10 @@ window.addEventListener('drop', e => {
         celebrated: false, lastBackup: null, wallet: 0,
         expenses: [], customCats: [], limit: 0, milestones: [], lastLevel: 1,
         lastVisit: null, onboarded: true, pigName: s.pigName || '', hamboarded: true,
-        pending: 0, eveningDay: '', chal: null, room: []
+        pending: 0, eveningDay: '', chal: null, chals: [], room: []
       }, s);
+      if (state.chal && !state.chals.length) state.chals = [{ cat: state.chal.cat, day: state.chal.day, reward: 2 }];
+      state.chal = null;
       localStorage.setItem(KEY, JSON.stringify(state));
       ensureGoal(); applyGoal();
       dispSum = null; render();
@@ -3057,15 +3099,19 @@ function renderQuests() {
   draw(q.weekly, 'qWeekly', 3);
 }
 
+// ---------- общие помощники прогноза (нужны и статистике, и «что если») ----------
+function daysSinceStart() {
+  return Math.max(1, Math.round((parseD(todayStr()) - parseD(state.startDate)) / 864e5) + 1);
+}
+function currentPace() { return total() / daysSinceStart(); }
+
 function renderStats() {
   const byDay = {};
   for (const c of state.closed) byDay[c.date] = (byDay[c.date] || 0) + c.amount;
   const sums = Object.values(byDay);
   const bestDay = sums.length ? Math.max(...sums) : 0;
   const avg = state.closed.length ? total() / state.closed.length : 0;
-
-  const daysSinceStart = Math.max(1, Math.round((parseD(todayStr()) - parseD(state.startDate)) / 864e5) + 1);
-  const pace = total() / daysSinceStart;
+  const pace = currentPace();
 
   document.getElementById('sBest').textContent = bestDay ? fmt(bestDay) : '—';
   document.getElementById('sAvg').textContent = avg ? fmt(avg) : '—';
@@ -3149,6 +3195,7 @@ function render(opts) {
   document.getElementById('starCount').textContent = state.stars;
   renderLevel();
   try { renderDayCard(); } catch(e) {}
+  try { pushNotifTags(); } catch(e) {}
 
   if (opts.grid !== false) renderGrid();
   renderQuests();
@@ -3725,53 +3772,130 @@ function renderSpend() {
   spendDirty = false;
 }
 
-// ---------- инсайт с действием: «категория съела X% недели» ----------
-function renderInsight() {
-  const box = document.getElementById('pieInsight');
-  // сначала разрешаем вчерашний челлендж, если был
-  if (state.chal && state.chal.day < todayStr()) {
-    const spent = state.expenses
-      .filter(e => e.date === state.chal.day && e.cat === state.chal.cat)
-      .reduce((a, e) => a + e.amount, 0);
-    const cname = catById(state.chal.cat).name;
-    if (spent === 0) {
-      state.stars += 2;
-      toast('🏆 Челлендж выполнен: день без «' + cname + '»! +2⭐');
-      sndAch(); vib([20, 30, 20]);
-    } else {
-      toast('🐹 Челлендж «день без ' + cname + '» не удался. Бывает!');
-    }
-    state.chal = null;
-    localStorage.setItem(KEY, JSON.stringify(state));
+// ---------- живые задания: система сама смотрит, где реально сливаются деньги ----------
+function prevWeekDates() {
+  const monday = parseD(weekDates()[0]);
+  const res = [];
+  for (let i = 7; i >= 1; i--) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() - i);
+    res.push(todayStr(d));
   }
+  return res;
+}
 
+// анализ реальных трат: до 2 категорий-кандидатов на «день без …», с причиной
+function detectLeakCats() {
+  const activeCats = new Set(state.chals.map(c => c.cat));
   const week = weekDates();
   const wExps = state.expenses.filter(e => week.includes(e.date));
   const wSum = wExps.reduce((a, e) => a + e.amount, 0);
-  if (wSum < 10) { box.style.display = 'none'; return; }
+  if (wSum < 15) return [];                       // данных пока маловато
 
-  const byCat = {};
-  wExps.forEach(e => byCat[e.cat] = (byCat[e.cat] || 0) + e.amount);
-  const top = Object.entries(byCat).sort((a, b) => b[1] - a[1])[0];
-  const share = Math.round(top[1] / wSum * 100);
-  const c = catById(top[0]);
+  const byCat = {}, cntCat = {};
+  wExps.forEach(e => {
+    byCat[e.cat] = (byCat[e.cat] || 0) + e.amount;
+    cntCat[e.cat] = (cntCat[e.cat] || 0) + 1;
+  });
+  const sorted = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
+
+  const prevWeek = prevWeekDates();
+  const pByCat = {};
+  state.expenses.filter(e => prevWeek.includes(e.date))
+    .forEach(e => pByCat[e.cat] = (pByCat[e.cat] || 0) + e.amount);
+
+  const candidates = [];
+  const used = new Set();
+
+  // 1. категория-лидер недели — съедает четверть бюджета и больше
+  if (sorted.length) {
+    const [cat, sum] = sorted[0];
+    const share = sum / wSum;
+    if (share >= .25) {
+      candidates.push({ cat, reward: 3,
+        reason: '«' + catById(cat).name + '» съедает ' + Math.round(share * 100) + '% трат этой недели (' + fmt2(sum) + ' BYN)' });
+      used.add(cat);
+    }
+  }
+
+  // 2. категория, которая быстрее всего разгоняется по сравнению с прошлой неделей
+  let growCat = null, growDelta = 0;
+  for (const [cat, sum] of Object.entries(byCat)) {
+    if (used.has(cat)) continue;
+    const d = sum - (pByCat[cat] || 0);
+    if (d > growDelta && d >= 15) { growDelta = d; growCat = cat; }
+  }
+  if (growCat) {
+    candidates.push({ cat: growCat, reward: 2,
+      reason: '«' + catById(growCat).name + '» выросла на ' + fmt2(growDelta) + ' BYN за неделю' });
+    used.add(growCat);
+  }
+
+  // 3. привычка — почти каждый день мелкие покупки в одной категории
+  let habCat = null, habCnt = 0;
+  for (const [cat, cnt] of Object.entries(cntCat)) {
+    if (used.has(cat)) continue;
+    if (cnt > habCnt && cnt >= 4) { habCnt = cnt; habCat = cat; }
+  }
+  if (habCat) {
+    candidates.push({ cat: habCat, reward: 2,
+      reason: '«' + catById(habCat).name + '» — ' + habCnt + ' покупок за неделю, вошло в привычку' });
+  }
+
+  return candidates.filter(c => !activeCats.has(c.cat)).slice(0, 2 - state.chals.length);
+}
+
+function renderInsight() {
+  const box = document.getElementById('pieInsight');
+
+  // сначала разрешаем все просроченные челленджи
+  if (state.chals.length) {
+    const stillActive = [];
+    for (const ch of state.chals) {
+      if (ch.day < todayStr()) {
+        const spent = state.expenses
+          .filter(e => e.date === ch.day && e.cat === ch.cat)
+          .reduce((a, e) => a + e.amount, 0);
+        const cname = catById(ch.cat).name;
+        const reward = ch.reward || 2;
+        if (spent === 0) {
+          state.stars += reward;
+          toast('🏆 Челлендж выполнен: день без «' + cname + '»! +' + reward + '⭐');
+          sndAch(); vib([20, 30, 20]);
+        } else {
+          toast('🐹 Челлендж «день без ' + cname + '» не удался. Бывает!');
+        }
+      } else stillActive.push(ch);
+    }
+    state.chals = stillActive;
+    localStorage.setItem(KEY, JSON.stringify(state));
+  }
+
+  const suggestions = detectLeakCats();
+  if (!state.chals.length && !suggestions.length) { box.style.display = 'none'; return; }
   box.style.display = '';
 
-  if (state.chal) {
-    const cn = catById(state.chal.cat).name;
-    box.innerHTML = '«' + c.name + '» съедает <b>' + share + '%</b> трат этой недели.' +
-      '<div class="chal-on">🔥 Челлендж активен: ' +
-      (state.chal.day === todayStr() ? 'СЕГОДНЯ' : 'завтра') + ' — день без «' + cn + '»</div>';
-  } else if (share >= 25) {
-    box.innerHTML = '«' + c.name + '» съедает <b>' + share + '%</b> трат этой недели (' + fmt2(top[1]) + ' BYN).' +
-      '<button onclick="startChal(\'' + top[0] + '\')">Челлендж: завтра — день без «' + c.name + '» (+2⭐)</button>';
-  } else {
-    box.innerHTML = 'Траты ровно распределены — самая большая доля у «' + c.name + '» всего <b>' + share + '%</b>. Так держать!';
+  let html = '<div class="chal-list">';
+  for (const ch of state.chals) {
+    const cn = catById(ch.cat).name;
+    html += '<div class="chal-row active">' + catBadge(catById(ch.cat)) +
+      '<div class="chal-txt"><b>День без «' + cn + '»</b>' +
+      '<div class="chal-sub">' + (ch.day === todayStr() ? '🔥 сегодня — держись!' : 'начнётся завтра') + '</div></div>' +
+      '<div class="chal-reward">+' + (ch.reward || 2) + '⭐</div></div>';
   }
+  for (const s of suggestions) {
+    html += '<div class="chal-row">' + catBadge(catById(s.cat)) +
+      '<div class="chal-txt"><b>' + s.reason + '</b>' +
+      '<div class="chal-sub">Живое задание — система заметила это в твоих тратах</div></div>' +
+      '<button onclick="startChal(\'' + s.cat + '\',' + s.reward + ')">День без «' + catById(s.cat).name + '» (+' + s.reward + '⭐)</button></div>';
+  }
+  html += '</div>';
+  box.innerHTML = html;
 }
-function startChal(cat) {
+function startChal(cat, reward) {
+  if (state.chals.length >= 2 || state.chals.some(c => c.cat === cat)) return;
   const d = new Date(); d.setDate(d.getDate() + 1);
-  state.chal = { cat, day: todayStr(d) };
+  state.chals.push({ cat, day: todayStr(d), reward: reward || 2 });
   localStorage.setItem(KEY, JSON.stringify(state));
   toast('🐹 Принято! Завтра — день без «' + catById(cat).name + '». Я слежу.');
   sndStar();
@@ -4375,6 +4499,53 @@ function disconnectSync() {
   setSyncDot(null);
   renderSync();
 }
+// ================== УВЕДОМЛЕНИЯ (OneSignal) ==================
+function osReady() { return window.onesignalReady && window.OneSignal; }
+
+async function enableNotifs() {
+  if (!osReady()) { toast('Уведомления ещё загружаются, попробуй через секунду'); return; }
+  try {
+    await OneSignal.Notifications.requestPermission();
+    renderNotifCard();
+    if (OneSignal.Notifications.permission) {
+      toast('🔔 Уведомления включены!');
+      pushNotifTags();
+    }
+  } catch(e) { toast('Не получилось включить уведомления'); }
+}
+
+function renderNotifCard() {
+  const card = document.getElementById('notifCard');
+  const body = document.getElementById('notifBody');
+  if (!osReady() || !('Notification' in window)) { card.style.display = 'none'; return; }
+  card.style.display = '';
+  const granted = OneSignal.Notifications.permission;
+  if (granted) {
+    body.innerHTML = '<div class="hint">Включены — иногда напомню про стрик или траты. ✓</div>';
+    pushNotifTags();
+  } else {
+    body.innerHTML =
+      '<div class="hint">Разреши напоминания — подскажу, если забыл про конверт или разошёлся в тратах.</div>' +
+      '<button class="add-btn" onclick="enableNotifs()">Включить напоминания</button>';
+  }
+}
+
+// теги с реальными данными — на их основе строятся рассылки в панели OneSignal
+function pushNotifTags() {
+  if (!osReady() || !OneSignal.Notifications.permission) return;
+  try {
+    const s = streak();
+    const lastVisitDays = state.lastVisit ? Math.round((parseD(todayStr()) - parseD(state.lastVisit)) / 864e5) : 0;
+    const leaks = detectLeakCats();
+    OneSignal.User.addTags({
+      streak: String(s),
+      days_since_visit: String(lastVisitDays),
+      leak_cat: leaks.length ? catById(leaks[0].cat).name : '',
+      pig_name: state.pigName || 'Свинка'
+    });
+  } catch(e) {}
+}
+
 function renderSync() {
   const body = document.getElementById('syncBody');
   if (!SYNC_DB_URL) {
@@ -4790,7 +4961,7 @@ function toggleMore() {
   btn.classList.toggle('open', open);
   document.getElementById('moreLabel').textContent = open
     ? 'Свернуть' : 'Ещё: статистика, награды…';
-  if (open) { try { renderAch(); renderStats(); renderHistory(); } catch(e) {} }
+  if (open) { try { renderAch(); renderStats(); renderHistory(); renderNotifCard(); } catch(e) {} }
 }
 
 function toggleMore2() {
