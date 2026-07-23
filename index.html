@@ -4564,6 +4564,23 @@ function pushNotifTags() {
     const envToday = state.closed.some(c => c.date === tDay);
     const expToday = state.expenses.some(e => e.date === tDay);
     const goalPct = GOAL > 0 ? Math.min(100, Math.round(total() / GOAL * 100)) : 0;
+
+    // недельный дайджест трат — считается только по понедельникам,
+    // чтобы пуш мог показать «на прошлой неделе потратил ...»
+    let weeklyRecap = '';
+    if (new Date().getDay() === 1) {
+      const pWeek = prevWeekDates();
+      const pExps = state.expenses.filter(e => pWeek.includes(e.date));
+      const wSpent = pExps.reduce((a, e) => a + e.amount, 0);
+      const pClosed = state.closed.filter(c => pWeek.includes(c.date));
+      const wSaved = pClosed.reduce((a, c) => a + c.amount, 0);
+      const onTrack = wSaved >= WEEK_TARGET;
+      weeklyRecap = (onTrack
+        ? '🎉 Вау, на прошлой неделе отложил ' + fmt(wSaved) + ' BYN — так держать!'
+        : '📉 На прошлой неделе отложил всего ' + fmt(wSaved) + ' BYN, план — ' + fmt(WEEK_TARGET) + ' BYN. Наверстаем?'
+      ) + ' Потратил за неделю: ' + fmt(wSpent) + ' BYN.';
+    }
+
     OneSignal.User.addTags({
       streak: String(s),
       days_since_visit: String(lastVisitDays),
@@ -4571,7 +4588,8 @@ function pushNotifTags() {
       pig_name: state.pigName || 'Свинка',
       today_env: envToday ? '1' : '0',    // закрыл ли конверт сегодня
       today_exp: expToday ? '1' : '0',    // вносил ли трату сегодня
-      goal_pct: String(goalPct)           // % выполнения общей цели копилки
+      goal_pct: String(goalPct),          // % выполнения общей цели копилки
+      weekly_recap: weeklyRecap           // текст недельного дайджеста (пусто, если не понедельник)
     });
   } catch(e) {}
 }
