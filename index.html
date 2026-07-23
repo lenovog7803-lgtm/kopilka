@@ -1423,8 +1423,8 @@
   }
   body.dragging .drop-hint { display:flex; }
 </style>
-<!-- OneSignal: push-уведомления. Свой воркер (sw.js) не трогаем —
-     у OneSignal отдельная зона /push/onesignal/, чтобы не спорить за scope -->
+<!-- OneSignal: push-уведомления. Воркер объединён с офлайн-кэшем в один файл
+     OneSignalSDKWorker.js в корне сайта — так, как OneSignal ждёт по умолчанию -->
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script>
   window.OneSignalDeferred = window.OneSignalDeferred || [];
@@ -1432,9 +1432,7 @@
   OneSignalDeferred.push(async function(OneSignal) {
     try {
       await OneSignal.init({
-        appId: "908c161a-3b23-44f4-a4ba-1c7b5e8193c4",
-        serviceWorkerPath: "push/onesignal/OneSignalSDKWorker.js",
-        serviceWorkerParam: { scope: "./push/onesignal/" }
+        appId: "908c161a-3b23-44f4-a4ba-1c7b5e8193c4"
       });
       window.onesignalReady = true;
     } catch(e) {
@@ -5126,7 +5124,7 @@ maybeBackup();
 </script>
 <script>
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-  navigator.serviceWorker.register('sw.js').then(reg => {
+  navigator.serviceWorker.register('OneSignalSDKWorker.js').then(reg => {
     reg.update();
     setInterval(() => reg.update(), 60 * 60 * 1000);
   }).catch(() => {});
