@@ -1423,6 +1423,41 @@
     pointer-events:none;
   }
   body.dragging .drop-hint { display:flex; }
+
+  /* ---- «летающий» тур по блокам приложения ---- */
+  .tour-ov {
+    position:fixed; z-index:150; pointer-events:none;
+    box-shadow: 0 0 0 9999px rgba(10,12,24,.58), 0 0 0 3px rgba(255,255,255,.9);
+    transition: top .16s linear, left .16s linear, width .16s linear, height .16s linear,
+                border-radius .3s ease, opacity .4s;
+    opacity:0;
+  }
+  .tour-ov.breathe { animation: tourBreathe 1.8s ease-in-out infinite; }
+  @keyframes tourBreathe {
+    0%, 100% { box-shadow: 0 0 0 9999px rgba(10,12,24,.58), 0 0 0 3px rgba(255,255,255,.9); }
+    50%      { box-shadow: 0 0 0 9999px rgba(10,12,24,.58), 0 0 0 6px rgba(255,255,255,.6); }
+  }
+  .tour-ov.land { animation: tourLand .38s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes tourLand {
+    0%   { transform: scale(1.1); }
+    60%  { transform: scale(.97); }
+    100% { transform: scale(1); }
+  }
+  .tour-avatar {
+    position:fixed; z-index:151; left:16px; right:16px; margin:0 auto; max-width:280px;
+    background: rgba(255,255,255,.94);
+    border:1px solid rgba(255,255,255,.9);
+    border-radius:18px; padding:11px 15px;
+    box-shadow: 0 10px 28px rgba(60,70,110,.28);
+    font-size:13.5px; font-weight:600; color:var(--text);
+    transition: opacity .4s, top .4s cubic-bezier(.22,1,.36,1);
+    opacity:0;
+  }
+  .tour-avatar .tour-caret {
+    display:inline-block; width:2px; height:1em; margin-left:2px;
+    background:var(--accent); vertical-align:-2px;
+    animation: caretBlink .8s step-end infinite;
+  }
 </style>
 <!-- OneSignal: push-уведомления. Воркер объединён с офлайн-кэшем в один файл
      OneSignalSDKWorker.js в корне сайта — так, как OneSignal ждёт по умолчанию -->
@@ -1574,7 +1609,7 @@
     <div class="garland"></div>
     <div class="section-title">Календарь-челлендж · <span id="envCount"></span></div>
     <div class="hint">Каждый день закрывай один конверт — какой потянешь. Чтобы идти по плану, сегодня подойдёт <b id="recoSum">—</b> <span style="color:var(--accent)">✨</span></div>
-    <div class="extra-row">
+    <div class="extra-row" id="extraRow">
       <input type="number" id="extraInput" placeholder="Доп. сумма, BYN" min="1" step="0.01" inputmode="decimal">
       <button onclick="autoDeposit()">Внести</button>
     </div>
@@ -1617,7 +1652,7 @@
   <div id="moreWrap" style="display:none">
 
   <!-- статистика -->
-  <div class="card">
+  <div class="card" id="statsCard">
     <div class="section-title">Статистика</div>
     <div class="stats-grid">
       <div class="sbox"><div class="v" id="sBest">—</div><div class="l">лучший день, BYN</div></div>
@@ -1658,7 +1693,7 @@
 
   <div class="view" id="viewSpend" style="display:none">
     <!-- новая трата -->
-    <div class="card">
+    <div class="card" id="newExpCard">
       <div class="section-title">Новая трата</div>
       <div class="extra-row" style="margin-bottom:0">
         <input type="number" id="expAmount" placeholder="Сумма, BYN" min="0.01" step="0.01" inputmode="decimal">
@@ -1669,7 +1704,7 @@
     </div>
 
     <!-- хомяк-транжира -->
-    <div class="card hero">
+    <div class="card hero" id="dbCard">
       <div class="garland"></div>
       <div class="pig-area">
         <svg id="hamSvg" class="fit" viewBox="58 56 116 84" width="200" height="145">
@@ -1755,7 +1790,7 @@
     </div>
 
     <!-- по категориям -->
-    <div class="card">
+    <div class="card" id="pieCard">
       <div class="section-title">Куда уходят деньги · месяц</div>
       <canvas id="pieCv" class="spend-canvas" height="170"></canvas>
       <div class="pie-summary" id="pieSummary" onclick="togglePieLegend()">
@@ -1767,7 +1802,7 @@
     </div>
 
     <!-- ещё (статистика, свёрнуто) -->
-    <div class="card more-btn" onclick="toggleMore2()">
+    <div class="card more-btn" id="moreBtn2" onclick="toggleMore2()">
       <span id="moreLabel2">Ещё: статистика и история трат…</span>
       <span class="more-arrow" id="moreArrow2">▾</span>
     </div>
@@ -3415,6 +3450,7 @@ function saveGoal() {
 }
 
 function switchTab(t) {
+  tourGen++; tourHide();   // ручное переключение вкладки — отменяем и прячем любой текущий тур
   const show = document.getElementById(t === 'save' ? 'viewSave' : 'viewSpend');
   const hide = document.getElementById(t === 'save' ? 'viewSpend' : 'viewSave');
   hide.style.display = 'none';
@@ -4655,6 +4691,166 @@ function say(txt) {
     }, 48);
   });
 }
+// ---- «летающий» тур по реальным блокам приложения (после сказок) ----
+function tourEnsureOv() {
+  let ov = document.getElementById('tourOv');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.id = 'tourOv'; ov.className = 'tour-ov';
+    document.body.appendChild(ov);
+  }
+  return ov;
+}
+// ставит рамку точно на текущее положение блока (вызывается каждый кадр во время полёта)
+function tourSpotlight(el) {
+  const ov = tourEnsureOv();
+  const r = el.getBoundingClientRect();
+  const pad = 8;
+  ov.style.top = (r.top - pad) + 'px';
+  ov.style.left = (r.left - pad) + 'px';
+  ov.style.width = (r.width + pad * 2) + 'px';
+  ov.style.height = (r.height + pad * 2) + 'px';
+  const cs = getComputedStyle(el);
+  ov.style.borderRadius = (parseFloat(cs.borderRadius) || 16) + pad + 'px';
+  ov.style.opacity = '1';
+}
+function tourAvatarEl() {
+  let av = document.getElementById('tourAvatar');
+  if (!av) {
+    av = document.createElement('div');
+    av.id = 'tourAvatar'; av.className = 'tour-avatar';
+    av.innerHTML = '<span id="tourAvatarText"></span><span class="tour-caret" id="tourCaret"></span>';
+    document.body.appendChild(av);
+  }
+  av.style.opacity = '1';
+  return av;
+}
+// пузырь с текстом переезжает поближе к подсвеченному блоку
+function tourPositionBubble(el) {
+  const av = tourAvatarEl();
+  const r = el.getBoundingClientRect();
+  const guessH = 70;
+  let top;
+  if (window.innerHeight - r.bottom > guessH + 20) top = r.bottom + 14;
+  else if (r.top > guessH + 20) top = Math.max(10, r.top - guessH - 14);
+  else top = window.innerHeight - guessH - 20;
+  av.style.top = top + 'px';
+}
+function tourHide() {
+  const ov = document.getElementById('tourOv');
+  if (ov) { ov.style.opacity = '0'; ov.classList.remove('breathe', 'land'); }
+  const av = document.getElementById('tourAvatar');
+  if (av) av.style.opacity = '0';
+}
+// печать текста тура по буквам + тихий тик, как в сказке
+function tourType(text) {
+  const txtEl = document.getElementById('tourAvatarText');
+  const caret = document.getElementById('tourCaret');
+  txtEl.textContent = '';
+  caret.style.display = '';
+  return new Promise(res => {
+    let i = 0;
+    const t = setInterval(() => {
+      txtEl.textContent = text.slice(0, ++i);
+      const ch = text[i - 1];
+      if (ch && ch !== ' ' && i % 2 === 0) tone(1000 + Math.random() * 350, .025, 0, 'square', .016);
+      if (i >= text.length) {
+        clearInterval(t);
+        caret.style.display = 'none';
+        setTimeout(res, 1300);
+      }
+    }, 42);
+  });
+}
+function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+// собственный плавный скролл к блоку — рамка подсветки трекается каждый кадр,
+// поэтому не «промахивается» мимо блока и не прыгает, даже если скроллить не нужно
+function tourFlyTo(el, duration) {
+  return new Promise(res => {
+    const dur = duration || 550;
+    const startScrollY = window.scrollY;
+    const rect0 = el.getBoundingClientRect();
+    const elDocTop = rect0.top + startScrollY;
+    const targetScrollY = Math.max(0, Math.min(
+      document.documentElement.scrollHeight - window.innerHeight,
+      elDocTop - window.innerHeight / 2 + rect0.height / 2
+    ));
+    const ov = tourEnsureOv();
+    ov.classList.remove('breathe', 'land');
+    const t0 = performance.now();
+    function frame(now) {
+      const t = Math.min(1, (now - t0) / dur);
+      const eased = easeOutCubic(t);
+      window.scrollTo(0, startScrollY + (targetScrollY - startScrollY) * eased);
+      tourSpotlight(el);
+      if (t < 1) requestAnimationFrame(frame);
+      else {
+        ov.classList.add('land');
+        setTimeout(() => ov.classList.replace('land', 'breathe'), 380);
+        res();
+      }
+    }
+    requestAnimationFrame(frame);
+  });
+}
+let tourGen = 0;   // счётчик поколений тура — переключение вкладки отменяет старый тур
+async function tourStep(el, text) {
+  const myGen = tourGen;
+  if (!el || myGen !== tourGen) return;
+  await tourFlyTo(el);
+  if (myGen !== tourGen) return;
+  tourPositionBubble(el);
+  await tourType(text);
+}
+async function tourFinish(myGen) {
+  if (myGen !== tourGen) return;
+  tourHide();
+  await new Promise(r => setTimeout(r, 200));
+  const startY = window.scrollY;
+  const t0 = performance.now();
+  function frame(now) {
+    const t = Math.min(1, (now - t0) / 500);
+    window.scrollTo(0, startY * (1 - easeOutCubic(t)));
+    if (t < 1) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+async function runPigBlockTour() {
+  if (!document.getElementById('tabSave').classList.contains('active')) switchTab('save');
+  const myGen = ++tourGen;
+  const moreWrap = document.getElementById('moreWrap');
+  if (moreWrap.style.display === 'none') toggleMore();
+  await new Promise(r => setTimeout(r, 380));   // дать блоку раскрыться
+  const steps = [
+    [document.getElementById('envGrid'),  'Тут выбирай и закрывай конверты каждый день'],
+    [document.getElementById('extraRow'), 'А тут можно внести сразу любую сумму'],
+    [document.getElementById('statsCard'),'Здесь статистика: темп, средний конверт, прогноз'],
+    [document.getElementById('notifCard'),'Тут включишь уведомления'],
+    [document.getElementById('syncCard'), 'А тут — синхронизация между устройствами']
+  ];
+  for (const [el, text] of steps) {
+    if (myGen !== tourGen) return;
+    await tourStep(el, text);
+  }
+  await tourFinish(myGen);
+}
+async function runHamBlockTour() {
+  if (!document.getElementById('tabSpend').classList.contains('active')) switchTab('spend');
+  const myGen = ++tourGen;
+  await new Promise(r => setTimeout(r, 200));   // дать вкладке отрендериться
+  const steps = [
+    [document.getElementById('newExpCard'), 'Тут вводи сумму и категорию новой траты'],
+    [document.getElementById('pieCard'),    'Тут видно, куда уходят деньги, по категориям'],
+    [document.getElementById('dbCard'),     'А здесь — сколько можно потратить сегодня'],
+    [document.getElementById('moreBtn2'),   'Удалил трату случайно? 5 сек на «Вернуть»']
+  ];
+  for (const [el, text] of steps) {
+    if (myGen !== tourGen) return;
+    await tourStep(el, text);
+  }
+  await tourFinish(myGen);
+}
+
 function ui(html) { $s('onbUI').innerHTML = html || ''; }
 function choice(opts) {
   ui('<div class="preset-row">' + opts.map(o =>
@@ -4768,7 +4964,9 @@ const OH_HAM = '<svg id="ohHam" viewBox="58 50 116 90" width="190" height="147">
  '<ellipse cx="103" cy="129" rx="7" ry="4" fill="#e6b988"/><ellipse cx="127" cy="129" rx="7" ry="4" fill="#e6b988"/>' +
  '</svg>';
 
+let currentStory = null;   // 'pig' | 'ham' — какая сказка сейчас идёт (для корректного скипа/тура)
 async function runPigStory(preview) {
+  currentStory = 'pig';
   storyShow(); ui('');
   $s('onb').classList.add('night');            // ночь: свинка спит
   $s('onbStage').innerHTML = OP_PIG;
@@ -4833,13 +5031,18 @@ async function runPigStory(preview) {
       ui('');
     };
   });
-  if (preview) { fadeStoryOut(); toast('Это был предпросмотр 😉 Данные не тронуты'); return; }
+  if (preview) {
+    fadeStoryOut(() => setTimeout(runPigBlockTour, 700));
+    toast('Это был предпросмотр 😉 Данные не тронуты');
+    return;
+  }
   gPreset = goal.preset;
   state.pigName = nm;
   state.goal = { name: goal.name, amount: goal.amount, deadline: goalDeadlineFromPreset(), startDate: todayStr(), carried: 0 };
   state.onboarded = true;
   applyGoal(); save();
   dispSum = null; render();
+
   fadeStoryOut(() => {                       // финальный кадр: настоящая свинка машет
     const p = $s('pigSvg');
     p.classList.add('hi');
@@ -4848,6 +5051,7 @@ async function runPigStory(preview) {
     setTempHappy(1500);
     coinRain(16); sndAch();
     toast('🐷 ' + nm + ' готова! Цель: ' + goal.name + ' — ' + fmt(goal.amount) + ' BYN');
+    setTimeout(runPigBlockTour, 1700);        // облёт блоков: уведомления + синхронизация
   });
 }
 
@@ -4887,6 +5091,7 @@ document.addEventListener('pointermove', e => {
 }, { passive: true });
 
 async function runHamStory(preview) {
+  currentStory = 'ham';
   storyShow(); ui('');
   $s('onbStage').innerHTML = OH_HAM;
   const ham = $s('ohHam');
@@ -4949,8 +5154,9 @@ async function runHamStory(preview) {
     await say('Принято: ' + fmt(lim) + ' BYN в месяц. Слежу за формой. За твоей и своей. 🐹');
   else
     await say('Ла-адно. Но учти: я всё равно всё вижу...');
+
   if (!preview) { state.hamboarded = true; save(); renderSpend(); }
-  fadeStoryOut();
+  fadeStoryOut(() => setTimeout(runHamBlockTour, 500));  // облёт блоков: диаграмма, бюджет, история
 }
 
 // пропуск — с подтверждением (свинка расстроится!)
@@ -4970,10 +5176,18 @@ document.getElementById('onbSkip').onclick = () => {
   clearTimeout(skipTimer);
   skipArmed = false;
   b.textContent = 'пропустить знакомство';
-  state.onboarded = true;
-  state.hamboarded = true;
+  // пропуск закрывает только ту сказку, что сейчас идёт — вторая (если ещё не была
+  // показана) сработает сама в свой момент: копилка — сразу, расходы — при первом заходе на вкладку
+  if (currentStory === 'ham') state.hamboarded = true;
+  else state.onboarded = true;
   localStorage.setItem(KEY, JSON.stringify(state));
-  fadeStoryOut();
+  fadeStoryOut(() => {
+    // даже при пропуске сказки показываем короткий облёт блоков именно этого раздела
+    setTimeout(() => {
+      if (currentStory === 'ham') runHamBlockTour();
+      else runPigBlockTour();
+    }, 500);
+  });
 };
 
 // ================== «СЕГОДНЯ»: фраза + факт дня ==================
