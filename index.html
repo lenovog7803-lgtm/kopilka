@@ -1428,15 +1428,28 @@
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script>
   window.OneSignalDeferred = window.OneSignalDeferred || [];
+  window.onesignalError = null;
   OneSignalDeferred.push(async function(OneSignal) {
-    await OneSignal.init({
-      appId: "908c161a-3b23-44f4-a4ba-1c7b5e8193c4",
-      serviceWorkerPath: "push/onesignal/OneSignalSDKWorker.js",
-      serviceWorkerParam: { scope: "./push/onesignal/" }
-    });
-    window.onesignalReady = true;
+    try {
+      await OneSignal.init({
+        appId: "908c161a-3b23-44f4-a4ba-1c7b5e8193c4",
+        serviceWorkerPath: "push/onesignal/OneSignalSDKWorker.js",
+        serviceWorkerParam: { scope: "./push/onesignal/" }
+      });
+      window.onesignalReady = true;
+    } catch(e) {
+      window.onesignalError = 'init: ' + (e && e.message ? e.message : e);
+    }
     try { renderNotifCard(); } catch(e) {}
   });
+  // если SDK вообще не подгрузился (заблокирован блокировщиком/сетью) —
+  // OneSignalDeferred.push никогда не выполнится; ловим это по таймауту
+  setTimeout(function() {
+    if (!window.onesignalReady && !window.onesignalError) {
+      window.onesignalError = 'timeout: cdn.onesignal.com не ответил за 6 сек — похоже, скрипт заблокирован (блокировщик рекламы/трекеров или нет сети)';
+    }
+    try { renderNotifCard(); } catch(e) {}
+  }, 6000);
 </script>
 </head>
 <body>
@@ -4517,7 +4530,18 @@ async function enableNotifs() {
 function renderNotifCard() {
   const card = document.getElementById('notifCard');
   const body = document.getElementById('notifBody');
-  if (!osReady() || !('Notification' in window)) { card.style.display = 'none'; return; }
+  if (!('Notification' in window)) { card.style.display = 'none'; return; }
+  // если SDK так и не поднялся — показываем понятную причину вместо тишины
+  if (!osReady()) {
+    if (window.onesignalError) {
+      card.style.display = '';
+      body.innerHTML = '<div class="hint">⚠️ Уведомления пока недоступны.<br>Причина: ' + window.onesignalError +
+        '<br><br>Попробуй отключить блокировщик рекламы/трекеров для этого сайта и обнови страницу.</div>';
+    } else {
+      card.style.display = 'none';   // ещё грузится — подождём
+    }
+    return;
+  }
   card.style.display = '';
   const granted = OneSignal.Notifications.permission;
   if (granted) {
