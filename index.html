@@ -5123,18 +5123,8 @@ setTimeout(checkEvening, 2500);   // итог дня — после привет
 maybeBackup();
 </script>
 <script>
-if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-  navigator.serviceWorker.register('OneSignalSDKWorker.js').then(reg => {
-    reg.update();
-    setInterval(() => reg.update(), 60 * 60 * 1000);
-  }).catch(() => {});
-  let swRefreshed = false;
-  navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (swRefreshed) return;
-    swRefreshed = true;
-    location.reload();
-  });
-}
+// OneSignal сам регистрирует OneSignalSDKWorker.js — наша задача только
+// иногда проверять есть ли уже активный воркер и не мешать ему
 </script>
 </body>
 </html>
