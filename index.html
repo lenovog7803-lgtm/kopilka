@@ -131,13 +131,37 @@
   .add-btn:active { transform: scale(.96); }
 
   .limit-box {
-    margin-top:14px; padding:14px 16px; border-radius:18px; cursor:pointer;
+    margin-top:10px; padding:12px 14px; border-radius:18px; cursor:pointer;
     background: rgba(255,255,255,.42); border:1px solid rgba(255,255,255,.6);
   }
   .limit-head { display:flex; justify-content:space-between; font-size:13.5px; font-weight:700; }
   .limit-head span:last-child { color:var(--text2); font-weight:600; }
-  .limit-bar { height:8px; border-radius:5px; margin-top:9px; background:rgba(255,255,255,.6); overflow:hidden; }
+  .limit-bar { position:relative; height:8px; border-radius:5px; margin-top:9px; background:rgba(255,255,255,.6); }
   .limit-bar i { display:block; height:100%; border-radius:5px; transition: width .7s cubic-bezier(.22,1,.36,1); }
+  /* риска «где должен быть сегодня по графику» */
+  .limit-pace {
+    position:absolute; top:-3px; width:2px; height:14px; border-radius:1px;
+    background:rgba(28,28,46,.35); transition:left .7s cubic-bezier(.22,1,.36,1);
+    display:none;
+  }
+  /* реплика хомяка отдельной строкой */
+  .ham-say {
+    width:100%; margin-top:2px; font-size:12.5px; font-weight:600; font-style:italic;
+    color:var(--text2); text-align:center; line-height:1.4;
+  }
+  .ham-say:empty { display:none; }
+  /* карточка расходов компактнее: меньше воздуха между блоками */
+  #viewSpend .card.hero { gap:10px; }
+  #viewSpend .hero-stats .stat { padding:9px 6px; }
+  #viewSpend .hero-stats .stat .l { font-size:11px; }
+  /* крупный призыв задать лимит, когда его нет */
+  .limit-cta {
+    display:block; width:100%; margin-top:12px; border:none; cursor:pointer; font-family:inherit;
+    font-size:15px; font-weight:700; padding:13px 0; border-radius:18px; color:#fff;
+    background:linear-gradient(160deg,#4cd97b,#26a349);
+    box-shadow:0 6px 15px rgba(38,163,73,.3);
+  }
+  .limit-cta:active { transform:scale(.97); }
 
   /* дневной бюджет */
   .daily-budget {
@@ -157,14 +181,20 @@
   .db-sum.bad { color:#d63a3a; }
   .db-note { font-size:12.5px; color:var(--text2); }
 
+  /* прогноз конца месяца: цвет состояния + стрелка тренда, одной строкой под полоской */
   .forecast-line {
-    margin-top:12px; padding:11px 14px; border-radius:16px;
-    font-size:13.5px; font-weight:600; text-align:center;
-    background: rgba(255,255,255,.42); border:1px solid rgba(255,255,255,.6);
-    color: var(--text2);
+    display:flex; align-items:center; gap:7px; justify-content:center;
+    margin-top:9px; padding:8px 11px; border-radius:13px;
+    font-size:12.5px; font-weight:600; text-align:center;
+    background: rgba(38,163,73,.1);
+    color: #1d7a3c;
   }
-  .forecast-line b { color:var(--text); font-variant-numeric:tabular-nums; }
-  .forecast-line.over b { color:#d63a3a; }
+  .forecast-line b { color:#146b31; font-variant-numeric:tabular-nums; }
+  .forecast-line.risk { background:rgba(224,115,15,.12); color:#a85c0c; }
+  .forecast-line.risk b { color:#8f4d08; }
+  .forecast-line.over { background:rgba(214,58,58,.12); color:#b03131; }
+  .forecast-line.over b { color:#962727; }
+  .fc-tr { font-size:14px; line-height:1; flex-shrink:0; }
 
   .cmp-row { display:flex; align-items:center; gap:10px; padding:6px 0; }
   .cmp-label { width:66px; font-size:12.5px; font-weight:600; color:var(--text2); text-transform:capitalize; }
@@ -195,26 +225,26 @@
     to   { transform: translateY(1.5px); }
   }
   #hamBodyGrp {
-    transform-origin: 115px 131px;
+    transform-origin: 115px 133px;
     transition: transform .9s cubic-bezier(.22,1,.36,1);
   }
-  #hamCheeks { transform-origin: 115px 101px; transition: transform .9s; }
+  #hamCheeks { transform-origin: 115px 103px; transition: transform .9s; }
   #hamCheeks.cheekPop { animation: cheekP .5s ease; }
   @keyframes cheekP { 40% { transform: scale(1.28); } }
 
   /* моргание (на внутренней группе, дёрганье глаз — на обёртке) */
-  #hamEyes { animation: hamBlink 5.6s infinite; transform-origin: 114px 92px; }
+  #hamEyes { animation: hamBlink 5.6s infinite; transform-origin: 115px 96px; }
   @keyframes hamBlink { 0%, 93%, 100% { transform: scaleY(1); } 95%, 97% { transform: scaleY(.08); } }
   /* тревога при 80% лимита: уши прижаты, глаза бегают */
   #hamEarL, #hamEarR { transition: transform .6s ease; }
-  #hamEarL { transform-origin: 97px 87px; }
-  #hamEarR { transform-origin: 130px 85px; }
+  #hamEarL { transform-origin: 95px 86px; }
+  #hamEarR { transform-origin: 135px 84px; }
   #hamSvg.alarm #hamEarL { transform: rotate(-26deg) scale(.92); }
   #hamSvg.alarm #hamEarR { transform: rotate(26deg) scale(.92); }
   #hamSvg.alarm #hamEyesW { animation: eyesDart 1.5s ease-in-out infinite; }
   @keyframes eyesDart { 0%,100% { transform: translateX(0); } 28% { transform: translateX(-1.7px); } 72% { transform: translateX(1.7px); } }
   /* усы и носик подёргиваются */
-  #hamWhisk { transform-origin: 114px 101px; animation: whiskTw 8s ease-in-out infinite; }
+  #hamWhisk { transform-origin: 115px 105px; animation: whiskTw 8s ease-in-out infinite; }
   @keyframes whiskTw { 0%, 90%, 100% { transform: rotate(0); } 93% { transform: rotate(1.6deg); } 96% { transform: rotate(-1.4deg); } }
   /* умывание */
   #hamSvg.washing #hamPaws { display:block; animation: washMove 1.7s ease both; }
@@ -229,7 +259,7 @@
   }
   /* семечка */
   #hamSvg.seeding #hamPaws { display:block; }
-  #hamSvg.seeding #hamSeed { display:block; animation: seedNib 1.5s ease both; transform-origin: 114px 107px; }
+  #hamSvg.seeding #hamSeed { display:block; animation: seedNib 1.5s ease both; transform-origin: 115px 112px; }
   @keyframes seedNib {
     0% { transform: scale(0); } 15% { transform: scale(1.1); }
     30%, 50%, 70% { transform: scale(1) rotate(-26deg); }
@@ -249,7 +279,7 @@
   #hamSvg.chomp #hamAll { animation: chompA .28s ease; }
   @keyframes chompA { 45% { transform: scale(1.06, .93) translateY(1.5px); } }
   /* желейное пузо */
-  #hamBelly { transform-origin: 111px 112px; }
+  #hamBelly { transform-origin: 115px 111px; }
   #hamSvg.jelly #hamBelly { animation: bellyJelly .75s cubic-bezier(.3,1.8,.4,1); }
   @keyframes bellyJelly {
     20% { transform: scale(1.22, .82); }
@@ -429,7 +459,13 @@
     border-bottom:1px dashed rgba(28,28,46,.3);
   }
   #goalLabel:active { opacity:.6; }
-  .jar-info .pct { font-size:15px; font-weight:600; color:var(--text2); }
+  /* сумма и процент в одну строку: процент справа от числа */
+  .sum-row { display:flex; align-items:baseline; gap:8px; flex-wrap:nowrap; }
+  .jar-info .pct {
+    font-size:15px; font-weight:700; color:#c78a00; flex-shrink:0;
+    background:rgba(255,211,92,.28); border-radius:9px; padding:2px 7px;
+    line-height:1.25; white-space:nowrap;
+  }
   .jar-info .sum { font-size:36px; font-weight:800; letter-spacing:-1px; margin:2px 0; font-variant-numeric: tabular-nums; }
   .jar-info .goal { font-size:13px; color:var(--text2); }
   .jar-info .stars { margin-top:8px; font-size:14px; font-weight:700; color:#c78a00; }
@@ -533,14 +569,27 @@
     transition: transform .15s;
   }
   .extra-row button:active { transform: scale(.94); }
+  /* остаток в кошельке: строка «иконка — текст — сумма», без переносов */
   .wallet-line {
-    display:none; align-items:center; justify-content:center; gap:6px;
-    font-size:13.5px; font-weight:700; color:#8a6d1a;
-    background: rgba(255,211,92,.25);
-    border:1px solid rgba(232,168,32,.35);
-    border-radius:14px; padding:8px 14px; margin-bottom:12px;
+    display:none; align-items:center; gap:10px;
+    background: rgba(255,211,92,.2);
+    border:1px solid rgba(232,168,32,.3);
+    border-radius:16px; padding:9px 12px; margin-bottom:12px;
   }
   .wallet-line.show { display:flex; }
+  .wl-ico {
+    flex-shrink:0; width:30px; height:30px; border-radius:10px;
+    background: rgba(232,168,32,.18);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .wl-ico svg { width:17px; height:17px; display:block; }
+  .wl-txt { flex:1; min-width:0; }
+  .wl-title { display:block; font-size:12.5px; font-weight:700; color:#8a6d1a; line-height:1.25; }
+  .wl-hint { display:block; font-size:11px; color:rgba(138,109,26,.72); line-height:1.3; margin-top:1px; }
+  .wl-sum {
+    flex-shrink:0; font-size:15px; font-weight:800; color:#8a6d1a;
+    font-variant-numeric: tabular-nums; white-space:nowrap;
+  }
 
   .filters { display:flex; gap:8px; margin-bottom:14px; }
   .chip {
@@ -1076,7 +1125,9 @@
   @media (max-width: 480px) {
     .jar-info .sum { font-size: clamp(20px, 6vw, 27px); }
     .db-sum { font-size: clamp(17px, 5.2vw, 24px) !important; }
-    .jar-info .goal, .jar-info .pct, .lvl, .jar-info .stars { font-size: 12px; }
+    .jar-info .goal, .lvl, .jar-info .stars { font-size: 12px; }
+    .jar-info .pct { font-size: 12px; padding: 2px 5px; }
+    .sum-row { gap: 5px; }
   }
   /* живые иконки категорий */
   .cat.sel .cbadge svg { animation: icoLive .55s ease; }
@@ -1556,6 +1607,27 @@
   .g-emoji { font-size:38px; text-align:center; margin-bottom:2px; }
   .g-card h3 { margin-bottom:2px !important; }
   .g-sub { font-size:12.5px; color:var(--text2); text-align:center; margin-bottom:14px; }
+  /* мастер цели: три шага, точки-индикатор */
+  .g-dots { display:flex; gap:5px; justify-content:center; margin-bottom:12px; }
+  .g-dots i {
+    width:6px; height:6px; border-radius:50%; background:rgba(120,130,160,.28);
+    transition: width .3s, background .3s, border-radius .3s;
+  }
+  .g-dots i.on { background:#0a84ff; width:18px; border-radius:3px; }
+  .g-step { animation: gStepIn .28s cubic-bezier(.22,1.2,.4,1); }
+  @keyframes gStepIn { 0% { opacity:0; transform:translateX(10px); } 100% { opacity:1; transform:translateX(0); } }
+  .g-name-presets, .g-amt-presets { margin-top:10px; }
+  .g-name-presets .pchip, .g-amt-presets .pchip { font-size:12px; padding:9px 4px; }
+  /* шаг «сколько»: сумма крупным вводом */
+  .g-card input.g-amount {
+    font-size:30px !important; font-weight:700 !important; text-align:center;
+    letter-spacing:-.8px; padding:14px 12px !important;
+    font-variant-numeric: tabular-nums;
+  }
+  .g-cur { text-align:center; font-size:12px; color:var(--text2); margin-top:5px; font-weight:600; }
+  /* перенос накопленного — компактный переключатель */
+  .g-seg { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:2px; }
+  .g-seg .pchip { font-size:12.5px; padding:9px 4px; }
   .g-label {
     display:block; text-align:left;
     font-size:11px; font-weight:700; color:var(--text2);
@@ -2043,8 +2115,10 @@
       </svg>
 
       <div class="jar-info">
-        <div class="pct" id="pct">0%</div>
-        <div class="sum" id="saved">0</div>
+        <div class="sum-row">
+          <div class="sum" id="saved">0</div>
+          <div class="pct" id="pct">0%</div>
+        </div>
         <div class="goal" id="goalLabel">из 15 000 BYN ✎</div>
         <div class="stars">⭐ <span id="starCount">0</span></div>
         <div class="lvl" id="pigLvl">Ур. 1 · <b>Поросёнок</b></div>
@@ -2171,59 +2245,68 @@
           <g id="hamAll">
             <g id="hamLean">
               <g id="hamBodyGrp">
-                <circle cx="145" cy="112" r="5" fill="#e6b988"/>
-                <!-- тело: стекло, как у свинки -->
-                <ellipse cx="115" cy="104" rx="36" ry="27" fill="rgba(236,196,150,.38)" stroke="rgba(255,255,255,.9)" stroke-width="2.5"/>
-                <ellipse cx="111" cy="112" rx="21" ry="15" fill="rgba(255,241,218,.5)"/>
-                <!-- блик стекла -->
-                <ellipse cx="100" cy="88" rx="14" ry="6.5" fill="rgba(255,255,255,.45)" transform="rotate(-22 100 88)"/>
-                <g id="hamEarL"><circle cx="97" cy="79" r="8" fill="#e6b988" stroke="rgba(255,255,255,.7)" stroke-width="1.5"/><circle cx="97" cy="79" r="4.5" fill="#f2c9cf"/></g>
-                <g id="hamEarR"><circle cx="130" cy="77" r="8" fill="#e6b988" stroke="rgba(255,255,255,.7)" stroke-width="1.5"/><circle cx="130" cy="77" r="4.5" fill="#f2c9cf"/></g>
+                <!-- тень под телом -->
+                <ellipse cx="115" cy="136" rx="32" ry="5" fill="rgba(120,110,90,.14)"/>
+                <!-- хвостик -->
+                <circle cx="150" cy="112" r="5" fill="#dba871"/>
+                <!-- задние лапки по бокам, выглядывают из-за тела -->
+                <ellipse cx="86" cy="112" rx="9" ry="7" fill="#e6b988" transform="rotate(-25 86 112)"/>
+                <ellipse cx="144" cy="112" rx="9" ry="7" fill="#e6b988" transform="rotate(25 144 112)"/>
+                <!-- ушки за телом -->
+                <g id="hamEarL"><circle cx="95" cy="78" r="8.5" fill="#e6b988"/><circle cx="95" cy="78" r="4.6" fill="#f2c9cf"/></g>
+                <g id="hamEarR"><circle cx="135" cy="76" r="8.5" fill="#e6b988"/><circle cx="135" cy="76" r="4.6" fill="#f2c9cf"/></g>
+                <!-- тело -->
+                <ellipse cx="115" cy="101" rx="34" ry="29" fill="#f0d0a8"/>
+                <!-- светлое пузо -->
+                <ellipse id="hamBelly" cx="115" cy="111" rx="21" ry="15" fill="#fdf0dc"/>
+                <!-- блик -->
+                <ellipse cx="101" cy="88" rx="12" ry="5.5" fill="rgba(255,255,255,.5)" transform="rotate(-20 101 88)"/>
                 <g id="hamCheeks">
-                  <ellipse id="cheekL" cx="92"  cy="101" rx="10" ry="9" fill="rgba(244,215,175,.55)" stroke="rgba(255,255,255,.55)" stroke-width="1.2"/>
-                  <ellipse id="cheekR" cx="138" cy="101" rx="10" ry="9" fill="rgba(244,215,175,.55)" stroke="rgba(255,255,255,.55)" stroke-width="1.2"/>
+                  <ellipse id="cheekL" cx="86"  cy="103" rx="11" ry="10" fill="#f7dcb8"/>
+                  <ellipse id="cheekR" cx="144" cy="103" rx="11" ry="10" fill="#f7dcb8"/>
                 </g>
-                <!-- румянец, как у свинки -->
-                <ellipse cx="97"  cy="106" rx="6" ry="3.8" fill="rgba(255,110,145,.3)"/>
-                <ellipse cx="133" cy="106" rx="6" ry="3.8" fill="rgba(255,110,145,.3)"/>
+                <!-- румянец -->
+                <ellipse cx="93"  cy="108" rx="6" ry="4" fill="rgba(255,110,145,.3)"/>
+                <ellipse cx="137" cy="108" rx="6" ry="4" fill="rgba(255,110,145,.3)"/>
                 <g id="hamEyesW">
                   <g id="hamEyes">
-                    <circle id="hpL" cx="105" cy="92" r="4.5" fill="#2c2c3e"/><circle id="hpR" cx="124" cy="92" r="4.5" fill="#2c2c3e"/>
-                    <circle id="hhL" cx="106.7" cy="90.3" r="1.6" fill="#fff"/><circle id="hhR" cx="125.7" cy="90.3" r="1.6" fill="#fff"/>
+                    <circle id="hpL" cx="105" cy="96" r="5" fill="#2c2c3e"/><circle id="hpR" cx="125" cy="96" r="5" fill="#2c2c3e"/>
+                    <circle id="hhL" cx="106.7" cy="94" r="1.8" fill="#fff"/><circle id="hhR" cx="126.7" cy="94" r="1.8" fill="#fff"/>
                   </g>
                 </g>
                 <g id="hamHappyE" style="display:none">
-                  <path d="M100 93 q5 -5.5 10 0" stroke="#2c2c3e" stroke-width="2.6" fill="none" stroke-linecap="round"/>
-                  <path d="M119 93 q5 -5.5 10 0" stroke="#2c2c3e" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+                  <path d="M100 97 q5 -6 10 0" stroke="#2c2c3e" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+                  <path d="M120 97 q5 -6 10 0" stroke="#2c2c3e" stroke-width="2.8" fill="none" stroke-linecap="round"/>
                 </g>
                 <g id="hamSleepE" style="display:none">
-                  <path d="M100 92 q5 4 10 0" stroke="#2c2c3e" stroke-width="2.4" fill="none" stroke-linecap="round"/>
-                  <path d="M119 92 q5 4 10 0" stroke="#2c2c3e" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+                  <path d="M100 96 q5 4.5 10 0" stroke="#2c2c3e" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+                  <path d="M120 96 q5 4.5 10 0" stroke="#2c2c3e" stroke-width="2.6" fill="none" stroke-linecap="round"/>
                 </g>
                 <g id="hamTired" style="display:none">
-                  <path d="M101 93 q4 3 8 0" stroke="#2c2c3e" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-                  <path d="M120 93 q4 3 8 0" stroke="#2c2c3e" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                  <path d="M101 97 q4 3 8 0" stroke="#2c2c3e" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+                  <path d="M121 97 q4 3 8 0" stroke="#2c2c3e" stroke-width="2.6" fill="none" stroke-linecap="round"/>
                 </g>
-                <path id="hamSweat" style="display:none" d="M142 76 q6 8 0 12 q-6 -4 0 -12" fill="#8fc6ff"/>
-                <ellipse cx="114.5" cy="100" rx="3.4" ry="2.7" fill="#f7b9c9" stroke="rgba(255,255,255,.7)" stroke-width="1"/>
-                <path d="M114.5 102.5 q0 4 -4 5 M114.5 102.5 q0 4 4 5" stroke="#b98a5f" stroke-width="1.4" fill="none" stroke-linecap="round"/>
-                <g id="hamWhisk"><path d="M82 100 L70 96 M82 104 L70 106 M147 100 L159 96 M147 104 L159 106" stroke="rgba(120,90,50,.45)" stroke-width="1.4" stroke-linecap="round"/></g>
-                <ellipse id="footL" cx="103" cy="129" rx="7" ry="4" fill="#e6b988" stroke="rgba(255,255,255,.6)" stroke-width="1"/>
-                <ellipse id="footR" cx="127" cy="129" rx="7" ry="4" fill="#e6b988" stroke="rgba(255,255,255,.6)" stroke-width="1"/>
+                <path id="hamSweat" style="display:none" d="M146 82 q6 8 0 12 q-6 -4 0 -12" fill="#8fc6ff"/>
+                <!-- нос и рот -->
+                <ellipse cx="115" cy="105" rx="4" ry="3" fill="#f7b9c9"/>
+                <path d="M115 108 q0 4 -4 5 M115 108 q0 4 4 5" stroke="#b98a5f" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+                <g id="hamWhisk"><path d="M77 103 L64 99 M77 107 L64 109 M153 103 L166 99 M153 107 L166 109" stroke="rgba(120,90,50,.42)" stroke-width="1.4" stroke-linecap="round"/></g>
+                <ellipse id="footL" cx="102" cy="130" rx="9" ry="5" fill="#dba871"/>
+                <ellipse id="footR" cx="128" cy="130" rx="9" ry="5" fill="#dba871"/>
                 <!-- семечка -->
-                <ellipse id="hamSeed" style="display:none" cx="114" cy="107" rx="4.2" ry="2.6" fill="#8a5a2b" transform="rotate(-28 114 107)"/>
+                <ellipse id="hamSeed" style="display:none" cx="115" cy="112" rx="4.2" ry="2.6" fill="#8a5a2b" transform="rotate(-28 115 112)"/>
                 <!-- передние лапки (умывание/семечка) -->
                 <g id="hamPaws" style="display:none">
-                  <ellipse cx="106" cy="103" rx="6" ry="4.5" fill="#e6b988" stroke="rgba(255,255,255,.7)" stroke-width="1"/>
-                  <ellipse cx="123" cy="103" rx="6" ry="4.5" fill="#e6b988" stroke="rgba(255,255,255,.7)" stroke-width="1"/>
+                  <ellipse cx="106" cy="113" rx="6.5" ry="5" fill="#e6b988"/>
+                  <ellipse cx="124" cy="113" rx="6.5" ry="5" fill="#e6b988"/>
                 </g>
                 <!-- ночной колпачок -->
                 <g id="hamSleepG" style="display:none">
-                  <path d="M96 77 q12 -20 34 -16 q4 9 0 15 q-16 -6 -34 1 Z" fill="#5e6bd8"/>
-                  <ellipse cx="112" cy="76" rx="17" ry="4.5" fill="#8f9af0"/>
-                  <circle cx="133" cy="62" r="4.5" fill="#8f9af0"/>
-                  <text class="zz z1" x="139" y="74" font-size="11" fill="#5e6bd8" font-weight="800">Z</text>
-                  <text class="zz z2" x="147" y="65" font-size="8" fill="#7e88e8" font-weight="800">Z</text>
+                  <path d="M95 74 q13 -21 35 -17 q4 9 0 15 q-17 -6 -35 2 Z" fill="#5e6bd8"/>
+                  <ellipse cx="112" cy="73" rx="18" ry="4.8" fill="#8f9af0"/>
+                  <circle cx="134" cy="58" r="4.8" fill="#8f9af0"/>
+                  <text class="zz z1" x="141" y="71" font-size="11" fill="#5e6bd8" font-weight="800">Z</text>
+                  <text class="zz z2" x="150" y="61" font-size="8" fill="#7e88e8" font-weight="800">Z</text>
                 </g>
               </g>
             </g>
@@ -2233,20 +2316,21 @@
           <div class="pct" id="spPct">За месяц</div>
           <div class="sum db-sum" id="dbSum">—</div>
           <div class="goal" id="dbNote"></div>
-          <div class="lvl" id="hamLine"></div>
         </div>
       </div>
+      <div class="ham-say" id="hamLine"></div>
       <div class="hero-stats">
-        <div class="stat"><div class="v" id="spToday">0</div><div class="l">сегодня, BYN</div></div>
-        <div class="stat"><div class="v" id="spWeek">0</div><div class="l">за неделю, BYN</div></div>
-        <div class="stat"><div class="v" id="spMonth">0</div><div class="l">за месяц, BYN</div></div>
+        <div class="stat"><div class="v" id="spToday">0</div><div class="l">сегодня</div></div>
+        <div class="stat"><div class="v" id="spWeek">0</div><div class="l">за неделю</div></div>
+        <div class="stat"><div class="v" id="spAvgDay">0</div><div class="l">в день в среднем</div></div>
       </div>
-      <div class="limit-box" onclick="setLimit()" title="Нажми, чтобы изменить" style="width:100%">
+      <div class="limit-box" id="limitBox" onclick="setLimit()" title="Нажми, чтобы изменить" style="width:100%">
         <div class="limit-head"><span>Лимит на месяц</span><span id="limitVal">задать →</span></div>
-        <div class="limit-bar" id="limitBarWrap" style="display:none"><i id="limitBar"></i></div>
+        <div class="limit-bar" id="limitBarWrap" style="display:none"><i id="limitBar"></i><u class="limit-pace" id="limitPace"></u></div>
         <div class="today-line" id="limitHint" style="margin-top:8px; display:none"></div>
+        <div class="forecast-line" id="spForecast" style="display:none"></div>
       </div>
-      <div class="forecast-line" id="spForecast" style="display:none; width:100%"></div>
+      <button class="limit-cta" id="limitCta" onclick="setLimit()" style="display:none">Задать лимит на месяц</button>
     </div>
 
     <!-- по категориям -->
@@ -2529,34 +2613,61 @@
 <!-- мастер цели -->
 <div id="goalModal">
   <div class="modal-card g-card">
-    <div class="g-emoji">🎯</div>
-    <h3>Цель накопления</h3>
-    <div class="g-sub">На что копим и к какому сроку</div>
-    <label class="g-label">Название</label>
-    <input id="gName" placeholder="Например, Отпуск" maxlength="20" autocomplete="off">
-    <label class="g-label">Сумма, BYN</label>
-    <input id="gAmount" type="number" inputmode="decimal" min="1" placeholder="15 000">
-    <label class="g-label">Срок</label>
-    <div class="preset-row">
-      <button class="pchip" data-p="w">Неделя</button>
-      <button class="pchip" data-p="m">Месяц</button>
-      <button class="pchip" data-p="h">Полгода</button>
-      <button class="pchip" data-p="y">Год</button>
-      <button class="pchip" data-p="ny">До НГ</button>
-      <button class="pchip" data-p="c">Дата…</button>
-    </div>
-    <input id="gDate" type="date" style="margin-top:8px; display:none">
-    <div id="gTransfer" style="display:none">
-      <label class="g-label">Уже накоплено <b id="gHave"></b> BYN — что с ним?</label>
-      <div class="preset-row" style="grid-template-columns:1fr 1fr">
-        <button class="pchip sel" data-t="keep">Перенести<br><small>зачесть в новую цель</small></button>
-        <button class="pchip" data-t="zero">С нуля<br><small>чистый лист</small></button>
+    <div class="g-dots" id="gDots"><i></i><i></i><i></i></div>
+    <h3 id="gStepTitle">На что копим?</h3>
+    <div class="g-sub" id="gStepSub">шаг 1 из 3</div>
+
+    <!-- шаг 1: название -->
+    <div class="g-step" id="gStep1">
+      <input id="gName" placeholder="Например, Отпуск" maxlength="20" autocomplete="off">
+      <div class="preset-row g-name-presets" id="gNamePresets">
+        <button type="button" class="pchip" data-n="Отпуск">Отпуск</button>
+        <button type="button" class="pchip" data-n="Ремонт">Ремонт</button>
+        <button type="button" class="pchip" data-n="Техника">Техника</button>
+        <button type="button" class="pchip" data-n="Подушка">Подушка</button>
+        <button type="button" class="pchip" data-n="Машина">Машина</button>
+        <button type="button" class="pchip" data-n="Учёба">Учёба</button>
       </div>
     </div>
+
+    <!-- шаг 2: сумма -->
+    <div class="g-step" id="gStep2" style="display:none">
+      <input id="gAmount" class="g-amount" type="number" inputmode="decimal" min="1" placeholder="15 000">
+      <div class="g-cur">BYN</div>
+      <div class="preset-row g-amt-presets" id="gAmtPresets">
+        <button type="button" class="pchip" data-a="1000">1 000</button>
+        <button type="button" class="pchip" data-a="5000">5 000</button>
+        <button type="button" class="pchip" data-a="10000">10 000</button>
+        <button type="button" class="pchip" data-a="15000">15 000</button>
+        <button type="button" class="pchip" data-a="20000">20 000</button>
+        <button type="button" class="pchip" data-a="50000">50 000</button>
+      </div>
+    </div>
+
+    <!-- шаг 3: срок и перенос накопленного -->
+    <div class="g-step" id="gStep3" style="display:none">
+      <div class="preset-row">
+        <button class="pchip" data-p="w">Неделя</button>
+        <button class="pchip" data-p="m">Месяц</button>
+        <button class="pchip" data-p="h">Полгода</button>
+        <button class="pchip" data-p="y">Год</button>
+        <button class="pchip" data-p="ny">До НГ</button>
+        <button class="pchip" data-p="c">Дата…</button>
+      </div>
+      <input id="gDate" type="date" style="margin-top:8px; display:none">
+      <div id="gTransfer" style="display:none">
+        <label class="g-label">Накоплено <b id="gHave"></b> — что с ним?</label>
+        <div class="g-seg">
+          <button type="button" class="pchip sel" data-t="keep">Перенести</button>
+          <button type="button" class="pchip" data-t="zero">С нуля</button>
+        </div>
+      </div>
+    </div>
+
     <div class="g-preview" id="gPreview"></div>
     <div class="modal-btns">
-      <button class="m-cancel" onclick="closeGoalWizard()">Отмена</button>
-      <button class="m-ok" onclick="saveGoal()">Сохранить</button>
+      <button class="m-cancel" id="gBack" onclick="gStepBack()">Отмена</button>
+      <button class="m-ok" id="gNext" onclick="gStepNext()">Далее</button>
     </div>
   </div>
 </div>
@@ -5260,7 +5371,19 @@ function render(opts) {
 
   const wl = document.getElementById('walletLine');
   wl.classList.toggle('show', state.wallet > 0);
-  wl.innerHTML = '💼 В кошельке: <b>' + fmt2(state.wallet) + ' BYN</b> — добавится к следующему взносу';
+  wl.innerHTML =
+    '<span class="wl-ico">' +
+      '<svg viewBox="0 0 20 20" aria-hidden="true">' +
+        '<path d="M2.5 6.5h15v10a1.5 1.5 0 0 1-1.5 1.5H4a1.5 1.5 0 0 1-1.5-1.5z" fill="#c8961a"/>' +
+        '<path d="M2.5 6.5 4 3.2A1.5 1.5 0 0 1 5.4 2.3h9.2a1.5 1.5 0 0 1 1.4.9l1.5 3.3z" fill="#e8a820"/>' +
+        '<circle cx="14" cy="11.5" r="2.2" fill="#fff8e2"/>' +
+      '</svg>' +
+    '</span>' +
+    '<span class="wl-txt">' +
+      '<span class="wl-title">В кошельке</span>' +
+      '<span class="wl-hint">пойдут в следующий конверт</span>' +
+    '</span>' +
+    '<span class="wl-sum">' + fmt2(state.wallet) + ' BYN</span>';
 
   const tDay = todayStr();
   const todayClosed = state.closed.filter(c => c.date === tDay);
@@ -5438,6 +5561,53 @@ function updateGoalPreview() {
     (carried > 0 ? ' · перенос ' + fmt(carried) : '');
 }
 
+// ---------- пошаговый мастер: 1) название 2) сумма 3) срок ----------
+let gStep = 1;
+const G_STEPS = [
+  { title: 'На что копим?',    sub: 'шаг 1 из 3' },
+  { title: 'Сколько нужно?',   sub: 'шаг 2 из 3' },
+  { title: 'К какому сроку?',  sub: 'шаг 3 из 3' }
+];
+function gRenderStep() {
+  const st = G_STEPS[gStep - 1];
+  const nameNow = (document.getElementById('gName').value || '').trim();
+  document.getElementById('gStepTitle').textContent = st.title;
+  document.getElementById('gStepSub').textContent =
+    (gStep > 1 && nameNow ? nameNow + ' · ' : '') + st.sub;
+  for (let i = 1; i <= 3; i++) {
+    document.getElementById('gStep' + i).style.display = i === gStep ? '' : 'none';
+  }
+  document.querySelectorAll('#gDots i').forEach((d, i) => d.classList.toggle('on', i === gStep - 1));
+  document.getElementById('gBack').textContent = gStep === 1 ? 'Отмена' : 'Назад';
+  document.getElementById('gNext').textContent = gStep === 3 ? 'Сохранить' : 'Далее';
+  // превью-итог показываем только на последнем шаге
+  document.getElementById('gPreview').style.display = gStep === 3 ? '' : 'none';
+  if (gStep === 3) updateGoalPreview();
+  // автофокус на поле активного шага
+  setTimeout(() => {
+    try {
+      if (gStep === 1) document.getElementById('gName').focus();
+      else if (gStep === 2) document.getElementById('gAmount').focus();
+    } catch(e) {}
+  }, 120);
+}
+function gStepNext() {
+  if (gStep === 1) {
+    const n = (document.getElementById('gName').value || '').trim();
+    if (!n) { toast('Как назовём цель?'); return; }
+    gStep = 2; gRenderStep(); return;
+  }
+  if (gStep === 2) {
+    const a = parseFloat((document.getElementById('gAmount').value || '').replace(',', '.'));
+    if (!a || a <= 0) { toast('Введи сумму цели'); return; }
+    gStep = 3; gRenderStep(); return;
+  }
+  saveGoal();
+}
+function gStepBack() {
+  if (gStep === 1) { closeGoalWizard(); return; }
+  gStep--; gRenderStep();
+}
 function openGoalWizard() {
   const g = state.goal;
   document.getElementById('gName').value = g.name || '';
@@ -5449,13 +5619,35 @@ function openGoalWizard() {
     c.classList.toggle('sel', c.dataset.p === 'c'));
   const has = total() > 0;
   document.getElementById('gTransfer').style.display = has ? '' : 'none';
-  document.getElementById('gHave').textContent = fmt2(total());
+  document.getElementById('gHave').textContent = fmt(Math.round(total()));
   document.querySelectorAll('.pchip[data-t]').forEach(c =>
     c.classList.toggle('sel', c.dataset.t === 'keep'));
-  updateGoalPreview();
+  gSyncPresets();
+  gStep = 1;
+  gRenderStep();
   document.getElementById('goalModal').classList.add('show');
 }
 function closeGoalWizard() { document.getElementById('goalModal').classList.remove('show'); }
+// подсветка чипов-подсказок под текущими значениями полей
+function gSyncPresets() {
+  const n = (document.getElementById('gName').value || '').trim().toLowerCase();
+  document.querySelectorAll('#gNamePresets .pchip').forEach(c =>
+    c.classList.toggle('sel', c.dataset.n.toLowerCase() === n));
+  const a = String(Math.round(parseFloat((document.getElementById('gAmount').value || '').replace(',', '.')) || 0));
+  document.querySelectorAll('#gAmtPresets .pchip').forEach(c =>
+    c.classList.toggle('sel', c.dataset.a === a));
+}
+document.querySelectorAll('#gNamePresets .pchip').forEach(c => c.onclick = () => {
+  document.getElementById('gName').value = c.dataset.n;
+  gSyncPresets();
+  document.getElementById('gStepSub').textContent = c.dataset.n + ' · ' + G_STEPS[0].sub;
+});
+document.querySelectorAll('#gAmtPresets .pchip').forEach(c => c.onclick = () => {
+  document.getElementById('gAmount').value = c.dataset.a;
+  gSyncPresets();
+});
+['gName', 'gAmount'].forEach(id =>
+  document.getElementById(id).addEventListener('input', gSyncPresets));
 
 document.querySelectorAll('.pchip[data-p]').forEach(c => c.onclick = () => {
   gPreset = c.dataset.p;
@@ -5798,7 +5990,7 @@ function monthSpent() {
   return state.expenses.filter(e => monthKey(e.date) === mk).reduce((s, e) => s + e.amount, 0);
 }
 
-const PIE_COLORS = ['#0a84ff','#ff6b6b','#30d158','#ffd35c','#b98bff','#ff9ec7','#5edfdf','#f0a35e','#9aa5b8','#7fd4a0'];
+const PIE_COLORS = ['#26a349','#ff6b6b','#7fd4a0','#ffd35c','#b98bff','#ff9ec7','#5edfdf','#f0a35e','#9aa5b8','#4cd97b'];
 
 function renderSpend() {
   const tDay = todayStr(), week = weekDates(), mk = monthKey();
@@ -5808,73 +6000,103 @@ function renderSpend() {
   const monthExps = exps.filter(e => monthKey(e.date) === mk);
   const sumMonth = monthExps.reduce((s, e) => s + e.amount, 0);
 
+  const nowD = new Date();
+  const dayNum = nowD.getDate();
+  const daysInMonth = new Date(nowD.getFullYear(), nowD.getMonth() + 1, 0).getDate();
+
   countSp(document.getElementById('spToday'), sumToday);
   countSp(document.getElementById('spWeek'), sumWeek);
-  countSp(document.getElementById('spMonth'), sumMonth);
+  // третий стат: средний расход в день (вместо дублирующего «за месяц»)
+  countSp(document.getElementById('spAvgDay'), sumMonth / dayNum);
 
-  // лимит
+  // единая гамма всей карточки: зелёный до 80%, янтарный 80–100%, красный выше
   const L = state.limit;
+  const pMonth = L > 0 ? sumMonth / L : 0;
+  const state3 = pMonth >= 1 ? 'over' : pMonth >= .8 ? 'risk' : 'ok';
+  const BAR_BG = {
+    ok:   'linear-gradient(90deg,#4cd97b,#26a349)',
+    risk: 'linear-gradient(90deg,#ffb340,#f0912e)',
+    over: 'linear-gradient(90deg,#ff5d5d,#e2404f)'
+  };
+
+  // лимит: полоска = потрачено, подпись тоже про потрачено
   const lv = document.getElementById('limitVal');
   const wrap = document.getElementById('limitBarWrap');
   const bar = document.getElementById('limitBar');
   const hint = document.getElementById('limitHint');
+  const pace = document.getElementById('limitPace');
+  const cta = document.getElementById('limitCta');
+  const limBox = document.getElementById('limitBox');
   if (L > 0) {
-    const p = sumMonth / L;
     lv.textContent = fmt(L) + ' BYN';
     wrap.style.display = '';
-    bar.style.width = Math.min(100, p * 100) + '%';
-    bar.classList.toggle('warn', p >= .8);          // пульс после 80%
-    if (p >= 1 && prevLimitOver === false) {        // вздрагивание при превышении
-      const box = document.querySelector('.limit-box');
-      box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake');
+    limBox.style.display = '';
+    if (cta) cta.style.display = 'none';
+    bar.style.width = Math.min(100, pMonth * 100) + '%';
+    bar.classList.toggle('warn', pMonth >= .8);          // пульс после 80%
+    if (pMonth >= 1 && prevLimitOver === false) {        // вздрагивание при превышении
+      limBox.classList.remove('shake'); void limBox.offsetWidth; limBox.classList.add('shake');
     }
-    prevLimitOver = p >= 1;
-    bar.style.background = p >= 1 ? 'linear-gradient(90deg,#ff5d5d,#e2404f)'
-      : p >= .8 ? 'linear-gradient(90deg,#ffb340,#f0912e)'
-      : 'linear-gradient(90deg,#0a84ff,#64d2ff)';
+    prevLimitOver = pMonth >= 1;
+    bar.style.background = BAR_BG[state3];
+    // риска «где должен быть сегодня по графику»
+    if (pace) {
+      const paceP = dayNum / daysInMonth * 100;
+      pace.style.display = '';
+      pace.style.left = 'calc(' + paceP.toFixed(1) + '% - 1px)';
+      pace.title = 'по графику на сегодня';
+    }
     hint.style.display = '';
-    hint.textContent = p >= 1
-      ? 'Превышение на ' + fmt2(sumMonth - L) + ' BYN 🚨'
-      : 'Осталось ' + fmt2(L - sumMonth) + ' BYN (' + Math.round((1 - p) * 100) + '%)';
+    hint.textContent = pMonth >= 1
+      ? 'Превышение на ' + fmt(Math.round(sumMonth - L)) + ' 🚨'
+      : 'Потрачено ' + fmt(Math.round(sumMonth)) + ' из ' + fmt(L) + ' · осталось ' + fmt(Math.round(L - sumMonth));
   } else {
     lv.textContent = 'задать →';
     wrap.style.display = 'none';
     hint.style.display = 'none';
+    limBox.style.display = 'none';
+    if (cta) cta.style.display = '';
+    if (pace) pace.style.display = 'none';
   }
 
-  // колонка у хомяка: «можно сегодня» (или траты месяца, если лимита нет)
+  // колонка у хомяка: «можно сегодня», целые рубли, BYN только здесь
   const sumEl = document.getElementById('dbSum');
   if (L > 0) {
-    const nd = new Date();
-    const daysLeftM = new Date(nd.getFullYear(), nd.getMonth() + 1, 0).getDate() - nd.getDate() + 1;
+    const daysLeftM = daysInMonth - dayNum + 1;
     const allowance = (L - (sumMonth - sumToday)) / daysLeftM;
-    const todayLeft = Math.round((allowance - sumToday) * 100) / 100;
+    const todayLeft = Math.round(allowance - sumToday);
     document.getElementById('spPct').textContent = 'Можно сегодня';
-    setOdometer(sumEl, (todayLeft >= 0 ? '' : '−') + fmt2(Math.abs(todayLeft)) + ' BYN');
-    sumEl.className = 'sum db-sum ' + (todayLeft > allowance * .3 ? 'ok' : todayLeft >= 0 ? 'mid' : 'bad');
+    setOdometer(sumEl, (todayLeft >= 0 ? '' : '−') + fmt(Math.abs(todayLeft)) + ' BYN');
+    // цвет суммы — из той же логики, что полоска и прогноз
+    sumEl.className = 'sum db-sum ' + (state3 === 'over' || todayLeft < 0 ? 'bad' : state3 === 'risk' ? 'mid' : 'ok');
     const tomorrow = daysLeftM > 1 ? Math.max(0, (L - sumMonth) / (daysLeftM - 1)) : 0;
     document.getElementById('dbNote').textContent = todayLeft >= 0
-      ? 'не потратишь — завтра ~' + fmt(Math.round(tomorrow))
-      : 'на сегодня всё · завтра ~' + fmt(Math.round(tomorrow));
+      ? 'сэкономишь сегодня — завтра будет ' + fmt(Math.round(tomorrow))
+      : 'на сегодня всё · завтра будет ' + fmt(Math.round(tomorrow));
   } else {
     document.getElementById('spPct').textContent = 'Потрачено за месяц';
-    setOdometer(sumEl, fmt2(sumMonth) + ' BYN');
+    setOdometer(sumEl, fmt(Math.round(sumMonth)) + ' BYN');
     sumEl.className = 'sum db-sum';
-    document.getElementById('dbNote').textContent = 'задай лимит — появится дневной бюджет';
+    document.getElementById('dbNote').textContent = 'без лимита не видно дневного бюджета';
   }
 
-  // прогноз до конца месяца
-  const now = new Date();
-  const dayN = now.getDate();
-  const daysInM = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  // прогноз конца месяца: цвет состояния + стрелка тренда, внутри блока лимита
   const fEl = document.getElementById('spForecast');
-  if (sumMonth > 0 && dayN < daysInM) {
-    const forecast = sumMonth / dayN * daysInM;
-    const over = L > 0 && forecast > L;
+  if (sumMonth > 0 && dayNum < daysInMonth) {
+    const forecast = sumMonth / dayNum * daysInMonth;
+    let cls = 'forecast-line', arrow = '', tail = '';
+    if (L > 0) {
+      const fp = forecast / L;
+      cls += fp > 1 ? ' over' : fp > .9 ? ' risk' : '';
+      arrow = fp > 1 ? '↑' : '↓';
+      tail = fp > 1 ? ' — лимит будет превышен'
+        : fp > .9 ? ' — идёшь у самой границы'
+        : ' — в лимит впишешься';
+    }
     fEl.style.display = '';
-    fEl.className = 'forecast-line' + (over ? ' over' : '');
-    fEl.innerHTML = 'При таком темпе к концу месяца: <b>~' + fmt(forecast) + ' BYN</b>' +
-      (over ? ' — лимит будет превышен' : (L > 0 ? ' — в лимит впишешься' : ''));
+    fEl.className = cls;
+    fEl.innerHTML = (arrow ? '<span class="fc-tr">' + arrow + '</span>' : '') +
+      '<span>К концу месяца: <b>~' + fmt(Math.round(forecast)) + '</b>' + tail + '</span>';
   } else fEl.style.display = 'none';
 
   renderHamster(monthExps);
@@ -6105,7 +6327,7 @@ function renderHamster(monthExps) {
     document.getElementById('hamSweat').style.display = 'none';
     hamFat = 0; hamPrevFat = 0;
     refreshHamEyes();
-    line.innerHTML = 'Задай лимит месяца — и я буду следить за формой 🐹';
+    line.textContent = '«Задай лимит — буду следить за формой. И за твоей тоже»';
     return;
   }
 
@@ -6152,12 +6374,16 @@ function renderHamster(monthExps) {
   document.getElementById('hamSweat').style.display = fat >= 2 ? '' : 'none';
   refreshHamEyes();
 
-  line.innerHTML = [
-    'В отличной форме — бюджет под контролем! 🏃',
-    'Слегка отъелся... был перебор за последние 3 дня 🐹',
-    'Толстеет: два перебора за три дня. Притормози 😬',
-    'Еле ходит 🥵 Три перебора подряд!'
+  // фраза дня выбирается детерминированно, чтобы не мигала при каждом рендере
+  const HAM_SAY = [
+    ['«Я в форме, бюджет тоже»', '«Красота: и я цел, и деньги целы»', '«Так держать, я даже не запыхался»', '«Идеально. Можно я посплю?»'],
+    ['«Кажется, я поправился на один перебор»', '«Штаны жмут. Совпадение? Не думаю»', '«Один заход мимо кассы — уже чувствую»', '«Ой. Один перебор за три дня»'],
+    ['«Два перебора. Я округляюсь»', '«Ещё немного и я не пролезу в норку»', '«Тормози, а то катиться начну»', '«Двойной перебор — двойной я»'],
+    ['«Три подряд?! Я не колобок вообще-то»', '«Всё, не могу бежать. Только лежать»', '«Кошелёк худеет, я нет. Несправедливо»', '«Я — последствия твоих решений»']
   ][fat];
+  let hs = 0; const hseed = todayStr() + fat;
+  for (let i = 0; i < hseed.length; i++) hs = (hs * 31 + hseed.charCodeAt(i)) % 9973;
+  line.textContent = HAM_SAY[hs % HAM_SAY.length];
 }
 
 // глаза хомяка: сон > радость > усталость > обычные
@@ -6178,7 +6404,7 @@ function hamHappy(ms) {
 
 // зрачки следят за пальцем
 const hamPup = ['hpL', 'hpR', 'hhL', 'hhR'].map(id => document.getElementById(id));
-const hamPupBase = [[105, 92], [124, 92], [106.7, 90.3], [125.7, 90.3]];
+const hamPupBase = [[105, 96], [125, 96], [106.7, 94], [126.7, 94]];
 let hamEyeRaf = null;
 document.addEventListener('pointermove', e => {
   if (hamEyeRaf) return;
@@ -6335,7 +6561,7 @@ function renderCmp(monthExps) {
       '<div class="cmp-track"><div class="cmp-fill" style="width:' + (prevSum / maxV * 100) + '%; background:rgba(120,130,160,.5)"></div></div>' +
       '<div class="cmp-sum">' + fmt2(prevSum) + '</div></div>' +
     '<div class="cmp-row"><div class="cmp-label">' + mName(now) + '</div>' +
-      '<div class="cmp-track"><div class="cmp-fill" style="width:' + (curSum / maxV * 100) + '%; background:linear-gradient(90deg,#0a84ff,#64d2ff)"></div></div>' +
+      '<div class="cmp-track"><div class="cmp-fill" style="width:' + (curSum / maxV * 100) + '%; background:linear-gradient(90deg,#4cd97b,#26a349)"></div></div>' +
       '<div class="cmp-sum">' + fmt2(curSum) + '</div></div>';
 
   const delta = document.getElementById('cmpDelta');
@@ -7017,18 +7243,23 @@ const OP_PIG = '<svg id="opPig" viewBox="0 0 260 212" width="205" height="167">'
  '</svg>';
 
 const OH_HAM = '<svg id="ohHam" viewBox="58 50 116 90" width="190" height="147">' +
- '<circle cx="145" cy="112" r="5" fill="#e6b988"/>' +
- '<ellipse cx="115" cy="104" rx="36" ry="27" fill="rgba(236,196,150,.38)" stroke="rgba(255,255,255,.9)" stroke-width="2.5"/>' +
- '<ellipse cx="111" cy="112" rx="21" ry="15" fill="rgba(255,241,218,.5)"/>' +
- '<ellipse cx="100" cy="88" rx="14" ry="6.5" fill="rgba(255,255,255,.45)" transform="rotate(-22 100 88)"/>' +
- '<circle cx="97" cy="79" r="8" fill="#e6b988" stroke="rgba(255,255,255,.7)" stroke-width="1.5"/><circle cx="97" cy="79" r="4.5" fill="#f2c9cf"/>' +
- '<circle cx="130" cy="77" r="8" fill="#e6b988" stroke="rgba(255,255,255,.7)" stroke-width="1.5"/><circle cx="130" cy="77" r="4.5" fill="#f2c9cf"/>' +
- '<g id="ohCheeks"><ellipse cx="92" cy="101" rx="10" ry="9" fill="rgba(244,215,175,.55)" stroke="rgba(255,255,255,.55)" stroke-width="1.2"/><ellipse cx="138" cy="101" rx="10" ry="9" fill="rgba(244,215,175,.55)" stroke="rgba(255,255,255,.55)" stroke-width="1.2"/></g>' +
- '<g id="ohEyes"><circle cx="105" cy="92" r="4.5" fill="#2c2c3e"/><circle cx="124" cy="92" r="4.5" fill="#2c2c3e"/><circle cx="106.7" cy="90.3" r="1.6" fill="#fff"/><circle cx="125.7" cy="90.3" r="1.6" fill="#fff"/></g>' +
- '<g id="ohHappy" style="display:none"><path d="M100 93 q5 -5.5 10 0" stroke="#2c2c3e" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="M119 93 q5 -5.5 10 0" stroke="#2c2c3e" stroke-width="2.6" fill="none" stroke-linecap="round"/></g>' +
- '<ellipse cx="114.5" cy="100" rx="3.4" ry="2.7" fill="#f7b9c9" stroke="rgba(255,255,255,.7)" stroke-width="1"/>' +
- '<path d="M114.5 102.5 q0 4 -4 5 M114.5 102.5 q0 4 4 5" stroke="#b98a5f" stroke-width="1.4" fill="none" stroke-linecap="round"/>' +
- '<ellipse cx="103" cy="129" rx="7" ry="4" fill="#e6b988"/><ellipse cx="127" cy="129" rx="7" ry="4" fill="#e6b988"/>' +
+ '<ellipse cx="115" cy="136" rx="32" ry="5" fill="rgba(120,110,90,.14)"/>' +
+ '<circle cx="150" cy="112" r="5" fill="#dba871"/>' +
+ '<ellipse cx="86" cy="112" rx="9" ry="7" fill="#e6b988" transform="rotate(-25 86 112)"/>' +
+ '<ellipse cx="144" cy="112" rx="9" ry="7" fill="#e6b988" transform="rotate(25 144 112)"/>' +
+ '<circle cx="95" cy="78" r="8.5" fill="#e6b988"/><circle cx="95" cy="78" r="4.6" fill="#f2c9cf"/>' +
+ '<circle cx="135" cy="76" r="8.5" fill="#e6b988"/><circle cx="135" cy="76" r="4.6" fill="#f2c9cf"/>' +
+ '<ellipse cx="115" cy="101" rx="34" ry="29" fill="#f0d0a8"/>' +
+ '<ellipse cx="115" cy="111" rx="21" ry="15" fill="#fdf0dc"/>' +
+ '<ellipse cx="101" cy="88" rx="12" ry="5.5" fill="rgba(255,255,255,.5)" transform="rotate(-20 101 88)"/>' +
+ '<g id="ohCheeks"><ellipse cx="86" cy="103" rx="11" ry="10" fill="#f7dcb8"/><ellipse cx="144" cy="103" rx="11" ry="10" fill="#f7dcb8"/></g>' +
+ '<ellipse cx="93" cy="108" rx="6" ry="4" fill="rgba(255,110,145,.3)"/><ellipse cx="137" cy="108" rx="6" ry="4" fill="rgba(255,110,145,.3)"/>' +
+ '<g id="ohEyes"><circle cx="105" cy="96" r="5" fill="#2c2c3e"/><circle cx="125" cy="96" r="5" fill="#2c2c3e"/><circle cx="106.7" cy="94" r="1.8" fill="#fff"/><circle cx="126.7" cy="94" r="1.8" fill="#fff"/></g>' +
+ '<g id="ohHappy" style="display:none"><path d="M100 97 q5 -6 10 0" stroke="#2c2c3e" stroke-width="2.8" fill="none" stroke-linecap="round"/><path d="M120 97 q5 -6 10 0" stroke="#2c2c3e" stroke-width="2.8" fill="none" stroke-linecap="round"/></g>' +
+ '<ellipse cx="115" cy="105" rx="4" ry="3" fill="#f7b9c9"/>' +
+ '<path d="M115 108 q0 4 -4 5 M115 108 q0 4 4 5" stroke="#b98a5f" stroke-width="1.5" fill="none" stroke-linecap="round"/>' +
+ '<path d="M77 103 L64 99 M77 107 L64 109 M153 103 L166 99 M153 107 L166 109" stroke="rgba(120,90,50,.42)" stroke-width="1.4" stroke-linecap="round"/>' +
+ '<ellipse cx="102" cy="130" rx="9" ry="5" fill="#dba871"/><ellipse cx="128" cy="130" rx="9" ry="5" fill="#dba871"/>' +
  '</svg>';
 
 let currentStory = null;   // 'pig' | 'ham' — какая сказка сейчас идёт (для корректного скипа/тура)
