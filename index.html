@@ -13,6 +13,17 @@
 <title>Копилка · 15 000 к НГ</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  /* нигде в приложении не выделяем текст и не зовём лупу iOS:
+     ни при долгом нажатии, ни при случайном свайпе */
+  html, body, * {
+    -webkit-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none;
+    -webkit-touch-callout:none;
+  }
+  /* исключение — поля ввода, иначе в них не поставить курсор */
+  input, textarea, select, [contenteditable="true"] {
+    -webkit-user-select:text; -moz-user-select:text; -ms-user-select:text; user-select:text;
+    -webkit-touch-callout:default;
+  }
 
   :root {
     --text: #1c1c2e;
@@ -1896,9 +1907,10 @@
   .flame-info { position:relative; z-index:2; display:flex; flex-direction:column; align-items:flex-start; justify-content:center; align-self:center; text-align:left; flex:1; min-width:0; }
   .flame-info .fi-today { font-size:19px; font-weight:800; letter-spacing:-.3px; }
   .fi-bar-row { display:flex; align-items:center; gap:7px; width:100%; margin-top:8px; }
-  .fi-bar { flex:1; height:6px; border-radius:3px; background:rgba(120,130,160,.18); overflow:hidden; }
+  /* бару гарантирован минимум ширины, иконки не могут его съесть */
+  .fi-bar { flex:1 1 auto; min-width:56px; height:6px; border-radius:3px; background:rgba(120,130,160,.18); overflow:hidden; }
   .fi-bar i { display:block; height:100%; border-radius:3px; background:linear-gradient(90deg,#ffb056,#f2632a); transition: width .6s cubic-bezier(.22,1,.36,1); }
-  .fi-rem-icons { display:flex; align-items:center; gap:4px; flex-shrink:0; }
+  .fi-rem-icons { display:flex; align-items:center; gap:4px; flex:0 0 auto; max-width:56%; overflow:hidden; }
   .flame-info .fi-streak { font-size:14.5px; font-weight:700; color:#c76a1a; margin-top:7px; }
   .flame-info .fi-record { font-size:12.5px; color:var(--text2); margin-top:4px; }
   .fi-remaining { display:flex; align-items:center; gap:5px; margin-top:7px; flex-wrap:wrap; font-size:12.5px; font-weight:700; color:var(--text2); }
@@ -1957,9 +1969,11 @@
   .wd-ring.celebrate { animation: wdPop .7s cubic-bezier(.34,1.56,.64,1); }
   @keyframes wdPop { 0%,100% { transform:scale(1); } 40% { transform:scale(1.22); } 70% { transform:scale(.94); } }
   #viewHabits .card.hero { position:relative; }
+  /* «+» стоит в потоке рядом с «Сегодня» — не вылезает за скругление карточки */
+  .fi-head { display:flex; align-items:center; justify-content:space-between; gap:10px; width:100%; }
   .flame-add-btn {
-    position:absolute; top:14px; right:14px; z-index:5;
-    width:34px; height:34px; border-radius:50%;
+    flex-shrink:0;
+    width:32px; height:32px; border-radius:50%;
     background: linear-gradient(165deg, #ffb066, #f2632a);
     border:1px solid rgba(255,255,255,.7); color:#fff; font-size:19px; font-weight:800;
     display:flex; align-items:center; justify-content:center; cursor:pointer;
@@ -2447,7 +2461,10 @@
         </svg>
         </div><!-- /flame-wrap -->
         <div class="flame-info">
-          <div class="fi-today" id="fiToday">Пока нет привычек</div>
+          <div class="fi-head">
+            <div class="fi-today" id="fiToday">Пока нет привычек</div>
+            <button class="flame-add-btn" onclick="openAddHabitModal()" aria-label="Добавить привычку">+</button>
+          </div>
           <div class="fi-bar-row" id="fiBarRow" style="display:none">
             <div class="fi-bar"><i id="fiBarFill" style="width:0%"></i></div>
             <span class="fi-rem-icons" id="fiRemaining"></span>
@@ -2457,7 +2474,6 @@
           <div class="fi-phrase" id="fiPhrase" style="display:none"></div>
           <div class="fi-neglect" id="fiNeglect" style="display:none"></div>
         </div>
-        <button class="flame-add-btn" onclick="openAddHabitModal()" aria-label="Добавить привычку">+</button>
       </div>
       <div class="hcal-week-wrap">
         <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
@@ -5030,10 +5046,11 @@ function renderFlame() {
 
   // хвост прогрессбара: мини-иконки невыполненных (тап — перейти к плитке привычки)
   const undone = state.habits.filter(h => !h.log.includes(t));
-  fiRemaining.innerHTML = undone.slice(0, 5).map(h =>
+  const SHOW = 3;   // больше трёх иконок не влезает — остальное числом
+  fiRemaining.innerHTML = undone.slice(0, SHOW).map(h =>
       '<span class="fr-ico" title="' + h.name + '" onclick="event.stopPropagation(); flameGoToHabit(' + h.id + ')">' + habitMiniIcon(h) + '</span>'
     ).join('') +
-    (undone.length > 5 ? '<span class="fr-more">+' + (undone.length - 5) + '</span>' : '');
+    (undone.length > SHOW ? '<span class="fr-more">+' + (undone.length - SHOW) + '</span>' : '');
 
   fiStreak.style.display = '';
   fiRecord.style.display = 'none'; // рекорд слит в строку стрика
