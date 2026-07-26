@@ -692,10 +692,29 @@
     animation: pop .5s cubic-bezier(.22,1.6,.36,1);
   }
   @keyframes pop { 0%{transform:scale(0)} 70%{transform:scale(1.2)} 100%{transform:scale(1)} }
+  .q-tile { position:relative; }
   .q-name { font-size:11.5px; font-weight:600; line-height:1.25; color:var(--text); min-height:29px; display:flex; align-items:center; justify-content:center; }
   .q-val { font-size:12px; font-weight:700; color:var(--text2); font-variant-numeric: tabular-nums; }
   .q-tile.done .q-val { color:#26a349; }
+  /* в привычках зелёный — только когда план полностью выполнен (неделя/цель), иначе нейтральный */
+  #habitsGrid .q-tile.done .q-val { color:var(--text2); }
+  #habitsGrid .q-val.full { color:#26a349; }
+  /* единый визуальный размер всех иконок-объектов на плитках + воздух между строками */
+  #habitsGrid svg.q-vessel { width:48px; height:44px; }
+  #habitsGrid .q-tile { gap:9px; }
+  #habitsGrid .q-val { margin-top:1px; }
   .q-reward { font-size:11px; font-weight:700; color:#c78a00; }
+  /* привычки: плитки без своей рамки — все на одном общем фоне карточки */
+  #habitsGrid .q-tile, #habitsGrid .q-tile.done {
+    background:none; border:none; box-shadow:none;
+  }
+  /* общий фон под привычками: растёт шагами по ряду (сетка 3 в ряд) */
+  .habits-card { padding:14px 10px; transition: none; }
+  #habitsGrid { row-gap:6px; }
+  /* пустые слоты-добивки держат высоту ряда, чтобы фон менялся ровными шагами */
+  #habitsGrid .q-empty { pointer-events:none; visibility:hidden; }
+  #habitsGrid .q-tile.done .q-flame { display:inline-block; animation: qFlameBounce 1.6s ease-in-out infinite; }
+  @keyframes qFlameBounce { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-3px) scale(1.15); } }
 
   /* ---- магазин ---- */
   .shop-grid { display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; }
@@ -1181,6 +1200,144 @@
     -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
   }
   #modal.show { display:flex; }
+  #habitEditModal {
+    position:fixed; inset:0; z-index:100; display:none;
+    align-items:flex-start; justify-content:center; padding-top:18vh;
+    background: rgba(30,32,50,.35);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  }
+  #habitEditModal.show { display:flex; }
+  #addHabitModal {
+    position:fixed; inset:0; z-index:100; display:none;
+    align-items:flex-start; justify-content:center; padding-top:14vh;
+    background: rgba(30,32,50,.35);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  }
+  #addHabitModal.show { display:flex; }
+  #addHabitModal .modal-card { max-height:70vh; overflow-y:auto; }
+  #habitEditModal .modal-card input { margin-top:0; }
+  /* модалка редактирования привычки: огненные акценты, подписи у полей */
+  .he-card h3 { font-size:16px; font-weight:700; margin-bottom:14px; }
+  .he-lab {
+    font-size:10.5px; font-weight:700; color:rgba(28,28,46,.42);
+    text-transform:uppercase; letter-spacing:.4px; margin:0 0 6px 3px;
+  }
+  #heCounterRow { margin-top:14px; }
+  #heDaysRow { margin-top:2px; }
+  .he-today-row {
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    background:rgba(255,150,50,.1); border-radius:14px; padding:8px 9px 8px 14px;
+  }
+  .he-today-txt { font-size:13px; font-weight:600; color:var(--text2); }
+  .he-today-txt b { color:#c76a1a; }
+  .he-step { display:flex; gap:6px; }
+  .he-step button {
+    width:31px; height:31px; border-radius:50%; border:none; cursor:pointer; font-family:inherit;
+    font-size:17px; font-weight:700; line-height:1; color:#c76a1a; background:#fff;
+    box-shadow:0 1px 3px rgba(120,80,40,.14);
+    display:flex; align-items:center; justify-content:center;
+    transition: transform .15s;
+  }
+  .he-step button:active { transform: scale(.88); background:rgba(255,180,110,.35); }
+  /* дни недели в огненной гамме, чтобы не спорить со вкладкой привычек */
+  #heDaysRow .dchip.sel, #chDays .dchip.sel {
+    background: rgba(242,113,42,.13);
+    color:#c76a1a; border-color:#f2712a;
+    box-shadow: 0 0 0 2px rgba(242,113,42,.12);
+  }
+  .he-save {
+    background: linear-gradient(160deg, #ffb03e, #f2712a) !important;
+    color:#fff !important;
+    box-shadow: 0 5px 13px rgba(242,113,42,.32);
+  }
+  /* заметка «зачем» в шапке модалки редактирования */
+  .he-why {
+    display:flex; align-items:flex-start; gap:8px; margin-bottom:12px;
+    background:rgba(255,200,120,.16); border-left:3px solid #f2b34a; border-radius:0 12px 12px 0;
+    padding:9px 10px 9px 11px;
+  }
+  .he-why-txt { flex:1; font-size:12.5px; line-height:1.45; color:#8a5a12; font-style:italic; }
+  .he-why-edit {
+    flex-shrink:0; width:24px; height:24px; border-radius:50%; border:none; cursor:pointer;
+    background:rgba(255,255,255,.7); color:#c76a1a; font-size:12px; font-family:inherit;
+  }
+  .he-why-edit:active { transform:scale(.9); }
+  /* мини-календарь конкретной привычки с правкой прошлых дней */
+  .he-cal { background:rgba(120,130,160,.06); border-radius:14px; padding:9px 10px 7px; }
+  .he-cal-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:7px; }
+  .he-cal-nav {
+    width:24px; height:24px; border-radius:50%; border:none; cursor:pointer; font-family:inherit;
+    font-size:14px; font-weight:700; color:#c76a1a; background:rgba(255,150,50,.12);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .he-cal-nav:active { transform:scale(.9); }
+  .he-cal-nav:disabled { opacity:.3; }
+  .he-cal-stats { font-size:11px; font-weight:600; color:var(--text2); }
+  .he-cal-stats b { color:#c76a1a; }
+  .he-cal-wd { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; margin-bottom:3px; }
+  .he-cal-wd span { text-align:center; font-size:8.5px; font-weight:500; color:rgba(28,28,46,.34); text-transform:uppercase; }
+  .he-cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
+  .hc-day {
+    aspect-ratio:1; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:9.5px; font-weight:500; color:rgba(28,28,46,.45);
+    background:rgba(120,130,160,.1); cursor:pointer;
+    transition: background .25s, color .25s, transform .15s;
+  }
+  .hc-day:active { transform:scale(.85); }
+  .hc-day.pad { background:none; cursor:default; }
+  .hc-day.done { background:linear-gradient(160deg,#ffb03e,#f2712a); color:#fff; font-weight:600; }
+  .hc-day.part { background:rgba(242,113,42,.24); color:#a8500c; font-weight:600; }
+  .hc-day.off { background:none; color:rgba(28,28,46,.2); }
+  .hc-day.future { background:none; color:rgba(28,28,46,.15); cursor:default; }
+  .hc-day.today { box-shadow:0 0 0 1.6px #f2712a; }
+  .he-cal-hint { font-size:9.5px; color:rgba(28,28,46,.35); text-align:center; margin:6px 0 0; }
+  /* модалка «зачем» при добавлении привычки */
+  #whyModal {
+    position:fixed; inset:0; z-index:130; display:none;
+    align-items:flex-start; justify-content:center; padding-top:16vh;
+    background:rgba(30,32,50,.35);
+    -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
+  }
+  #whyModal.show { display:flex; }
+  .why-card { text-align:center; }
+  .why-ico { display:flex; align-items:center; justify-content:center; margin-bottom:8px; }
+  .why-ico svg { width:46px; height:42px; }
+  .why-card h3 { margin-bottom:6px; }
+  .why-sub { font-size:12px; color:var(--text2); line-height:1.45; margin:0 0 13px; }
+  #whyText {
+    width:100%; border:1px solid rgba(120,130,160,.3); background:#fff; border-radius:14px;
+    padding:11px 13px; font-size:14px; font-family:inherit; color:var(--text);
+    outline:none; resize:none; line-height:1.45;
+  }
+  #whyText:focus { border-color:rgba(242,113,42,.6); }
+  .why-save {
+    display:block; width:100%; margin-top:13px; border:none; cursor:pointer; font-family:inherit;
+    font-size:15px; font-weight:700; padding:12px 0; border-radius:16px; color:#fff;
+    background:linear-gradient(160deg,#ffb03e,#f2712a);
+    box-shadow:0 6px 14px rgba(242,113,42,.3);
+  }
+  .why-save:active { transform:scale(.97); }
+  .why-skip {
+    display:block; width:100%; margin-top:9px; border:none; cursor:pointer; font-family:inherit;
+    font-size:14px; font-weight:600; padding:11px 0; border-radius:16px;
+    background:rgba(120,130,160,.12); color:var(--text2);
+  }
+  .why-skip:active { background:rgba(120,130,160,.22); }
+  /* всплывашка заметки при долгом тапе по плитке */
+  .why-pop {
+    position:fixed; z-index:140; max-width:min(260px,80vw);
+    background:rgba(40,32,24,.94); color:#ffe9c9; font-size:12.5px; line-height:1.45; font-style:italic;
+    padding:10px 13px; border-radius:14px; box-shadow:0 10px 26px rgba(0,0,0,.3);
+    pointer-events:none; animation:whyPopIn .25s cubic-bezier(.22,1.3,.4,1);
+  }
+  @keyframes whyPopIn { 0% { opacity:0; transform:translateY(6px) scale(.94); } 100% { opacity:1; transform:translateY(0) scale(1); } }
+  /* удаление — тихая ссылка внизу, не доминирует над главными кнопками */
+  .he-delete {
+    display:block; width:100%; margin-top:12px; font-size:12.5px; font-weight:600;
+    color:rgba(200,60,60,.7); font-family:inherit; cursor:pointer;
+    background:none; border:none; padding:7px 0;
+  }
+  .he-delete:active { color:rgba(200,60,60,1); }
   .modal-card {
     width: min(330px, 88vw);
     background: rgba(255,255,255,.88);
@@ -1370,6 +1527,19 @@
     box-shadow: 0 2px 6px rgba(60,70,110,.06);
   }
   .pchip small { font-weight:500; font-size:10.5px; opacity:.75; }
+  .day-picker { display:grid; grid-template-columns:repeat(7,1fr); gap:5px; margin-top:2px; }
+  .dchip {
+    border:1.5px solid rgba(150,165,200,.45); cursor:pointer;
+    background: rgba(255,255,255,.3); color:var(--text2);
+    font-family:inherit; font-size:11.5px; font-weight:700;
+    padding:9px 2px; border-radius:50%; aspect-ratio:1; transition: all .2s;
+    box-shadow:none;
+  }
+  .dchip.sel {
+    background: rgba(10,132,255,.14);
+    color:#0a84ff; border-color:#0a84ff;
+    box-shadow: 0 0 0 2px rgba(10,132,255,.12);
+  }
   .pchip.sel {
     background: linear-gradient(135deg, #0a84ff, #5e9dff);
     color:#fff; border-color: transparent;
@@ -1453,11 +1623,300 @@
     transition: opacity .4s, top .4s cubic-bezier(.22,1,.36,1);
     opacity:0;
   }
+  /* ---- календарь привычек: светлый, без баннера, огненная гамма ---- */
+  .hcal {
+    width:100%; border-radius:24px; overflow:hidden;
+    background: rgba(255,255,255,.82);
+    box-shadow: 0 12px 28px rgba(60,40,60,.14);
+  }
+  .hcal-head {
+    position:relative; z-index:1; display:flex; align-items:center; justify-content:space-between;
+    padding:14px 16px 12px; border-bottom:1px solid rgba(120,130,160,.14);
+  }
+  .hcal-nav {
+    width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:16px; font-weight:700; color:#c76a1a;
+    background: rgba(255,150,50,.1);
+    border: 1px solid rgba(242,113,42,.22);
+    transition: transform .15s ease;
+  }
+  .hcal-nav:active { transform: scale(.9); }
+  .hcal-nav:disabled { opacity:.3; }
+  .hcal-title { font-size:14.5px; font-weight:700; color:#a8500c; text-transform:capitalize; }
+  .hcal-body { padding:14px 14px 16px; }
+  .hcal-wd { display:grid; grid-template-columns:repeat(7,1fr); gap:5px; margin-bottom:8px; }
+  .hcal-wd span { text-align:center; font-size:9.5px; font-weight:500; color:rgba(28,28,46,.38); text-transform:uppercase; letter-spacing:.3px; }
+  .hcal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:5px; }
+  .hcal-day {
+    aspect-ratio:1; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:11.5px; font-weight:500; color:rgba(28,28,46,.45); position:relative;
+    background: rgba(120,130,160,.09);
+    transition: background .3s, color .3s;
+  }
+  .hcal-day.pad { background:none; }
+  .hcal-day.done {
+    background: linear-gradient(160deg, #ffb03e, #f2712a);
+    color:#fff; font-weight:600;
+    box-shadow: 0 3px 9px rgba(242,113,42,.3);
+  }
+  .hcal-day.part { background: rgba(242,113,42,.22); color:#a8500c; font-weight:600; }
+  .hcal-day.future { background:none; border:1px dashed rgba(120,130,160,.25); color:rgba(28,28,46,.2); }
+  .hcal-day.today { box-shadow: 0 0 0 2px #f2712a; }
+  .hcal-day.today.done { box-shadow: 0 3px 9px rgba(242,113,42,.3), 0 0 0 2px rgba(255,255,255,.95); }
+  .hcal-day.celebrate { animation: hcalCelebrate .7s cubic-bezier(.34,1.56,.64,1); z-index:2; }
+  @keyframes hcalCelebrate {
+    0%   { transform: scale(1) rotate(0deg) translateY(0); }
+    28%  { transform: scale(1.35) rotate(160deg) translateY(-9px); }
+    55%  { transform: scale(.85) rotate(330deg) translateY(3px); }
+    78%  { transform: scale(1.12) rotate(370deg) translateY(-2px); }
+    100% { transform: scale(1) rotate(360deg) translateY(0); }
+  }
+
   .tour-avatar .tour-caret {
     display:inline-block; width:2px; height:1em; margin-left:2px;
     background:var(--accent); vertical-align:-2px;
     animation: caretBlink .8s step-end infinite;
   }
+
+  /* ---- привычки: сосуд-визуал (используется только в #habitsGrid; общий .q-ring/.rbg/.rfg остаётся для заданий) ---- */
+  #habitsGrid .q-vessel { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); filter: drop-shadow(0 2px 4px rgba(0,0,0,.08)); }
+  #habitsGrid .q-vessel-fill { transition: y .5s cubic-bezier(.22,1,.36,1), height .5s cubic-bezier(.22,1,.36,1); }
+  #habitsGrid .q-ring.q-pop { animation: qPop .5s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes qPop { 0%, 100% { transform: scale(1); } 35% { transform: scale(1.18) rotate(-3deg); } 65% { transform: scale(.94); } }
+  #habitsGrid .q-sunmoon .q-moon, #habitsGrid .q-sunmoon .q-sun,
+  #habitsGrid .q-book .q-book-open, #habitsGrid .q-book .q-book-closed {
+    opacity:0; transform:scale(.7) rotate(-8deg); transform-origin:center; transform-box:fill-box;
+    transition: opacity .45s ease, transform .45s cubic-bezier(.34,1.56,.64,1);
+  }
+  #habitsGrid .q-sunmoon .show, #habitsGrid .q-book .show { opacity:1; transform:scale(1) rotate(0); }
+  /* универсальные «до/после» состояния для 30 новых объектов-привычек */
+  #habitsGrid .q-vessel .q-before, #habitsGrid .q-vessel .q-after {
+    opacity:0; transform:scale(.7) rotate(-8deg); transform-origin:center; transform-box:fill-box;
+    transition: opacity .45s ease, transform .45s cubic-bezier(.34,1.56,.64,1);
+  }
+  #habitsGrid .q-vessel .q-before.show, #habitsGrid .q-vessel .q-after.show { opacity:1; transform:scale(1) rotate(0); }
+  /* список каталога привычек (замена формы ввода названия) */
+  .hcat-group-title { font-size:11px; font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:.4px; margin:12px 0 6px; }
+  .hcat-group-title:first-child { margin-top:0; }
+  .hcat-row {
+    display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:14px;
+    background:rgba(120,140,180,.08); margin-bottom:8px; cursor:pointer;
+  }
+  .hcat-row:last-child { margin-bottom:0; }
+  .hcat-row:active { background:rgba(120,140,180,.16); }
+  .hcat-ico { font-size:22px; display:flex; align-items:center; justify-content:center; width:30px; }
+  .hcat-ico svg { width:28px; height:26px; display:block; }
+  .hcat-name { font-size:13.5px; font-weight:600; color:var(--text); flex:1; }
+  .hcat-plus { font-size:16px; font-weight:800; color:var(--accent); }
+  /* в списке каталога и превью иконки показываем только активное состояние двухфазных SVG */
+  #habitCatalogList .q-before:not(.show), #habitCatalogList .q-after:not(.show),
+  #habitCatalogList .q-book-open:not(.show), #habitCatalogList .q-book-closed:not(.show),
+  #habitCatalogList .q-sun:not(.show), #habitCatalogList .q-moon:not(.show),
+  .ch-icons .q-before:not(.show), .ch-icons .q-after:not(.show),
+  .hcat-custom .q-before:not(.show), .hcat-custom .q-after:not(.show) { display:none; }
+  /* сворачиваемые категории */
+  .hcat-group-title { display:flex; align-items:center; justify-content:space-between; cursor:pointer; user-select:none; padding:4px 2px; }
+  .hcat-arr { font-size:12px; color:var(--text2); transition: transform .2s; }
+  /* своя привычка */
+  .hcat-custom {
+    display:flex; align-items:center; gap:10px; padding:11px 12px; border-radius:14px; cursor:pointer;
+    background: linear-gradient(135deg, rgba(255,176,86,.25), rgba(242,99,42,.18));
+    border: 1.5px dashed rgba(242,99,42,.45); margin-bottom:10px;
+  }
+  .hcat-custom:active { background: linear-gradient(135deg, rgba(255,176,86,.4), rgba(242,99,42,.3)); }
+  .hcat-custom .hcat-name { font-weight:700; color:#c76a1a; }
+  .hcat-custom svg { width:26px; height:24px; display:block; }
+  #customHabitForm { padding:4px 2px 10px; }
+  #customHabitForm input { margin-bottom:10px; }
+  .ch-icons { display:flex; gap:8px; justify-content:space-between; margin-bottom:12px; }
+  .ch-ico {
+    flex:1; aspect-ratio:1; max-width:56px; border-radius:14px; cursor:pointer;
+    background:rgba(120,140,180,.08); border:2px solid transparent;
+    display:flex; align-items:center; justify-content:center; padding:6px;
+    transition: transform .15s, border-color .2s, background .2s;
+  }
+  .ch-ico svg { width:34px; height:30px; }
+  .ch-ico:active { transform: scale(.9); }
+  .ch-ico.sel { border-color:#f2632a; background:rgba(255,150,50,.16); }
+  .ch-type { display:flex; gap:8px; margin-bottom:10px; }
+  .ch-type button {
+    flex:1; border:1.5px solid rgba(150,165,200,.45); cursor:pointer;
+    background: rgba(255,255,255,.3); color:var(--text2);
+    font-family:inherit; font-size:12.5px; font-weight:700;
+    padding:9px 0; border-radius:12px;
+  }
+  .ch-type button.sel {
+    background: rgba(242,99,42,.13); color:#c76a1a; border-color:#f2632a;
+    box-shadow: 0 0 0 2px rgba(242,99,42,.12);
+  }
+  .ch-create {
+    display:block; width:100%; border:none; cursor:pointer; font-family:inherit;
+    font-size:15px; font-weight:700; padding:12px 0; border-radius:16px; color:#fff;
+    background: linear-gradient(135deg, #ffb056, #f2632a);
+    box-shadow: 0 6px 14px rgba(242,99,42,.3);
+  }
+  .ch-create:active { transform: scale(.97); }
+  /* анимации кастомных иконок */
+  .ci-anim-star { animation: ciTwinkle 1.8s ease-in-out infinite; transform-box:fill-box; transform-origin:center; }
+  @keyframes ciTwinkle { 0%,100% { transform:scale(1) rotate(0deg); } 50% { transform:scale(1.12) rotate(8deg); } }
+  .ci-anim-flame { animation: ciFlick 1.1s ease-in-out infinite; transform-box:fill-box; transform-origin:center bottom; }
+  @keyframes ciFlick { 0%,100% { transform:scaleY(1); } 50% { transform:scaleY(1.09) scaleX(.95); } }
+  .ci-anim-heart { animation: ciBeat 1.2s ease-in-out infinite; transform-box:fill-box; transform-origin:center; }
+  @keyframes ciBeat { 0%,100% { transform:scale(1); } 25% { transform:scale(1.14); } 45% { transform:scale(1); } 60% { transform:scale(1.08); } }
+  .ci-anim-bolt { animation: ciFlash 1.6s ease-in-out infinite; }
+  @keyframes ciFlash { 0%,44% { opacity:1; } 52% { opacity:.4; } 60%,100% { opacity:1; } }
+  .ci-anim-gem { animation: ciShine 2s ease-in-out infinite; }
+  @keyframes ciShine { 0%,100% { opacity:.25; } 50% { opacity:.9; } }
+
+  /* ---- маскот «Огонёк» (вкладка «Привычки») ---- */
+  .flame-area { position:relative; display:flex; align-items:center; justify-content:center; gap:16px; width:100%; }
+  .flame-aura {
+    position:absolute; z-index:0; border-radius:50%; pointer-events:none;
+    width:150px; height:150px; left:50%; top:50%; transform:translate(-50%,-52%);
+    background: radial-gradient(circle, rgba(255,164,50,.6) 0%, rgba(255,180,80,.25) 45%, transparent 70%);
+    filter: blur(10px); opacity:.85;
+    animation: flameAuraPulse 3.2s ease-in-out infinite;
+    transition: width .6s cubic-bezier(.22,1,.36,1), height .6s cubic-bezier(.22,1,.36,1), background 1s, opacity 1s;
+  }
+  @keyframes flameAuraPulse { 50% { transform: translate(-50%,-52%) scale(1.09); } }
+  .flame { position:relative; z-index:2; cursor:pointer; transform-origin:70px 160px; animation: flameSway 2.6s ease-in-out infinite; }
+  @keyframes flameSway {
+    0%, 100% { transform: rotate(-1.2deg) scaleY(1); }
+    50%      { transform: rotate(1.4deg) scaleY(1.015); }
+  }
+  .flame.tap { animation: flameTap .55s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes flameTap {
+    0%   { transform: rotate(0) scale(1); }
+    30%  { transform: rotate(-6deg) scale(1.14, .9); }
+    60%  { transform: rotate(5deg) scale(.92,1.1); }
+    100% { transform: rotate(0) scale(1); }
+  }
+  /* 5 настроений: от бледно-холодного к жаркому */
+  .flame #flBody, .flame ellipse.flLimb { transition: fill 1s; }
+  .flame #flBody { fill: rgba(255,158,48,.56); }
+  .flame ellipse.flLimb { fill: rgba(255,158,48,.68); }
+  .flame.mood-sad #flBody { fill: rgba(150,170,200,.44); }
+  .flame.mood-sad ellipse.flLimb { fill: rgba(150,170,200,.54); }
+  .flame.mood-meh #flBody { fill: rgba(214,178,132,.5); }
+  .flame.mood-meh ellipse.flLimb { fill: rgba(214,178,132,.6); }
+  .flame.mood-neutral #flBody { fill: rgba(255,158,48,.56); }
+  .flame.mood-neutral ellipse.flLimb { fill: rgba(255,158,48,.68); }
+  .flame.mood-good #flBody { fill: rgba(255,148,32,.63); }
+  .flame.mood-good ellipse.flLimb { fill: rgba(255,148,32,.73); }
+  .flame.mood-happy #flBody { fill: rgba(255,130,16,.74); }
+  .flame.mood-happy ellipse.flLimb { fill: rgba(255,130,16,.84); }
+  /* темп покачивания: чем лучше настроение, тем живее */
+  .flame.mood-meh { animation-duration: 3.4s; }
+  .flame.mood-good { animation-duration: 2.2s; }
+  .flame.mood-happy { animation-duration: 1.7s; }
+  .flame.mood-meh g#flArmL, .flame.mood-meh g#flArmR { animation-duration: 3.4s; }
+  .flame.mood-good g#flArmL, .flame.mood-good g#flArmR { animation-duration: 1.9s; }
+  .flame.mood-happy g#flArmL, .flame.mood-happy g#flArmR { animation-duration: 1.4s; }
+  .flame.mood-sad { animation-duration: 4.2s; opacity:.88; }
+  .flame.mood-sad .flame-aura { opacity:.32; filter: blur(16px); }
+  .flame g#flArmL { transform-box: fill-box; transform-origin: 90% 40%; animation: flArmWaveL 2.4s ease-in-out infinite; }
+  .flame g#flArmR { transform-box: fill-box; transform-origin: 10% 40%; animation: flArmWaveR 2.4s ease-in-out infinite; }
+  @keyframes flArmWaveL { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-14deg); } }
+  @keyframes flArmWaveR { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(14deg); } }
+  .flame.mood-sad g#flArmL, .flame.mood-sad g#flArmR { animation-play-state: paused; }
+  .flame-area { justify-content:flex-start; gap:14px; align-items:center; }
+  .flame-wrap { position:relative; flex-shrink:0; }
+  .flame-info { position:relative; z-index:2; display:flex; flex-direction:column; align-items:flex-start; justify-content:center; align-self:center; text-align:left; flex:1; min-width:0; }
+  .flame-info .fi-today { font-size:19px; font-weight:800; letter-spacing:-.3px; }
+  .fi-bar-row { display:flex; align-items:center; gap:7px; width:100%; margin-top:8px; }
+  .fi-bar { flex:1; height:6px; border-radius:3px; background:rgba(120,130,160,.18); overflow:hidden; }
+  .fi-bar i { display:block; height:100%; border-radius:3px; background:linear-gradient(90deg,#ffb056,#f2632a); transition: width .6s cubic-bezier(.22,1,.36,1); }
+  .fi-rem-icons { display:flex; align-items:center; gap:4px; flex-shrink:0; }
+  .flame-info .fi-streak { font-size:14.5px; font-weight:700; color:#c76a1a; margin-top:7px; }
+  .flame-info .fi-record { font-size:12.5px; color:var(--text2); margin-top:4px; }
+  .fi-remaining { display:flex; align-items:center; gap:5px; margin-top:7px; flex-wrap:wrap; font-size:12.5px; font-weight:700; color:var(--text2); }
+  .fr-ico { cursor:pointer; background:rgba(255,150,50,.13); border-radius:9px; padding:2px 4px; display:inline-flex; align-items:center; transition: transform .15s; }
+  .fr-ico:active { transform: scale(.85); }
+  .fr-ico svg { width:22px; height:20px; display:block; }
+  .fr-ico .q-before:not(.show), .fr-ico .q-after:not(.show),
+  .fr-ico .q-moon:not(.show), .fr-ico .q-sun:not(.show),
+  .fr-ico .q-book-open:not(.show), .fr-ico .q-book-closed:not(.show),
+  #hdList .q-before:not(.show), #hdList .q-after:not(.show),
+  #hdList .q-moon:not(.show), #hdList .q-sun:not(.show),
+  #hdList .q-book-open:not(.show), #hdList .q-book-closed:not(.show) { display:none; }
+  .fr-more { font-size:11.5px; color:var(--text2); font-weight:700; }
+  .fi-phrase { font-size:12.5px; font-weight:600; color:var(--text2); margin-top:6px; font-style:italic; }
+  .fi-neglect { font-size:11.5px; color:var(--text2); margin-top:4px; cursor:pointer; text-decoration:underline dotted rgba(120,120,140,.5); }
+  #flZzz { display:none; }
+  body.sleep #flZzz { display:block; }
+  body.sleep .flame { animation:none; filter:saturate(.5) brightness(.82); }
+  body.sleep .flame g#flArmL, body.sleep .flame g#flArmR { animation:none; }
+  body.sleep .flame-aura { opacity:.12 !important; }
+  #habitDayModal {
+    position:fixed; inset:0; z-index:120; display:none;
+    align-items:flex-start; justify-content:center; padding-top:20vh;
+    background: rgba(30,32,50,.3);
+    -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  }
+  #habitDayModal.show { display:flex; }
+  .hd-row { display:flex; align-items:center; gap:10px; padding:7px 4px; border-bottom:1px solid rgba(120,130,160,.12); font-size:13.5px; font-weight:600; }
+  .hd-row:last-child { border-bottom:none; }
+  .hd-row svg { width:24px; height:22px; flex-shrink:0; }
+  .hd-name { flex:1; color:var(--text); }
+  .hd-st { font-weight:800; font-size:13px; }
+  .hd-st.ok { color:#30d158; }
+  .hd-st.no { color:rgba(200,60,60,.8); }
+  .hd-empty { font-size:13px; color:var(--text2); text-align:center; padding:8px 0; }
+  .q-tile.q-hint { animation: qHint 1.2s ease 2; }
+  @keyframes qHint { 0%,100% { box-shadow:none; transform:scale(1); } 50% { box-shadow:0 0 0 3px rgba(242,99,42,.55), 0 8px 20px rgba(242,99,42,.3); transform:scale(1.06); } }
+  .hcal-week-wrap { width:100%; margin-top:6px; }
+  .hcal-week { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; }
+  /* дни недели — кружки с кольцом прогресса (огненная гамма) */
+  .wd-cell { display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; }
+  .wd-lab { font-size:9px; font-weight:500; color:rgba(28,28,46,.38); letter-spacing:.3px; text-transform:uppercase; }
+  .wd-ring { display:block; }
+  .wd-ring .wr-bg { stroke:rgba(120,130,160,.18); }
+  .wd-ring .wr-fg { stroke:#f7a13c; transition: stroke-dashoffset .7s cubic-bezier(.22,1,.36,1); }
+  .wd-ring .wr-fill { fill:none; transition: fill .5s; }
+  .wd-ring.done .wr-fill { fill:url(#wdGrad); }
+  .wd-ring.done .wr-fg { stroke:none; }
+  .wd-ring .wr-num { font-size:11px; font-weight:500; fill:rgba(28,28,46,.5); }
+  .wd-ring.done .wr-num { fill:#fff; font-weight:600; }
+  .wd-ring.future .wr-bg { stroke:rgba(120,130,160,.14); stroke-dasharray:2.5 3; }
+  .wd-ring.future .wr-num { fill:rgba(28,28,46,.22); }
+  .wd-cell.today .wd-lab { color:#c76a1a; font-weight:700; }
+  .wd-cell.today .wd-ring { filter: drop-shadow(0 0 0 rgba(0,0,0,0)); }
+  .wd-cell.today .wd-ring .wr-halo { stroke: rgba(242,113,42,.45); }
+  .wd-ring.celebrate { animation: wdPop .7s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes wdPop { 0%,100% { transform:scale(1); } 40% { transform:scale(1.22); } 70% { transform:scale(.94); } }
+  #viewHabits .card.hero { position:relative; }
+  .flame-add-btn {
+    position:absolute; top:14px; right:14px; z-index:5;
+    width:34px; height:34px; border-radius:50%;
+    background: linear-gradient(165deg, #ffb066, #f2632a);
+    border:1px solid rgba(255,255,255,.7); color:#fff; font-size:19px; font-weight:800;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    box-shadow: 0 5px 12px rgba(242,99,42,.35);
+    transition: transform .15s;
+  }
+  .flame-add-btn:active { transform: scale(.9); }
+  @media (prefers-reduced-motion: reduce) {
+    .flame, .flame-aura { animation:none; }
+  }
+  @media (max-width:380px) {
+    .flame-area { gap:10px; }
+  }
+
+  /* ---- модалка полного календаря привычек (открывается долгим тапом по огоньку) ---- */
+  #habitCalModal {
+    position:fixed; inset:0; z-index:100; display:none;
+    align-items:flex-start; justify-content:center; padding-top:14vh;
+    background: rgba(30,32,50,.35);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  }
+  #habitCalModal.show { display:flex; }
+  .hcm-card { width:min(360px, 90vw); padding:0; background:transparent; box-shadow:none; border:none; position:relative; }
+  .hcm-close {
+    position:absolute; right:-6px; top:-14px; z-index:5; width:32px; height:32px; border-radius:50%;
+    background:rgba(255,255,255,.92); border:1px solid rgba(255,255,255,.9); color:var(--text);
+    font-size:15px; font-weight:700; cursor:pointer; box-shadow:0 6px 14px rgba(0,0,0,.18);
+  }
+  .hcm-close:active { transform: scale(.92); }
 </style>
 <!-- OneSignal: push-уведомления. Воркер объединён с офлайн-кэшем в один файл
      OneSignalSDKWorker.js в корне сайта — так, как OneSignal ждёт по умолчанию -->
@@ -1497,6 +1956,7 @@
   <div class="tabbar">
     <button class="tab active" id="tabSave" onclick="switchTab('save')">Копилка</button>
     <button class="tab" id="tabSpend" onclick="switchTab('spend')">Расходы</button>
+    <button class="tab" id="tabHabits" onclick="switchTab('habits')">Привычки</button>
   </div>
 
   <div class="view" id="viewSave">
@@ -1828,6 +2288,157 @@
     </div>
     </div><!-- /moreWrap2 -->
   </div><!-- /viewSpend -->
+
+  <!-- ---- привычки ---- -->
+  <div class="view" id="viewHabits" style="display:none">
+    <div class="card hero">
+      <div class="flame-area">
+        <div class="flame-wrap">
+        <div class="flame-aura" id="flameAura"></div>
+        <svg class="flame" id="flameSvg" viewBox="0 0 140 172" width="146" height="179"
+             onpointerdown="flamePressStart()" onpointerup="flamePressEnd()" onpointerleave="flamePressEnd()">
+          <defs>
+            <mask id="flBodyMask">
+              <rect x="0" y="0" width="140" height="172" fill="#fff"/>
+              <path d="M53 20 C50 39 42 56 36 73 C31 87 28 98 28 115 C28 140 46 157 70 157 C94 157 112 140 112 115 C112 104 109 92 104 81 C101 70 101 56 104 42 C95 50 92 62 90 70 C84 53 81 39 81 22 C76 36 70 48 64 59 C62 45 56 34 53 20 Z" fill="#000"/>
+            </mask>
+          </defs>
+          <g mask="url(#flBodyMask)">
+            <g id="flArmL" class="flLimb"><ellipse class="flLimb" cx="30" cy="121" rx="12.5" ry="8.4" stroke="rgba(255,255,255,.75)" stroke-width="1.5" transform="rotate(-30 30 121)"/></g>
+            <g id="flArmR" class="flLimb"><ellipse class="flLimb" cx="110" cy="121" rx="12.5" ry="8.4" stroke="rgba(255,255,255,.75)" stroke-width="1.5" transform="rotate(30 110 121)"/></g>
+            <ellipse id="flLegL" class="flLimb" cx="55" cy="159" rx="11" ry="8.2" stroke="rgba(255,255,255,.75)" stroke-width="1.5"/>
+            <ellipse id="flLegR" class="flLimb" cx="85" cy="159" rx="11" ry="8.2" stroke="rgba(255,255,255,.75)" stroke-width="1.5"/>
+          </g>
+          <path id="flBody" stroke="rgba(255,255,255,.9)" stroke-width="2.5"
+            d="M53 20 C50 39 42 56 36 73 C31 87 28 98 28 115 C28 140 46 157 70 157 C94 157 112 140 112 115 C112 104 109 92 104 81 C101 70 101 56 104 42 C95 50 92 62 90 70 C84 53 81 39 81 22 C76 36 70 48 64 59 C62 45 56 34 53 20 Z"/>
+          <ellipse id="flShine" cx="49" cy="86" rx="17" ry="8" fill="rgba(255,255,255,.45)" transform="rotate(-28 49 86)"/>
+          <g id="flFace">
+            <g id="flEyesOpen">
+              <g id="flEyeGL"><circle cx="57" cy="116" r="7.5" fill="#2b1c10"/><circle cx="59.6" cy="113.4" r="2.6" fill="#fff"/></g>
+              <g id="flEyeGR"><circle cx="83" cy="116" r="7.5" fill="#2b1c10"/><circle cx="85.6" cy="113.4" r="2.6" fill="#fff"/></g>
+            </g>
+            <g id="flEyesSleep" style="display:none">
+              <path d="M49 116 q8 6 16 0" fill="none" stroke="#2b1c10" stroke-width="3" stroke-linecap="round"/>
+              <path d="M75 116 q8 6 16 0" fill="none" stroke="#2b1c10" stroke-width="3" stroke-linecap="round"/>
+            </g>
+            <g id="flZzz">
+              <text class="zz z1" x="106" y="52" font-size="16" fill="#e8791c" font-weight="800">Z</text>
+              <text class="zz z2" x="118" y="38" font-size="12" fill="#f2962e" font-weight="800">Z</text>
+              <text class="zz z3" x="128" y="26" font-size="9" fill="#ffb056" font-weight="800">Z</text>
+            </g>
+            <g id="flEyesHappy" style="display:none">
+              <path d="M48 111 q9 -10 18 0" fill="none" stroke="#2b1c10" stroke-width="3.4" stroke-linecap="round"/>
+              <path d="M74 111 q9 -10 18 0" fill="none" stroke="#2b1c10" stroke-width="3.4" stroke-linecap="round"/>
+            </g>
+            <g id="flEyesMeh" style="display:none">
+              <circle cx="57" cy="117" r="6.2" fill="#2b1c10"/>
+              <circle cx="83" cy="117" r="6.2" fill="#2b1c10"/>
+              <circle cx="59" cy="115" r="2" fill="#fff"/>
+              <circle cx="85" cy="115" r="2" fill="#fff"/>
+              <path d="M49 110 h15" fill="none" stroke="#2b1c10" stroke-width="3.4" stroke-linecap="round"/>
+              <path d="M75 110 h15" fill="none" stroke="#2b1c10" stroke-width="3.4" stroke-linecap="round"/>
+            </g>
+            <g id="flEyesGood" style="display:none">
+              <circle cx="57" cy="115" r="7.5" fill="#2b1c10"/>
+              <circle cx="83" cy="115" r="7.5" fill="#2b1c10"/>
+              <circle cx="59.8" cy="112.2" r="2.8" fill="#fff"/>
+              <circle cx="85.8" cy="112.2" r="2.8" fill="#fff"/>
+              <ellipse cx="42" cy="128" rx="6" ry="4" fill="rgba(255,120,90,.35)"/>
+              <ellipse cx="98" cy="128" rx="6" ry="4" fill="rgba(255,120,90,.35)"/>
+            </g>
+            <g id="flEyesSad" style="display:none">
+              <circle cx="57" cy="119" r="6.4" fill="#2b1c10"/>
+              <circle cx="83" cy="119" r="6.4" fill="#2b1c10"/>
+              <circle cx="59" cy="117" r="2" fill="#fff"/>
+              <circle cx="85" cy="117" r="2" fill="#fff"/>
+              <path d="M46 103 q12 -7 21 -2" fill="none" stroke="#2b1c10" stroke-width="2.8" stroke-linecap="round"/>
+              <path d="M94 103 q-12 -7 -21 -2" fill="none" stroke="#2b1c10" stroke-width="2.8" stroke-linecap="round"/>
+            </g>
+            <path id="flMouthHappy" style="display:none" d="M56 134 q14 15 28 0 q-14 5 -28 0 Z" fill="#2b1c10" stroke="#2b1c10" stroke-width="2.4" stroke-linejoin="round"/>
+            <path id="flMouthGood" style="display:none" d="M58 135 q12 11 24 0" fill="none" stroke="#2b1c10" stroke-width="3.2" stroke-linecap="round"/>
+            <path id="flMouthNeutral" d="M60 136 q10 4 20 0" fill="none" stroke="#2b1c10" stroke-width="2.8" stroke-linecap="round"/>
+            <path id="flMouthMeh" style="display:none" d="M60 138 q5 -3 10 0 q5 3 10 0" fill="none" stroke="#2b1c10" stroke-width="2.8" stroke-linecap="round"/>
+            <path id="flMouthSad" style="display:none" d="M58 141 q12 -9 24 0" fill="none" stroke="#2b1c10" stroke-width="2.8" stroke-linecap="round"/>
+          </g>
+        </svg>
+        </div><!-- /flame-wrap -->
+        <div class="flame-info">
+          <div class="fi-today" id="fiToday">Пока нет привычек</div>
+          <div class="fi-bar-row" id="fiBarRow" style="display:none">
+            <div class="fi-bar"><i id="fiBarFill" style="width:0%"></i></div>
+            <span class="fi-rem-icons" id="fiRemaining"></span>
+          </div>
+          <div class="fi-streak" id="fiStreak" style="display:none"></div>
+          <div class="fi-record" id="fiRecord" style="display:none"></div>
+          <div class="fi-phrase" id="fiPhrase" style="display:none"></div>
+          <div class="fi-neglect" id="fiNeglect" style="display:none"></div>
+        </div>
+        <button class="flame-add-btn" onclick="openAddHabitModal()" aria-label="Добавить привычку">+</button>
+      </div>
+      <div class="hcal-week-wrap">
+        <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+          <linearGradient id="wdGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#ffb03e"/><stop offset="1" stop-color="#f2712a"/>
+          </linearGradient>
+        </defs></svg>
+        <div class="hcal-week" id="hcalWeekGrid"></div>
+      </div>
+    </div>
+
+    <div class="card habits-card" id="habitsCard" style="display:none">
+      <div class="q-grid" id="habitsGrid" style="grid-template-columns:repeat(3,1fr)"></div>
+    </div>
+  </div><!-- /viewHabits -->
+</div>
+
+<div id="habitCalModal" onclick="if(event.target===this) closeHabitCalModal()">
+  <div class="modal-card hcm-card">
+    <button class="hcm-close" onclick="closeHabitCalModal()">✕</button>
+    <div class="hcal">
+      <div class="hcal-head">
+        <button class="hcal-nav" onclick="habitCalShift(-1)">‹</button>
+        <div class="hcal-title" id="hcalTitle"></div>
+        <button class="hcal-nav" id="hcalNext" onclick="habitCalShift(1)">›</button>
+      </div>
+      <div class="hcal-body">
+        <div class="hcal-wd">
+          <span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span>
+        </div>
+        <div class="hcal-grid" id="hcalGrid"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="habitDayModal" onclick="if(event.target===this) closeHabitDayModal()">
+  <div class="modal-card">
+    <h3 id="hdTitle">День</h3>
+    <div id="hdList"></div>
+    <div class="modal-btns">
+      <button class="m-cancel" onclick="closeHabitDayModal()">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<div id="addHabitModal" onclick="if(event.target===this) closeAddHabitModal()">
+  <div class="modal-card">
+    <h3>Добавить привычку</h3>
+    <div id="habitCatalogList"></div>
+    <div class="modal-btns">
+      <button class="m-cancel" onclick="closeAddHabitModal()">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<div id="whyModal" onclick="if(event.target===this) whySkip()">
+  <div class="modal-card why-card">
+    <div class="why-ico" id="whyIco"></div>
+    <h3 id="whyTitle">Зачем тебе это?</h3>
+    <p class="why-sub">Пара слов, которые напомнят, ради чего всё это. Можно пропустить.</p>
+    <textarea id="whyText" maxlength="140" rows="3" placeholder="Например: чтобы к вечеру не болела голова"></textarea>
+    <button type="button" class="why-save" onclick="whySave()">Сохранить</button>
+    <button type="button" class="why-skip" onclick="whySkip()">Пропустить</button>
+  </div>
 </div>
 
 <div id="toast"><span id="toastMsg"></span><button class="t-undo" id="toastUndo">Вернуть</button></div>
@@ -1851,6 +2462,56 @@
       <button class="m-cancel" onclick="modalClose(false)">Отмена</button>
       <button class="m-ok" onclick="modalClose(true)">Готово</button>
     </div>
+  </div>
+</div>
+
+<div id="habitEditModal">
+  <div class="modal-card he-card">
+    <h3 id="heTitle">Изменить привычку</h3>
+    <div class="he-why" id="heWhyBox" style="display:none">
+      <span class="he-why-txt" id="heWhyTxt"></span>
+      <button type="button" class="he-why-edit" onclick="heEditWhy()" aria-label="Изменить заметку">✎</button>
+    </div>
+    <div class="he-today-row" id="heTodayRow" style="display:none">
+      <span class="he-today-txt">Сегодня: <b id="heTodayVal">0</b></span>
+      <span class="he-step">
+        <button type="button" onclick="heDecrementToday()" aria-label="Убавить">−</button>
+        <button type="button" onclick="heIncrementToday()" aria-label="Прибавить">+</button>
+      </span>
+    </div>
+    <p class="he-lab" style="margin-top:14px">История · <span id="heCalTitle"></span></p>
+    <div class="he-cal">
+      <div class="he-cal-head">
+        <button type="button" class="he-cal-nav" onclick="heCalShift(-1)">‹</button>
+        <div class="he-cal-stats" id="heCalStats"></div>
+        <button type="button" class="he-cal-nav" id="heCalNext" onclick="heCalShift(1)">›</button>
+      </div>
+      <div class="he-cal-wd"><span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span></div>
+      <div class="he-cal-grid" id="heCalGrid"></div>
+      <p class="he-cal-hint">Тапни по дню, чтобы отметить задним числом</p>
+    </div>
+    <div id="heCounterRow" style="display:none">
+      <p class="he-lab">Сколько раз в день</p>
+      <div class="extra-row">
+        <input type="number" id="heTarget" min="2" max="99" placeholder="6">
+        <input type="text" id="heUnit" maxlength="16" placeholder="стакан">
+      </div>
+    </div>
+    <p class="he-lab">В какие дни</p>
+    <div class="day-picker" id="heDaysRow">
+      <button class="dchip" data-d="1">Пн</button>
+      <button class="dchip" data-d="2">Вт</button>
+      <button class="dchip" data-d="3">Ср</button>
+      <button class="dchip" data-d="4">Чт</button>
+      <button class="dchip" data-d="5">Пт</button>
+      <button class="dchip" data-d="6">Сб</button>
+      <button class="dchip" data-d="0">Вс</button>
+    </div>
+    <div class="modal-btns">
+      <button class="m-cancel" onclick="closeHabitEditModal()">Отмена</button>
+      <button class="m-ok he-save" onclick="saveHabitEditModal()">Сохранить</button>
+    </div>
+    <button type="button" class="he-delete" onclick="heDeleteHabit()">Удалить привычку</button>
   </div>
 </div>
 
@@ -1975,8 +2636,18 @@ function load() {
     celebrated: false, lastBackup: null, wallet: 0,
     expenses: [], customCats: [], limit: 0, milestones: [], lastLevel: 1,
     lastVisit: null, onboarded: false, pigName: '', hamboarded: false,
-    pending: 0, eveningDay: '', chal: null, chals: [], room: []
+    pending: 0, eveningDay: '', chal: null, chals: [], room: [],
+    habits: [], flameXP: 0, flameLvl: 1, flameAwarded: {}
   }, s);
+  if (typeof merged.flameAwarded !== 'object' || !merged.flameAwarded) merged.flameAwarded = {};
+  if (!Array.isArray(merged.habits)) merged.habits = [];
+  // миграция со старой модели частоты (timesPerWeek) на конкретные дни недели
+  merged.habits.forEach(h => {
+    if (!Array.isArray(h.days) || !h.days.length) {
+      h.days = daysFromCount(h.timesPerWeek || 7);
+    }
+    delete h.timesPerWeek;
+  });
   // миграция со старой одиночной модели челленджа на массив
   if (merged.chal && (!merged.chals || !merged.chals.length)) {
     merged.chals = [{ cat: merged.chal.cat, day: merged.chal.day, reward: 2 }];
@@ -2597,6 +3268,7 @@ function sleepCheck() {
   document.getElementById('sleepGroup').style.display = on ? '' : 'none';
   refreshEyes();
   try { refreshHamEyes(); } catch(e) {}   // хомяк тоже спит
+  try { setFlameEyesMouth(flameMood()); } catch(e) {}   // огонёк тоже спит
 }
 setInterval(sleepCheck, 60000);
 
@@ -3146,6 +3818,1376 @@ function renderQuests() {
   draw(q.weekly, 'qWeekly', 3);
 }
 
+// ---------- привычки ----------
+function daysFromCount(n) {
+  const order = [1, 2, 3, 4, 5, 6, 0]; // Пн..Вс
+  if (!n || n >= 7) return [0, 1, 2, 3, 4, 5, 6];
+  const res = [], step = 7 / n;
+  for (let i = 0; i < n; i++) res.push(order[Math.floor(i * step)]);
+  return [...new Set(res)];
+}
+document.querySelectorAll('#heDaysRow .dchip').forEach(c => c.onclick = () => {
+  c.classList.toggle('sel');
+});
+function getDaysFrom(sel) {
+  return Array.from(document.querySelectorAll(sel + ' .dchip.sel')).map(x => +x.dataset.d);
+}
+function setDaysFrom(sel, days) {
+  document.querySelectorAll(sel + ' .dchip').forEach(x => x.classList.toggle('sel', days.includes(+x.dataset.d)));
+}
+function habitWeekCount(h) {
+  const week = weekDates();
+  return h.log.filter(d => week.includes(d)).length;
+}
+function habitStreak(h) {
+  const set = new Set(h.log);
+  const days = new Set((h.days && h.days.length) ? h.days : [0, 1, 2, 3, 4, 5, 6]);
+  const d = parseD(todayStr());
+  if (days.has(d.getDay()) && !set.has(todayStr(d))) d.setDate(d.getDate() - 1); // сегодняшний плановый день ещё не отмечен — не обнуляем раньше времени
+  let streak = 0, guard = 0;
+  while (guard++ < 3650) {
+    if (!days.has(d.getDay())) { d.setDate(d.getDate() - 1); continue; } // не плановый день — пропускаем, стрик не рвём
+    if (!set.has(todayStr(d))) break;
+    streak++;
+    d.setDate(d.getDate() - 1);
+  }
+  return streak;
+}
+function habitMissedStreak(h) {
+  // сколько плановых дней подряд (не считая сегодня) пропущено — до последней отметки или до создания привычки
+  const days = new Set((h.days && h.days.length) ? h.days : [0, 1, 2, 3, 4, 5, 6]);
+  const set = new Set(h.log);
+  const created = parseD(todayStr(new Date(h.id)));
+  let d = parseD(todayStr());
+  d.setDate(d.getDate() - 1);
+  let missed = 0, guard = 0;
+  while (d >= created && guard++ < 3650) {
+    if (!days.has(d.getDay())) { d.setDate(d.getDate() - 1); continue; }
+    if (set.has(todayStr(d))) break;
+    missed++;
+    d.setDate(d.getDate() - 1);
+  }
+  return missed;
+}
+function checkHabitNeglect() {
+  if (!state.habits.length) return;
+  if (state.lastNeglectNudge === todayStr()) return; // уже подсказали сегодня
+  let worst = null, worstMissed = 0;
+  state.habits.forEach(h => {
+    const m = habitMissedStreak(h);
+    if (m > worstMissed) { worstMissed = m; worst = h; }
+  });
+  if (worst && worstMissed >= 3) {
+    state.lastNeglectNudge = todayStr();
+    save();
+    toast('👋 «' + worst.name + '» — давно не виделись, уже ' + worstMissed + ' ' + plural(worstMissed, 'день', 'дня', 'дней') + ' без отметки');
+  }
+}
+
+// ---------- привычки: универсальный «сосуд»-виджет (вода и все остальные) ----------
+function isWaterHabit(h) { return /вод|пить|попить/i.test(h.name) && isCounterHabit(h); }
+function findWaterHabit() { return state.habits.find(isWaterHabit); }
+const HABIT_VESSEL_COLORS = ['#0a84ff', '#ff9500', '#ff375f', '#8e44ff', '#00b8a2', '#ffb340', '#5e5ce6', '#34c759'];
+function habitColor(name) {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+  return HABIT_VESSEL_COLORS[h % HABIT_VESSEL_COLORS.length];
+}
+const HABIT_BOTTLE_PATH = 'M9 2h8v5c3 1 5 3 5 7v17a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V14c0-4 2-6 5-7V2z';
+function habitVesselSVG(id, frac, color) {
+  const bodyTop = 4, bodyBottom = 34, range = bodyBottom - bodyTop;
+  const fillH = Math.max(0, Math.min(1, frac)) * range, fillY = bodyBottom - fillH;
+  const clipId = 'qvclip' + id;
+  return (
+    '<svg class="q-vessel" width="34" height="47" viewBox="0 0 26 36">' +
+      '<defs><clipPath id="' + clipId + '"><path d="' + HABIT_BOTTLE_PATH + '"/></clipPath></defs>' +
+      '<path d="' + HABIT_BOTTLE_PATH + '" fill="rgba(255,255,255,.55)" stroke="rgba(120,150,190,.55)" stroke-width="1.2"/>' +
+      '<g clip-path="url(#' + clipId + ')">' +
+        '<rect class="q-vessel-fill" data-y="' + fillY + '" data-h="' + fillH + '" x="0" y="' + bodyBottom + '" width="26" height="0" fill="' + color + '"/>' +
+      '</g>' +
+    '</svg>'
+  );
+}
+// «ранний подъём»: луна ночью → солнце после отметки
+function habitSunMoonSVG(done) {
+  const rays = [];
+  for (let i = 0; i < 8; i++) {
+    const a = i * Math.PI / 4;
+    const x1 = (22 + Math.cos(a) * 13).toFixed(1), y1 = (22 + Math.sin(a) * 13).toFixed(1);
+    const x2 = (22 + Math.cos(a) * 17).toFixed(1), y2 = (22 + Math.sin(a) * 17).toFixed(1);
+    rays.push('<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="#ffb340" stroke-width="2.2" stroke-linecap="round"/>');
+  }
+  return (
+    '<svg class="q-vessel q-sunmoon" width="44" height="44" viewBox="0 0 44 44">' +
+      '<g class="q-moon' + (done ? '' : ' show') + '">' +
+        '<path d="M27 6a16 16 0 1 0 11 27A13 13 0 0 1 27 6z" fill="#dbe1f5" stroke="#aab4d6" stroke-width="1"/>' +
+        '<circle cx="10" cy="10" r="1.4" fill="#c9d0ec"/><circle cx="6" cy="20" r="1" fill="#c9d0ec"/><circle cx="15" cy="5" r="1" fill="#c9d0ec"/>' +
+      '</g>' +
+      '<g class="q-sun' + (done ? ' show' : '') + '">' +
+        '<circle cx="22" cy="22" r="9" fill="#ffb340" stroke="#ff9500" stroke-width="1"/>' +
+        rays.join('') +
+      '</g>' +
+    '</svg>'
+  );
+}
+// «читать»: открытая книга → закрытая (с закладкой) после отметки
+function habitBookSVG(done) {
+  return (
+    '<svg class="q-vessel q-book" width="46" height="40" viewBox="0 0 46 40">' +
+      '<g class="q-book-open' + (done ? '' : ' show') + '">' +
+        '<path d="M23 6c-4-3-10-3-19-1v25c9-2 15-2 19 1 4-3 10-3 19-1V5c-9-2-15-2-19 1z" fill="#fff8ec" stroke="#caa06a" stroke-width="1.2"/>' +
+        '<path d="M23 6v25" stroke="#caa06a" stroke-width="1"/>' +
+        '<path d="M7 9c4-1 8-1 12 0M7 14c4-1 8-1 12 0M27 9c4-1 8-1 12 0M27 14c4-1 8-1 12 0" stroke="#e0c9a0" stroke-width="1" fill="none"/>' +
+      '</g>' +
+      '<g class="q-book-closed' + (done ? ' show' : '') + '">' +
+        '<rect x="9" y="4" width="28" height="32" rx="3" fill="#8c6a46" stroke="#6b4f33" stroke-width="1.2"/>' +
+        '<rect x="9" y="4" width="6" height="32" rx="2" fill="#6b4f33"/>' +
+        '<path d="M30 4v11l-4-3-4 3V4z" fill="#e2b04a"/>' +
+      '</g>' +
+    '</svg>'
+  );
+}
+function habitIcon(name) {
+  const n = (name || '').toLowerCase();
+  const map = [
+    // еда и напитки
+    [/вод|пить|попить/, '💧'],
+    [/кофе/, '☕'],
+    [/сахар|сладк/, '🍬'],
+    [/алкогол|пив[оа]|вин[оа]/, '🍷'],
+    [/кур[ие]|сигарет|вейп/, '🚭'],
+    [/завтрак/, '🍳'],
+    [/обед/, '🍲'],
+    [/ужин/, '🍽️'],
+    [/перекус/, '🍎'],
+    [/еда|поесть|кбжу|питани|калори|рацион/, '🍽️'],
+    [/готов|кулинар|рецепт/, '👩‍🍳'],
+    [/пост(?![а-яё])|голодан/, '⏳'],
+
+    // сон и режим
+    [/сон|высыпа|спать|лечь пораньше|рано лечь/, '😴'],
+    [/будильник|подъём|вставать|проснут/, '🌅'],
+    [/отдых|релакс/, '🛋️'],
+
+    // тело и спорт
+    [/спорт|трениров|качалк|силов|штанг/, '🏋️'],
+    [/зарядк/, '🤸'],
+    [/бег|пробежк|марафон/, '🏃'],
+    [/плаван|бассейн/, '🏊'],
+    [/велосипед|вело[^с]/, '🚴'],
+    [/йог[аи]|пилатес/, '🧘'],
+    [/растяжк/, '🤸'],
+    [/танц/, '💃'],
+    [/футбол/, '⚽'],
+    [/баскетбол/, '🏀'],
+    [/теннис/, '🎾'],
+    [/лыж|сноуборд/, '⛷️'],
+    [/скалолаз/, '🧗'],
+    [/шаг|ходьб|прогулк/, '🚶'],
+    [/массаж/, '💆'],
+
+    // здоровье и гигиена
+    [/витамин|таблетк|лекарств/, '💊'],
+    [/душ|гигиен|умыться|умыван/, '🚿'],
+    [/зуб/, '🦷'],
+    [/кож|крем|уход за лицом/, '🧴'],
+    [/волос|причёск|голов/, '💇'],
+    [/ногт|маникюр/, '💅'],
+    [/обливан|холодный душ/, '❄️'],
+    [/дыхательн|дыхан/, '🫁'],
+    [/медита|осознанност/, '🧘'],
+    [/благодарност|аффирмац|афирмац/, '🙏'],
+
+    // ум и учёба
+    [/книг|читат|чтени/, '📖'],
+    [/язык|английск|немецк|испанск|француз/, '🗣️'],
+    [/учить|учеб|урок|домашк|домашн/, '📝'],
+    [/дневник|журнал|заметк/, '📔'],
+    [/планирова|список дел|todo|задач/, '🗓️'],
+    [/шахмат/, '♟️'],
+    [/настольн.*игр/, '🎲'],
+
+    // творчество
+    [/рисован|скетч|живопис/, '🎨'],
+    [/музык|гитар|инструмент/, '🎸'],
+    [/петь|вокал/, '🎤'],
+    [/фото/, '📷'],
+    [/писать|блог|текст/, '✍️'],
+    [/код|программир|разработ/, '💻'],
+
+    // дом и порядок
+    [/уборк|порядок|пыл/, '🧹'],
+    [/стирк/, '🧺'],
+    [/посуд/, '🧽'],
+    [/растени|цвет[ыо]|полив/, '🌱'],
+
+    // деньги
+    [/бюджет|финанс|трат|расход/, '📊'],
+    [/инвестиц|акци/, '📈'],
+    [/долг|кредит/, '💳'],
+    [/копилк|накоплен/, '🐷'],
+
+    // экраны и цифровой детокс
+    [/телефон|соцсет|инстаграм|тикток/, '📵'],
+    [/видеоигр|геймин/, '🎮'],
+    [/телевизор|сериал/, '📺'],
+    [/новости/, '📰'],
+
+    // люди и питомцы
+    [/собак|выгул/, '🐕'],
+    [/кот|кошк/, '🐈'],
+    [/питомц|животн/, '🐾'],
+    [/родител|позвонить|звонок/, '📞'],
+    [/друз|встреч/, '🤝'],
+    [/семь|дет[ье]/, '👨‍👩‍👧'],
+    [/партнёр|свидан/, '❤️'],
+
+    // природа и путешествия
+    [/природ|улиц|воздух/, '🌳'],
+    [/солнце|загар|загора/, '☀️'],
+    [/путешеств|поездк|отпуск/, '✈️'],
+  ];
+  for (const [re, emo] of map) if (re.test(n)) return emo;
+  return '⭐';
+}
+function isCounterHabit(h) { return !!(h.target && h.target > 1); }
+function habitCounterToday(h) { return (h.counts && h.counts[todayStr()]) || 0; }
+let habitEditingId = null;
+let heCalMonth = null;   // месяц мини-календаря привычки
+function openHabitEdit(id) {
+  const h = state.habits.find(x => x.id === id);
+  if (!h) return;
+  habitEditingId = id;
+  document.getElementById('heTitle').textContent = 'Изменить «' + h.name + '»';
+  setDaysFrom('#heDaysRow', (h.days && h.days.length) ? h.days : [0, 1, 2, 3, 4, 5, 6]);
+  const isCounter = isCounterHabit(h);
+  document.getElementById('heCounterRow').style.display = isCounter ? '' : 'none';
+  document.getElementById('heTarget').value = isCounter ? h.target : '';
+  document.getElementById('heUnit').value = isCounter ? (h.unit || '') : '';
+  document.getElementById('heTodayRow').style.display = isCounter ? 'flex' : 'none';
+  if (isCounter) heRefreshToday(h);
+  // заметка «зачем» — если заполнена, показываем в шапке
+  const whyBox = document.getElementById('heWhyBox');
+  if (h.why) {
+    whyBox.style.display = '';
+    document.getElementById('heWhyTxt').textContent = '«' + h.why + '»';
+  } else whyBox.style.display = 'none';
+  // мини-календарь этой привычки: открываем на текущем месяце
+  const now = new Date();
+  heCalMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  renderHeCal();
+  document.getElementById('habitEditModal').classList.add('show');
+}
+// ---------- мини-календарь одной привычки + правка прошлых дней ----------
+function heCalShift(delta) {
+  if (!heCalMonth) return;
+  heCalMonth.setMonth(heCalMonth.getMonth() + delta);
+  renderHeCal();
+}
+function renderHeCal() {
+  const h = state.habits.find(x => x.id === habitEditingId);
+  const gridEl = document.getElementById('heCalGrid');
+  const titleEl = document.getElementById('heCalTitle');
+  const statsEl = document.getElementById('heCalStats');
+  const nextBtn = document.getElementById('heCalNext');
+  if (!h || !gridEl || !heCalMonth) return;
+  const y = heCalMonth.getFullYear(), m = heCalMonth.getMonth();
+  titleEl.textContent = heCalMonth.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
+  const now = new Date();
+  const isCurMonth = (y === now.getFullYear() && m === now.getMonth());
+  if (nextBtn) nextBtn.disabled = isCurMonth;
+  const firstDow = (new Date(y, m, 1).getDay() + 6) % 7;   // Пн = 0
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const todayS = todayStr();
+  const planDays = (h.days && h.days.length) ? h.days : [0, 1, 2, 3, 4, 5, 6];
+  const counter = isCounterHabit(h);
+  let html = '';
+  for (let i = 0; i < firstDow; i++) html += '<div class="hc-day pad"></div>';
+  let doneCnt = 0, planCnt = 0;
+  for (let day = 1; day <= daysInMonth; day++) {
+    const d = new Date(y, m, day);
+    const dStr = todayStr(d);
+    const scheduled = planDays.includes(d.getDay());
+    const existed = habitExistedOn(h, dStr) || dStr === todayStr(new Date(h.id));
+    const done = h.log.includes(dStr);
+    let cls = 'hc-day';
+    if (dStr === todayS) cls += ' today';
+    if (dStr > todayS) cls += ' future';
+    else if (done) cls += ' done';
+    else if (counter && h.counts && h.counts[dStr] > 0) cls += ' part';
+    else if (!scheduled || !existed) cls += ' off';
+    if (dStr <= todayS && scheduled && existed) { planCnt++; if (done) doneCnt++; }
+    const clickable = dStr <= todayS;
+    html += '<div class="' + cls + '"' + (clickable ? ' onclick="heToggleDay(\'' + dStr + '\')"' : '') +
+      ' title="' + dStr + '">' + day + '</div>';
+  }
+  gridEl.innerHTML = html;
+  const pct = planCnt ? Math.round(doneCnt / planCnt * 100) : 0;
+  statsEl.innerHTML = 'выполнено <b>' + doneCnt + '/' + planCnt + '</b> · ' + pct + '% · стрик <b>' + habitStreak(h) + '</b>';
+}
+// правка задним числом: тап по дню переключает отметку
+function heToggleDay(dStr) {
+  const h = state.habits.find(x => x.id === habitEditingId);
+  if (!h || dStr > todayStr()) return;
+  const i = h.log.indexOf(dStr);
+  if (i >= 0) {
+    h.log.splice(i, 1);
+    if (h.counts) delete h.counts[dStr];
+  } else {
+    h.log.push(dStr);
+    // для счётчиков считаем день закрытым полностью
+    if (isCounterHabit(h)) { if (!h.counts) h.counts = {}; h.counts[dStr] = h.target; }
+    sndStar(); vib(12);
+  }
+  save();
+  renderHeCal();
+  if (isCounterHabit(h)) heRefreshToday(h);
+  renderHabits();
+}
+function heRefreshToday(h) {
+  document.getElementById('heTodayVal').textContent = habitCounterToday(h) + '/' + h.target + (h.unit ? ' ' + h.unit : '');
+}
+function heDecrementToday() {
+  if (!habitEditingId) return;
+  decrementHabitCounter(habitEditingId); // уже сохраняет и перерисовывает плитки
+  const h = state.habits.find(x => x.id === habitEditingId);
+  if (h) heRefreshToday(h);
+}
+function heIncrementToday() {
+  if (!habitEditingId) return;
+  incrementHabitCounter(habitEditingId); // уже сохраняет и перерисовывает плитки
+  const h = state.habits.find(x => x.id === habitEditingId);
+  if (h) heRefreshToday(h);
+}
+function heDeleteHabit() {
+  if (habitEditingId) confirmDeleteHabit(habitEditingId);
+}
+function closeHabitEditModal() {
+  document.getElementById('habitEditModal').classList.remove('show');
+  habitEditingId = null;
+  heCalMonth = null;
+}
+function saveHabitEditModal() {
+  if (!habitEditingId) return;
+  const days = getDaysFrom('#heDaysRow');
+  if (!days.length) { toast('Выбери хотя бы один день'); return; }
+  const h = state.habits.find(x => x.id === habitEditingId);
+  if (h) {
+    h.days = days;
+    // тип (обычная/со счётчиком) теперь фиксирован при создании и здесь не меняется —
+    // редактируем только цель/единицу (если привычка со счётчиком) и дни недели
+    if (isCounterHabit(h)) {
+      h.target = Math.max(2, parseInt(document.getElementById('heTarget').value, 10) || h.target || 8);
+      h.unit = (document.getElementById('heUnit').value || '').trim() || h.unit || 'раз';
+    }
+  }
+  closeHabitEditModal();
+  save(); renderHabits();
+  toast('Привычка обновлена');
+}
+// ---------- каталог привычек: только выбор из готового списка, свободный ввод названия убран ----------
+const HABIT_CATALOG = [
+  { key: 'water',    name: 'Пить воду',            icon: '💧', type: 'counter', target: 8, unit: 'стаканов', cat: 'Еда и привычки', match: h => isWaterHabit(h) },
+  { key: 'sunrise',  name: 'Ранний подъём',        icon: '☀️', type: 'simple',  cat: 'Сон и режим', match: h => /будильник|подъём|вставать|проснут/i.test(h.name) },
+  { key: 'reading',  name: 'Читать',               icon: '📖', type: 'simple',  cat: 'Ум и продуктивность', match: h => /книг|читат|чтени/i.test(h.name) },
+  { key: 'workout',    name: 'Тренировка',           icon: '🏋️', type: 'simple', cat: 'Тело и спорт', askFrequency: true, match: h => /спорт|трениров|качалк|силов|штанг/i.test(h.name) },
+  { key: 'running',    name: 'Бег',                  icon: '🏃', type: 'simple', cat: 'Тело и спорт', match: h => /бег|пробежк|марафон/i.test(h.name) },
+  { key: 'yoga',       name: 'Йога',                 icon: '🧘', type: 'simple', cat: 'Тело и спорт', match: h => /йог[аи]|пилатес/i.test(h.name) },
+  { key: 'stretching', name: 'Растяжка',             icon: '🤸', type: 'simple', cat: 'Тело и спорт', match: h => /растяжк/i.test(h.name) },
+  { key: 'plank',      name: 'Планка/пресс',         icon: '🧎', type: 'simple', cat: 'Тело и спорт', match: h => /планк|пресс/i.test(h.name) },
+  { key: 'posture',    name: 'Осанка',               icon: '🧍', type: 'simple', cat: 'Тело и спорт', match: h => /осанк/i.test(h.name) },
+  { key: 'walk',       name: 'Прогулка',             icon: '🚶', type: 'simple', cat: 'Тело и спорт', match: h => /шаг|ходьб|прогулк/i.test(h.name) },
+  { key: 'bedtime',    name: 'Отбой вовремя',        icon: '😴', type: 'simple', cat: 'Сон и режим', match: h => /сон|высыпа|спать|лечь пораньше|рано лечь|отбой/i.test(h.name) },
+  { key: 'coldshower', name: 'Контрастный душ',      icon: '❄️', type: 'simple', cat: 'Сон и режим', match: h => /обливан|холодный душ|контрастн/i.test(h.name) },
+  { key: 'vitamins',   name: 'Витамины',             icon: '💊', type: 'counter', target: 2, unit: 'приёма', cat: 'Еда и привычки', match: h => /витамин|таблетк|лекарств/i.test(h.name) },
+  { key: 'nosugar',    name: 'Без сахара',           icon: '🍬', type: 'simple', cat: 'Еда и привычки', match: h => /сахар|сладк/i.test(h.name) },
+  { key: 'noalcohol',  name: 'Без алкоголя',         icon: '🍷', type: 'simple', cat: 'Еда и привычки', match: h => /алкогол|пив[оа]|вин[оа]/i.test(h.name) },
+  { key: 'nosmoking',  name: 'Без курения',          icon: '🚭', type: 'simple', cat: 'Еда и привычки', match: h => /кур[ие]|сигарет|вейп/i.test(h.name) },
+  { key: 'breakfast',  name: 'Завтрак',              icon: '🍳', type: 'simple', cat: 'Еда и привычки', match: h => /завтрак/i.test(h.name) },
+  { key: 'lesscoffee', name: 'Меньше кофе',          icon: '☕', type: 'simple', cat: 'Еда и привычки', match: h => /кофе/i.test(h.name) },
+  { key: 'meditation', name: 'Медитация',            icon: '🕯️', type: 'simple', cat: 'Ум и продуктивность', match: h => /медита|осознанност/i.test(h.name) },
+  { key: 'gratitude',  name: 'Дневник благодарности', icon: '🙏', type: 'simple', cat: 'Ум и продуктивность', match: h => /благодарност|аффирмац|афирмац/i.test(h.name) },
+  { key: 'planning',   name: 'Планирование дня',     icon: '🗓️', type: 'simple', cat: 'Ум и продуктивность', match: h => /планирова|список дел|todo|задач/i.test(h.name) },
+  { key: 'language',   name: 'Иностранный язык',     icon: '🗣️', type: 'simple', cat: 'Ум и продуктивность', match: h => /язык|английск|немецк|испанск|француз/i.test(h.name) },
+  { key: 'impulse',    name: 'Без спонтанных трат',  icon: '🪙', type: 'simple', cat: 'Ум и продуктивность', match: h => /спонтанн|импульсивн.*трат|без трат/i.test(h.name) },
+  { key: 'lessphone',  name: 'Меньше телефона',      icon: '📵', type: 'simple', cat: 'Ум и продуктивность', match: h => /телефон|соцсет|инстаграм|тикток/i.test(h.name) },
+  { key: 'study',      name: 'Учёба/уроки',          icon: '📝', type: 'simple', cat: 'Ум и продуктивность', match: h => /учить|учеб|урок|домашк|домашн/i.test(h.name) },
+  { key: 'drawing',    name: 'Рисование',            icon: '🎨', type: 'simple', cat: 'Творчество', match: h => /рисован|скетч|живопис/i.test(h.name) },
+  { key: 'music',      name: 'Музыкальный инструмент', icon: '🎸', type: 'simple', cat: 'Творчество', match: h => /музык|гитар|инструмент/i.test(h.name) },
+  { key: 'cleaning',   name: 'Уборка',               icon: '🧹', type: 'simple', cat: 'Дом и забота о себе', match: h => /уборк|убират|пылесос/i.test(h.name) },
+  { key: 'skincare',   name: 'Уход за кожей',        icon: '🧴', type: 'simple', cat: 'Дом и забота о себе', match: h => /кож|крем|уход за лицом/i.test(h.name) },
+  { key: 'teeth',      name: 'Чистка зубов',         icon: '🦷', type: 'counter', target: 2, unit: 'раза', cat: 'Дом и забота о себе', match: h => /зуб/i.test(h.name) },
+  { key: 'plants',     name: 'Полив цветов',         icon: '🌱', type: 'simple', cat: 'Дом и забота о себе', match: h => /цвет[ыов]|растени|полив/i.test(h.name) },
+  { key: 'calling',    name: 'Звонок близким',       icon: '📞', type: 'simple', cat: 'Дом и забота о себе', match: h => /родител|позвонить|звонок/i.test(h.name) },
+  { key: 'pet',        name: 'Питомец',              icon: '🐾', type: 'simple', cat: 'Дом и забота о себе', match: h => /собак|выгул|кот|кошк|питом|животн/i.test(h.name) }
+];
+function catalogEntryFor(h) { return HABIT_CATALOG.find(c => c.match(h)) || null; }
+// готовые пары «до/после» для объектов-иконок новых 30 привычек (двухфазная анимация как у солнца/книги)
+const HABIT_OBJECTS = {
+  workout: {
+    before: '<g><rect x="5" y="20" width="34" height="6" rx="3" fill="#c3ccdc"/><rect x="1" y="15" width="9" height="16" rx="3" fill="#9aa8c4"/><rect x="34" y="15" width="9" height="16" rx="3" fill="#9aa8c4"/></g>',
+    after: '<g transform="rotate(-14 22 22)"><rect x="5" y="20" width="34" height="6" rx="3" fill="#0a84ff"/><rect x="1" y="15" width="9" height="16" rx="3" fill="#0a84ff"/><rect x="34" y="15" width="9" height="16" rx="3" fill="#0a84ff"/></g><line x1="8" y1="8" x2="4" y2="4" stroke="#0a84ff" stroke-width="2" stroke-linecap="round"/><line x1="36" y1="8" x2="40" y2="4" stroke="#0a84ff" stroke-width="2" stroke-linecap="round"/>'
+  },
+  running: {
+    before: '<path d="M4 30h34a4 4 0 0 1 4 4v0H4z" fill="#b9c4d6"/><path d="M8 30c0-8 6-13 13-15l9-3c5-1 8 2 9 6l1 8c0 2-2 4-4 4H8z" fill="#c3ccdc"/><path d="M20 15l4 4M25 13l4 4M30 12l3 4" stroke="#9aa8c4" stroke-width="1.6" stroke-linecap="round"/>',
+    after: '<line x1="2" y1="18" x2="7" y2="18" stroke="#00b8a2" stroke-width="2" stroke-linecap="round" opacity=".5"/><line x1="1" y1="24" x2="8" y2="24" stroke="#00b8a2" stroke-width="2" stroke-linecap="round" opacity=".7"/><path d="M4 30h34a4 4 0 0 1 4 4v0H4z" fill="#019485"/><path d="M8 30c0-8 6-13 13-15l9-3c5-1 8 2 9 6l1 8c0 2-2 4-4 4H8z" fill="#00b8a2"/><path d="M20 15l4 4M25 13l4 4M30 12l3 4" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".8"/>'
+  },
+  yoga: {
+    before: '<circle cx="22" cy="10" r="5" fill="#c3ccdc"/><path d="M10 30c4-8 10-10 12-10s8 2 12 10c-6 4-18 4-24 0z" fill="#c3ccdc"/>',
+    after: '<circle cx="22" cy="22" r="18" fill="none" stroke="#bf5af2" stroke-width="1.4" opacity=".4"/><circle cx="22" cy="10" r="5" fill="#bf5af2"/><path d="M10 30c4-8 10-10 12-10s8 2 12 10c-6 4-18 4-24 0z" fill="#bf5af2"/>'
+  },
+  stretching: {
+    before: '<circle cx="22" cy="8" r="5" fill="#c3ccdc"/><path d="M22 13v16" stroke="#c3ccdc" stroke-width="4" stroke-linecap="round"/><path d="M22 17h-7M22 17h7" stroke="#c3ccdc" stroke-width="3" stroke-linecap="round"/><path d="M22 29l-6 9M22 29l6 9" stroke="#c3ccdc" stroke-width="3" stroke-linecap="round"/>',
+    after: '<circle cx="26" cy="8" r="5" fill="#34c759"/><path d="M26 13c-3 6-3 12 0 16" stroke="#34c759" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M22 15c-6-2-9 2-10 6" stroke="#34c759" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M26 29l-5 9M26 29l7 8" stroke="#34c759" stroke-width="3" stroke-linecap="round"/>'
+  },
+  plank: {
+    before: '<circle cx="8" cy="30" r="4" fill="#c3ccdc"/><path d="M12 30h22" stroke="#c3ccdc" stroke-width="4" stroke-linecap="round"/><path d="M34 30l3 3M12 30l-3 3" stroke="#c3ccdc" stroke-width="3" stroke-linecap="round"/><line x1="6" y1="36" x2="40" y2="36" stroke="#dfe3ee" stroke-width="2"/>',
+    after: '<circle cx="8" cy="18" r="4" fill="#0a84ff"/><path d="M12 18h24" stroke="#0a84ff" stroke-width="4" stroke-linecap="round"/><path d="M36 18l2 14M12 18l-2 14" stroke="#0a84ff" stroke-width="3" stroke-linecap="round"/><line x1="6" y1="36" x2="40" y2="36" stroke="#dfe3ee" stroke-width="2"/>'
+  },
+  posture: {
+    before: '<rect x="6" y="30" width="7" height="8" fill="#c3ccdc"/><path d="M24 12c3 2 3 6 1 8s-5 2-6 6-1 8 3 10" fill="none" stroke="#c3ccdc" stroke-width="4" stroke-linecap="round"/><circle cx="25" cy="10" r="5" fill="#c3ccdc"/>',
+    after: '<rect x="6" y="30" width="7" height="8" fill="#00b8a2"/><path d="M22 14v20" fill="none" stroke="#00b8a2" stroke-width="4" stroke-linecap="round"/><circle cx="22" cy="9" r="5" fill="#00b8a2"/><path d="M14 22h16" stroke="#00b8a2" stroke-width="2.4" stroke-linecap="round"/>'
+  },
+  walk: {
+    before: '<path d="M20 30c-4 0-6-3-6-8 0-6 3-11 6-11s6 5 6 11c0 5-2 8-6 8z" fill="#c3ccdc"/><circle cx="15" cy="9" r="1.6" fill="#c3ccdc"/><circle cx="19" cy="6" r="1.8" fill="#c3ccdc"/><circle cx="23" cy="6" r="1.6" fill="#c3ccdc"/><circle cx="26" cy="9" r="1.3" fill="#c3ccdc"/>',
+    after: '<path d="M12 34c-3 0-5-2-5-6 0-5 2-9 5-9s5 4 5 9c0 4-2 6-5 6z" fill="#5e5ce6" opacity=".5"/><circle cx="8" cy="16" r="1.4" fill="#5e5ce6" opacity=".5"/><circle cx="12" cy="14" r="1.5" fill="#5e5ce6" opacity=".5"/><path d="M28 26c-3 0-5-2-5-6 0-5 2-9 5-9s5 4 5 9c0 4-2 6-5 6z" fill="#5e5ce6"/><circle cx="25" cy="8" r="1.6" fill="#5e5ce6"/><circle cx="29" cy="5" r="1.8" fill="#5e5ce6"/><circle cx="33" cy="7" r="1.4" fill="#5e5ce6"/>'
+  },
+  bedtime: {
+    before: '<rect x="5" y="26" width="34" height="4" rx="2" fill="#cdd6ef"/><rect x="5" y="20" width="34" height="8" rx="3" fill="#eef1fb" stroke="#c9d0ec" stroke-width="1"/><rect x="7" y="16" width="10" height="7" rx="3" fill="#fff"/><circle cx="10" cy="7" r="1.2" fill="#c9d0ec"/><circle cx="30" cy="5" r="1" fill="#c9d0ec"/><circle cx="36" cy="10" r="1" fill="#c9d0ec"/>',
+    after: '<rect x="5" y="26" width="34" height="4" rx="2" fill="#8886e8"/><rect x="5" y="18" width="34" height="10" rx="4" fill="#7d7bea" stroke="#6a68d8" stroke-width="1"/><rect x="7" y="16" width="10" height="7" rx="3" fill="#fff"/><path d="M32 4a7 7 0 1 0 5 12A6 6 0 0 1 32 4z" fill="#ffd60a"/><text x="34" y="17" font-size="7" fill="#5e5ce6" font-weight="800">z</text>'
+  },
+  coldshower: {
+    before: '<rect x="20" y="4" width="5" height="7" rx="2" fill="#b0bcd0"/><path d="M11 18 a11.5 8 0 0 1 23 0 v2 h-23 z" fill="#c3ccdc"/><circle cx="15" cy="26" r="1.6" fill="#b0bcd0"/><circle cx="22.5" cy="28" r="1.6" fill="#b0bcd0"/><circle cx="30" cy="26" r="1.6" fill="#b0bcd0"/>',
+    after: '<rect x="20" y="4" width="5" height="7" rx="2" fill="#4aa3d8"/><path d="M11 18 a11.5 8 0 0 1 23 0 v2 h-23 z" fill="#5ac8fa"/><g stroke="#64d2ff" stroke-width="2.2" stroke-linecap="round"><line x1="14" y1="23" x2="13" y2="34"/><line x1="19" y1="23" x2="18.5" y2="38"/><line x1="24" y1="23" x2="24" y2="33"/><line x1="29" y1="23" x2="29.5" y2="38"/><line x1="33" y1="23" x2="34" y2="32"/></g><circle cx="13" cy="38" r="1.3" fill="#9fe3ff"/><circle cx="24" cy="37" r="1.3" fill="#9fe3ff"/><circle cx="34" cy="36" r="1.2" fill="#9fe3ff"/>'
+  },
+  vitamins: {
+    before: '<path d="M14 16h8v12h-8a6 6 0 0 1-6-6 6 6 0 0 1 6-6z" fill="#c3ccdc"/><path d="M22 16h8a6 6 0 0 1 6 6 6 6 0 0 1-6 6h-8z" fill="#b0bcd0"/><line x1="22" y1="16" x2="22" y2="28" stroke="#fff" stroke-width="1"/>',
+    after: '<path d="M14 16h8v12h-8a6 6 0 0 1-6-6 6 6 0 0 1 6-6z" fill="#ff9500"/><path d="M22 16h8a6 6 0 0 1 6 6 6 6 0 0 1-6 6h-8z" fill="#5ac8fa"/><line x1="22" y1="16" x2="22" y2="28" stroke="#fff" stroke-width="1"/><circle cx="34" cy="10" r="1.4" fill="#ffd60a"/><circle cx="10" cy="32" r="1.2" fill="#ffd60a"/>'
+  },
+  nosugar: {
+    before: '<circle cx="22" cy="22" r="9" fill="#ff9ee0"/><path d="M9 22l-5-4v8zM35 22l5-4v8z" fill="#ff9ee0"/>',
+    after: '<circle cx="22" cy="22" r="9" fill="#c3ccdc"/><path d="M9 22l-5-4v8zM35 22l5-4v8z" fill="#c3ccdc"/><line x1="10" y1="34" x2="34" y2="10" stroke="#ff375f" stroke-width="2.4" stroke-linecap="round"/>'
+  },
+  noalcohol: {
+    before: '<path d="M14 6h16l-3 14a5 5 0 0 1-10 0z" fill="#d98fb0"/><path d="M22 25v11M15 36h14" stroke="#b06a90" stroke-width="2.4" stroke-linecap="round"/>',
+    after: '<g transform="rotate(180 22 22)"><path d="M14 6h16l-3 14a5 5 0 0 1-10 0z" fill="none" stroke="#9aa8c4" stroke-width="1.6"/><path d="M22 25v11M15 36h14" stroke="#9aa8c4" stroke-width="2.4" stroke-linecap="round"/></g>'
+  },
+  nosmoking: {
+    before: '<rect x="6" y="20" width="26" height="6" rx="2" fill="#fff" stroke="#c3ccdc" stroke-width="1"/><rect x="28" y="20" width="8" height="6" rx="2" fill="#ff9500"/><path d="M37 18c1 2 1 4 0 6" stroke="#c3ccdc" stroke-width="1.6" fill="none"/>',
+    after: '<g transform="rotate(-10 19 23)"><rect x="6" y="20" width="12" height="6" rx="2" fill="#fff" stroke="#c3ccdc" stroke-width="1"/></g><g transform="rotate(14 26 23)"><rect x="20" y="20" width="12" height="6" rx="2" fill="#fff" stroke="#c3ccdc" stroke-width="1"/><rect x="26" y="20" width="6" height="6" fill="#ff9500"/></g>'
+  },
+  breakfast: {
+    before: '<circle cx="22" cy="22" r="14" fill="#fff8ec" stroke="#e0c9a0" stroke-width="1.6"/>',
+    after: '<circle cx="22" cy="22" r="14" fill="#fff8ec" stroke="#e0c9a0" stroke-width="1.6"/><circle cx="18" cy="20" r="5" fill="#fff"/><circle cx="18" cy="20" r="2.2" fill="#ffb340"/><rect x="24" y="24" width="10" height="6" rx="1.5" fill="#e2b04a"/>'
+  },
+  lesscoffee: {
+    before: '<path d="M10 16h20v10a10 10 0 0 1-20 0z" fill="#8c6a46"/><path d="M30 18h4a4 4 0 0 1 0 8h-4" fill="none" stroke="#8c6a46" stroke-width="2.4"/>',
+    after: '<path d="M10 16h20v10a10 10 0 0 1-20 0z" fill="#c8a2ff"/><path d="M30 18h4a4 4 0 0 1 0 8h-4" fill="none" stroke="#c8a2ff" stroke-width="2.4"/><path d="M14 10c1-2-1-3 0-5M22 10c1-2-1-3 0-5" stroke="#c8a2ff" stroke-width="1.6" fill="none" stroke-linecap="round"/>'
+  },
+  meditation: {
+    before: '<rect x="8" y="32" width="28" height="4" rx="2" fill="#e0c9a0"/><rect x="16" y="10" width="12" height="24" rx="3" fill="#fff8ec" stroke="#e0c9a0" stroke-width="1.2"/><rect x="21" y="6" width="2" height="4" fill="#8c6a46"/>',
+    after: '<rect x="8" y="32" width="28" height="4" rx="2" fill="#caa06a"/><rect x="16" y="12" width="12" height="22" rx="3" fill="#fff8ec" stroke="#e0c9a0" stroke-width="1.2"/><rect x="21" y="8" width="2" height="4" fill="#8c6a46"/><circle cx="22" cy="7" r="8" fill="#ffd968" opacity=".3"/><path d="M22 2c4 4 4 8 0 12-4-4-4-8 0-12z" fill="#ffb340"/>'
+  },
+  gratitude: {
+    before: '<rect x="9" y="8" width="26" height="28" rx="3" fill="#fff8ec" stroke="#caa06a" stroke-width="1.4"/><rect x="9" y="8" width="6" height="28" fill="#caa06a"/>',
+    after: '<rect x="7" y="10" width="30" height="22" rx="2" fill="#fff8ec" stroke="#caa06a" stroke-width="1.2"/><line x1="22" y1="10" x2="22" y2="32" stroke="#caa06a" stroke-width="1"/><line x1="11" y1="18" x2="19" y2="18" stroke="#e0c9a0" stroke-width="1.4"/><line x1="11" y1="23" x2="17" y2="23" stroke="#e0c9a0" stroke-width="1.4"/><path d="M25 28l10-10 3 3-10 10z" fill="#5e5ce6"/>'
+  },
+  planning: {
+    before: '<rect x="8" y="8" width="28" height="6" rx="2" fill="#eef1fb"/><rect x="8" y="19" width="28" height="6" rx="2" fill="#eef1fb"/><rect x="8" y="30" width="28" height="6" rx="2" fill="#eef1fb"/>',
+    after: '<rect x="8" y="8" width="6" height="6" rx="1.5" fill="#34c759"/><line x1="17" y1="11" x2="34" y2="11" stroke="#8fa0c0" stroke-width="2"/><rect x="8" y="19" width="6" height="6" rx="1.5" fill="#34c759"/><line x1="17" y1="22" x2="34" y2="22" stroke="#8fa0c0" stroke-width="2"/><rect x="8" y="30" width="6" height="6" rx="1.5" fill="#34c759"/><line x1="17" y1="33" x2="34" y2="33" stroke="#8fa0c0" stroke-width="2"/>'
+  },
+  language: {
+    before: '<rect x="10" y="10" width="24" height="24" rx="4" fill="#dbe1f5" stroke="#aab4d6" stroke-width="1.4"/>',
+    after: '<rect x="10" y="10" width="24" height="24" rx="4" fill="#bf5af2" stroke="#9c3fd1" stroke-width="1.4"/><text x="22" y="27" font-size="12" fill="#fff" font-weight="800" text-anchor="middle">Aa</text>'
+  },
+  impulse: {
+    before: '<path d="M12 20h20l2 16a4 4 0 0 1-4 4H14a4 4 0 0 1-4-4z" fill="none" stroke="#c3ccdc" stroke-width="1.6"/><circle cx="22" cy="10" r="5" fill="#ffd60a"/>',
+    after: '<path d="M12 20h20l2 16a4 4 0 0 1-4 4H14a4 4 0 0 1-4-4z" fill="none" stroke="#c3ccdc" stroke-width="1.6"/><circle cx="22" cy="30" r="5" fill="#ffd60a"/>'
+  },
+  lessphone: {
+    before: '<rect x="14" y="6" width="16" height="32" rx="4" fill="#0a84ff"/><rect x="16" y="10" width="12" height="20" fill="#bcdcff"/>',
+    after: '<rect x="14" y="6" width="16" height="32" rx="4" fill="#3a3a4a"/><rect x="16" y="10" width="12" height="20" fill="#232330"/><circle cx="22" cy="34" r="1.4" fill="#5a5a6a"/>'
+  },
+  study: {
+    before: '<path d="M22 8L4 16l18 8 18-8z" fill="#c3ccdc"/><path d="M12 20v8c0 3 5 5 10 5s10-2 10-5v-8" fill="none" stroke="#c3ccdc" stroke-width="2"/>',
+    after: '<path d="M22 8L4 16l18 8 18-8z" fill="#5e5ce6"/><path d="M12 20v8c0 3 5 5 10 5s10-2 10-5v-8" fill="none" stroke="#5e5ce6" stroke-width="2"/><path d="M36 16v9" stroke="#5e5ce6" stroke-width="2" stroke-linecap="round"/><circle cx="36" cy="27" r="1.6" fill="#ffd60a"/>'
+  },
+  drawing: {
+    before: '<path d="M22 6a16 16 0 1 0 6 31c-2-1-3-3-1-5 3-2 8 1 10-4A16 16 0 0 0 22 6z" fill="#eef1fb" stroke="#c3ccdc" stroke-width="1.4"/>',
+    after: '<path d="M22 6a16 16 0 1 0 6 31c-2-1-3-3-1-5 3-2 8 1 10-4A16 16 0 0 0 22 6z" fill="#eef1fb" stroke="#c3ccdc" stroke-width="1.4"/><circle cx="15" cy="18" r="2.6" fill="#ff375f"/><circle cx="22" cy="14" r="2.6" fill="#ffb340"/><circle cx="29" cy="18" r="2.6" fill="#0a84ff"/><path d="M14 30q6-4 12 0" stroke="#34c759" stroke-width="2.4" fill="none" stroke-linecap="round"/>'
+  },
+  music: {
+    before: '<circle cx="16" cy="32" r="5" fill="#c3ccdc"/><rect x="19" y="8" width="2.4" height="24" fill="#c3ccdc"/><path d="M21 8l10 3v6l-10-3z" fill="#c3ccdc"/>',
+    after: '<circle cx="22" cy="22" r="17" fill="none" stroke="#ff9ee0" stroke-width="1.2" opacity=".5"/><circle cx="16" cy="32" r="5" fill="#ff2d78"/><rect x="19" y="8" width="2.4" height="24" fill="#ff2d78"/><path d="M21 8l10 3v6l-10-3z" fill="#ff2d78"/>'
+  },
+  cleaning: {
+    before: '<rect x="19" y="4" width="6" height="14" rx="3" fill="#9aa8c4"/><path d="M10 18h24l-3 12a4 4 0 0 1-4 3H17a4 4 0 0 1-4-3z" fill="#c3ccdc" stroke="#9aa8c4" stroke-width="1"/><circle cx="8" cy="30" r="1.4" fill="#c3ccdc"/><circle cx="12" cy="35" r="1" fill="#c3ccdc"/><circle cx="16" cy="31" r="1.2" fill="#c3ccdc"/>',
+    after: '<rect x="19" y="4" width="6" height="14" rx="3" fill="#019485"/><path d="M10 18h24l-3 12a4 4 0 0 1-4 3H17a4 4 0 0 1-4-3z" fill="#00b8a2" stroke="#019485" stroke-width="1"/><circle cx="18" cy="26" r="1.3" fill="#fff" opacity=".8"/><circle cx="22" cy="28" r="1" fill="#fff" opacity=".7"/><circle cx="25" cy="25" r="1.1" fill="#fff" opacity=".8"/><path d="M34 10l1.4 3 3 1.4-3 1.4-1.4 3-1.4-3-3-1.4 3-1.4z" fill="#ffd60a"/>'
+  },
+  skincare: {
+    before: '<rect x="10" y="14" width="24" height="20" rx="4" fill="#ffe3ec" stroke="#f0a8c0" stroke-width="1.4"/><rect x="10" y="10" width="24" height="6" rx="3" fill="#f0a8c0"/>',
+    after: '<rect x="10" y="16" width="24" height="18" rx="4" fill="#ffe3ec" stroke="#f0a8c0" stroke-width="1.4"/><ellipse cx="22" cy="16" rx="12" ry="4" fill="#fff"/><rect x="8" y="8" width="10" height="5" rx="2.5" fill="#f0a8c0" transform="rotate(-14 13 10)"/>'
+  },
+  teeth: {
+    before: '<path d="M13 39l2-3h14l2 3z" fill="#9aa8c4"/><rect x="11" y="14" width="22" height="25" rx="5" fill="#eef1fb" stroke="#c9d0ec" stroke-width="1.2"/><rect x="19" y="9" width="6" height="6" fill="#c3ccdc"/><path d="M18 9c0-3 2-5 4-5s4 2 4 5z" fill="#c3ccdc"/><rect x="11" y="24" width="22" height="4" fill="#5ac8fa" opacity=".35"/>',
+    after: '<path d="M13 39l2-3h14l2 3z" fill="#019485"/><rect x="11" y="14" width="22" height="25" rx="5" fill="#eaf7ff" stroke="#00b8a2" stroke-width="1.2"/><rect x="19" y="9" width="6" height="6" fill="#00b8a2"/><path d="M20 9c-1-4 0-7 2-8 2 1 1 5 1 8z" fill="#fff" stroke="#dfe3ee" stroke-width="1"/><rect x="11" y="24" width="22" height="4" fill="#00b8a2" opacity=".5"/>'
+  },
+  plants: {
+    before: '<path d="M10 30h24l-2 8H12z" fill="#caa06a"/><path d="M22 30v-8" stroke="#34c759" stroke-width="2.4" stroke-linecap="round"/><path d="M22 22c-4-2-4-6-2-8 3 1 4 5 2 8z" fill="#34c759"/>',
+    after: '<path d="M10 30h24l-2 8H12z" fill="#caa06a"/><path d="M22 30v-10" stroke="#34c759" stroke-width="2.4" stroke-linecap="round"/><circle cx="22" cy="12" r="4" fill="#ffb340"/><circle cx="16" cy="16" r="4" fill="#ff9ee0"/><circle cx="28" cy="16" r="4" fill="#ff9ee0"/><circle cx="22" cy="20" r="4" fill="#ff9ee0"/><circle cx="22" cy="16" r="3" fill="#ffd60a"/>'
+  },
+  calling: {
+    before: '<path d="M12 12c4-4 8-4 10-2l3 3c1 1 1 3-1 4l-2 2c1 4 5 8 9 9l2-2c1-2 3-2 4-1l3 3c2 2 2 6-2 10-8 2-20-10-22-18-1-3-1-5-4-8z" fill="#c3ccdc"/>',
+    after: '<path d="M12 12c4-4 8-4 10-2l3 3c1 1 1 3-1 4l-2 2c1 4 5 8 9 9l2-2c1-2 3-2 4-1l3 3c2 2 2 6-2 10-8 2-20-10-22-18-1-3-1-5-4-8z" fill="#34c759"/><path d="M32 8c1-2 4-2 4 1 0 2-4 4-4 4s-4-2-4-4c0-3 3-3 4-1z" fill="#ff375f"/>'
+  },
+  pet: {
+    before: '<circle cx="22" cy="26" r="8" fill="#c3ccdc"/><circle cx="12" cy="16" r="3.4" fill="#c3ccdc"/><circle cx="20" cy="10" r="3.4" fill="#c3ccdc"/><circle cx="28" cy="10" r="3.4" fill="#c3ccdc"/><circle cx="34" cy="17" r="3.4" fill="#c3ccdc"/>',
+    after: '<circle cx="22" cy="26" r="8" fill="#ffb340"/><circle cx="12" cy="16" r="3.4" fill="#ffb340"/><circle cx="20" cy="10" r="3.4" fill="#ffb340"/><circle cx="28" cy="10" r="3.4" fill="#ffb340"/><circle cx="34" cy="17" r="3.4" fill="#ffb340"/><path d="M6 30q-3-2-1-5M8 34q-4-1-3-5" stroke="#ffb340" stroke-width="2" fill="none" stroke-linecap="round"/>'
+  }
+};
+// frac (0..1) необязателен: если задан (привычки со счётчиком) — «до» и «после»
+// смешиваются пропорционально прогрессу (1 из 2 = половина, 1 из 3 = треть и т.д.),
+// а не переключаются рывком только по достижении цели
+function habitCatalogObjectSVG(key, done, frac) {
+  const o = HABIT_OBJECTS[key];
+  if (!o) return '';
+  if (typeof frac === 'number') {
+    const f = Math.max(0, Math.min(1, frac));
+    return (
+      '<svg class="q-vessel" width="40" height="40" viewBox="0 0 44 44">' +
+        '<g class="q-before show" style="opacity:' + (1 - f) + '">' + o.before + '</g>' +
+        '<g class="q-after show" style="opacity:' + f + '">' + o.after + '</g>' +
+      '</svg>'
+    );
+  }
+  return (
+    '<svg class="q-vessel" width="40" height="40" viewBox="0 0 44 44">' +
+      '<g class="q-before' + (done ? '' : ' show') + '">' + o.before + '</g>' +
+      '<g class="q-after' + (done ? ' show' : '') + '">' + o.after + '</g>' +
+    '</svg>'
+  );
+}
+function createCatalogHabit(entry, days) {
+  const habit = { id: Date.now() + Math.floor(Math.random() * 1000), name: entry.name, days, log: [] };
+  if (entry.type === 'counter') { habit.target = entry.target; habit.unit = entry.unit; habit.counts = {}; }
+  state.habits.push(habit);
+  save(); renderHabits();
+  toast(entry.icon + ' «' + entry.name + '» добавлена');
+  openWhyModal(habit.id);   // спрашиваем «зачем» — пропустить одним тапом
+}
+// ---------- заметка «зачем»: спрашиваем при добавлении, показываем в редактировании ----------
+let whyPendingId = null;
+function openWhyModal(id) {
+  const h = state.habits.find(x => x.id === id);
+  if (!h) return;
+  whyPendingId = id;
+  document.getElementById('whyTitle').textContent = 'Зачем тебе «' + h.name + '»?';
+  document.getElementById('whyIco').innerHTML = habitMiniIcon(h, true);
+  const ta = document.getElementById('whyText');
+  ta.value = h.why || '';
+  closeAddHabitModal();
+  document.getElementById('whyModal').classList.add('show');
+  setTimeout(() => { try { ta.focus(); } catch(e) {} }, 120);
+}
+function closeWhyModal() {
+  document.getElementById('whyModal').classList.remove('show');
+  whyPendingId = null;
+}
+function whySave() {
+  const h = state.habits.find(x => x.id === whyPendingId);
+  const txt = (document.getElementById('whyText').value || '').trim();
+  if (h) {
+    if (txt) h.why = txt; else delete h.why;
+    save();
+    // если открыта модалка редактирования — обновляем её шапку
+    if (habitEditingId === h.id) {
+      const box = document.getElementById('heWhyBox');
+      if (h.why) { box.style.display = ''; document.getElementById('heWhyTxt').textContent = '«' + h.why + '»'; }
+      else box.style.display = 'none';
+    }
+  }
+  closeWhyModal();
+}
+function whySkip() { closeWhyModal(); }
+function heEditWhy() { if (habitEditingId) openWhyModal(habitEditingId); }
+// всплывашка с заметкой: показывается пока держишь плитку (до открытия редактирования)
+let whyPopEl = null;
+function showWhyPop(id) {
+  hideWhyPop();
+  const h = state.habits.find(x => x.id === id);
+  if (!h || !h.why) return;
+  const tile = document.querySelector('#habitsGrid [onclick="habitTileClick(' + id + ')"]');
+  if (!tile) return;
+  const r = tile.getBoundingClientRect();
+  const el = document.createElement('div');
+  el.className = 'why-pop';
+  el.textContent = '«' + h.why + '»';
+  document.body.appendChild(el);
+  const pr = el.getBoundingClientRect();
+  let left = r.left + r.width / 2 - pr.width / 2;
+  left = Math.max(10, Math.min(left, window.innerWidth - pr.width - 10));
+  let top = r.top - pr.height - 8;
+  if (top < 10) top = r.bottom + 8;
+  el.style.left = left + 'px';
+  el.style.top = top + 'px';
+  whyPopEl = el;
+}
+function hideWhyPop() {
+  if (whyPopEl) { whyPopEl.remove(); whyPopEl = null; }
+}
+function addCatalogHabit(key) {
+  const entry = HABIT_CATALOG.find(c => c.key === key);
+  if (!entry) return;
+  if (state.habits.some(h => { const e = catalogEntryFor(h); return e && e.key === key; })) {
+    toast('Эта привычка уже добавлена'); return;
+  }
+  if (entry.askFrequency) {
+    askValue(entry.name + ': сколько раз в неделю?', { type: 'number', placeholder: 'Например, 3', value: '3' }, v => {
+      if (v === null) return;
+      const n = Math.max(1, Math.min(7, parseInt(v, 10) || 3));
+      createCatalogHabit(entry, daysFromCount(n));
+    });
+    return;
+  }
+  createCatalogHabit(entry, [0, 1, 2, 3, 4, 5, 6]);
+}
+// ---------- кастомные иконки для «своей привычки»: серое «до» → яркое анимированное «после» ----------
+const CUSTOM_ICONS = {
+  star: {
+    name: 'Звезда',
+    before: '<path d="M23 4 L27.8 14.6 L39 15.8 L30.6 23.6 L33.2 34.6 L23 28.8 L12.8 34.6 L15.4 23.6 L7 15.8 L18.2 14.6 Z" fill="#c9cdd8" stroke="#aab0c0" stroke-width="1.5" stroke-linejoin="round"/>',
+    after: '<g class="ci-anim-star"><path d="M23 4 L27.8 14.6 L39 15.8 L30.6 23.6 L33.2 34.6 L23 28.8 L12.8 34.6 L15.4 23.6 L7 15.8 L18.2 14.6 Z" fill="#ffca28" stroke="#e8a800" stroke-width="1.5" stroke-linejoin="round"/><circle cx="10" cy="9" r="1.6" fill="#ffe28a"/><circle cx="38" cy="7" r="1.3" fill="#ffe28a"/><circle cx="40" cy="28" r="1.4" fill="#ffe28a"/></g>'
+  },
+  flame: {
+    name: 'Огонёк',
+    before: '<path d="M23 4 C18 12 13 18 13 25 C13 32 17.5 36 23 36 C28.5 36 33 32 33 25 C33 18 28 12 23 4 Z" fill="#c9cdd8"/>',
+    after: '<g class="ci-anim-flame"><path d="M23 4 C18 12 13 18 13 25 C13 32 17.5 36 23 36 C28.5 36 33 32 33 25 C33 18 28 12 23 4 Z" fill="#ff9a3c"/><path d="M23 16 C20 21 18 24.5 18 28 C18 31.5 20.2 33.5 23 33.5 C25.8 33.5 28 31.5 28 28 C28 24.5 26 21 23 16 Z" fill="#ffe08a"/></g>'
+  },
+  heart: {
+    name: 'Сердце',
+    before: '<path d="M23 34 C10 24 6 16 10.5 10.5 C14 6.5 20 7.5 23 12 C26 7.5 32 6.5 35.5 10.5 C40 16 36 24 23 34 Z" fill="#c9cdd8"/>',
+    after: '<g class="ci-anim-heart"><path d="M23 34 C10 24 6 16 10.5 10.5 C14 6.5 20 7.5 23 12 C26 7.5 32 6.5 35.5 10.5 C40 16 36 24 23 34 Z" fill="#ff5a76"/><path d="M14 12 q3 -3 6 -1" stroke="rgba(255,255,255,.7)" stroke-width="2" fill="none" stroke-linecap="round"/></g>'
+  },
+  bolt: {
+    name: 'Молния',
+    before: '<path d="M26 3 L12 22 L21 22 L18 37 L34 16 L24.5 16 Z" fill="#c9cdd8"/>',
+    after: '<g class="ci-anim-bolt"><path d="M26 3 L12 22 L21 22 L18 37 L34 16 L24.5 16 Z" fill="#ffd028" stroke="#e8ae00" stroke-width="1.2" stroke-linejoin="round"/></g>'
+  },
+  gem: {
+    name: 'Алмаз',
+    before: '<path d="M14 8 L32 8 L39 16 L23 36 L7 16 Z" fill="#c9cdd8"/>',
+    after: '<path d="M14 8 L32 8 L39 16 L23 36 L7 16 Z" fill="#57c8f2" stroke="#2b9fd6" stroke-width="1.2" stroke-linejoin="round"/><path d="M7 16 L39 16 M14 8 L23 16 L32 8 M23 36 L23 16" stroke="rgba(255,255,255,.55)" stroke-width="1.2" fill="none"/><path class="ci-anim-gem" d="M14 8 L23 16 L7 16 Z" fill="#bfeaff"/>'
+  }
+};
+function customIconSVG(key, done, frac) {
+  const o = CUSTOM_ICONS[key];
+  if (!o) return '';
+  // frac (0..1) — пропорциональное «загорание» для счётчиков: серое «до» тает, яркое «после» проявляется
+  if (frac !== undefined && !done) {
+    const f = Math.max(0, Math.min(1, frac));
+    return '<svg class="q-vessel ci-' + key + '" width="46" height="40" viewBox="0 0 46 40">' +
+      '<g class="q-before show" style="opacity:' + (1 - f) + '">' + o.before + '</g>' +
+      '<g class="q-after show" style="opacity:' + f + '">' + o.after + '</g>' +
+    '</svg>';
+  }
+  return '<svg class="q-vessel ci-' + key + '" width="46" height="40" viewBox="0 0 46 40">' +
+    '<g class="q-before' + (done ? '' : ' show') + '">' + o.before + '</g>' +
+    '<g class="q-after' + (done ? ' show' : '') + '">' + o.after + '</g>' +
+  '</svg>';
+}
+// иконка строки каталога: SVG плитки вместо эмодзи
+function hcatIconMarkup(c) {
+  if (HABIT_OBJECTS[c.key]) return habitCatalogObjectSVG(c.key, false);
+  if (c.key === 'sunrise') return habitSunMoonSVG(false);
+  if (c.key === 'reading') return habitBookSVG(false);
+  if (c.key === 'water') return habitVesselSVG('cat', 0, '#5ac8fa');
+  return '<span style="font-size:20px">' + c.icon + '</span>';
+}
+let chIconSel = 'star', chTypeMulti = false;
+let hcatCollapsed = {};
+function hcatIsCollapsed(cat) { return hcatCollapsed[cat] === undefined ? true : hcatCollapsed[cat]; } // по умолчанию всё свёрнуто
+function hcatToggleCat(el) {
+  const cat = el.dataset.cat;
+  hcatCollapsed[cat] = !hcatIsCollapsed(cat);
+  renderHabitCatalogList();
+}
+function toggleCustomHabitForm() {
+  const f = document.getElementById('customHabitForm');
+  if (!f) return;
+  f.style.display = f.style.display === 'none' ? '' : 'none';
+  if (f.style.display !== 'none') { const inp = document.getElementById('chName'); if (inp) inp.focus(); }
+}
+function chSelectIcon(k) {
+  chIconSel = k;
+  document.querySelectorAll('.ch-ico').forEach(b => b.classList.toggle('sel', b.dataset.k === k));
+}
+function chSelectType(multi) {
+  chTypeMulti = multi;
+  const once = document.getElementById('chTypeOnce'), many = document.getElementById('chTypeMulti');
+  if (once) once.classList.toggle('sel', !multi);
+  if (many) many.classList.toggle('sel', multi);
+  const row = document.getElementById('chCounterRow');
+  if (row) row.style.display = multi ? '' : 'none';
+}
+function createCustomHabit() {
+  const inp = document.getElementById('chName');
+  const name = (inp && inp.value || '').trim();
+  if (!name) { toast('Введи название привычки'); return; }
+  if (state.habits.some(h => h.name.toLowerCase() === name.toLowerCase())) { toast('Такая привычка уже есть'); return; }
+  const days = getDaysFrom('#chDays');
+  if (!days.length) { toast('Выбери хотя бы один день'); return; }
+  const habit = { id: Date.now(), name: name, days: days, log: [], customIcon: chIconSel };
+  if (chTypeMulti) {
+    const target = parseInt((document.getElementById('chTarget') || {}).value, 10);
+    if (!target || target < 2) { toast('Укажи цель: сколько раз в день (от 2)'); return; }
+    habit.target = Math.min(99, target);
+    habit.unit = ((document.getElementById('chUnit') || {}).value || '').trim() || 'раз';
+    habit.counts = {};
+  }
+  state.habits.push(habit);
+  save();
+  renderHabits();
+  closeAddHabitModal();
+  toast('✨ Привычка «' + name + '» добавлена');
+  openWhyModal(habit.id);   // спрашиваем «зачем» — пропустить одним тапом
+}
+function renderHabitCatalogList() {
+  const wrap = document.getElementById('habitCatalogList');
+  if (!wrap) return;
+  const available = HABIT_CATALOG.filter(c => !state.habits.some(h => { const e = catalogEntryFor(h); return e && e.key === c.key; }));
+  const customBlock =
+    '<div class="hcat-custom" onclick="toggleCustomHabitForm()">' +
+      customIconSVG('star', true) +
+      '<span class="hcat-name">Своя привычка</span>' +
+      '<span class="hcat-plus">+</span>' +
+    '</div>' +
+    '<div id="customHabitForm" style="display:none">' +
+      '<input id="chName" maxlength="24" placeholder="Например, Дневник" autocomplete="off">' +
+      '<div class="ch-icons">' + Object.keys(CUSTOM_ICONS).map(k =>
+        '<button type="button" class="ch-ico' + (k === chIconSel ? ' sel' : '') + '" data-k="' + k + '" title="' + CUSTOM_ICONS[k].name + '" onclick="chSelectIcon(\'' + k + '\')">' + customIconSVG(k, true) + '</button>'
+      ).join('') + '</div>' +
+      '<div class="ch-type">' +
+        '<button type="button" id="chTypeOnce" class="' + (chTypeMulti ? '' : 'sel') + '" onclick="chSelectType(false)">Раз в день</button>' +
+        '<button type="button" id="chTypeMulti" class="' + (chTypeMulti ? 'sel' : '') + '" onclick="chSelectType(true)">Несколько раз</button>' +
+      '</div>' +
+      '<div class="extra-row" id="chCounterRow" style="display:' + (chTypeMulti ? '' : 'none') + '; margin-bottom:10px">' +
+        '<input type="number" id="chTarget" min="2" max="99" placeholder="Цель, напр. 8">' +
+        '<input type="text" id="chUnit" maxlength="16" placeholder="Единица (раз)">' +
+      '</div>' +
+      '<div class="day-picker" id="chDays" style="margin-bottom:12px">' +
+        [['1','Пн'],['2','Вт'],['3','Ср'],['4','Чт'],['5','Пт'],['6','Сб'],['0','Вс']].map(d =>
+          '<button type="button" class="dchip sel" data-d="' + d[0] + '" onclick="this.classList.toggle(\'sel\')">' + d[1] + '</button>'
+        ).join('') +
+      '</div>' +
+      '<button type="button" class="ch-create" onclick="createCustomHabit()">Создать</button>' +
+    '</div>';
+  if (!available.length) {
+    wrap.innerHTML = customBlock + '<div class="today-line">Все привычки из каталога уже добавлены</div>';
+    return;
+  }
+  const cats = [];
+  available.forEach(c => { if (!cats.includes(c.cat)) cats.push(c.cat); });
+  wrap.innerHTML = customBlock + cats.map(cat => {
+    const collapsed = hcatIsCollapsed(cat);
+    return '<div class="hcat-group-title" data-cat="' + cat + '" onclick="hcatToggleCat(this)">' +
+      '<span>' + cat + '</span><span class="hcat-arr">' + (collapsed ? '▸' : '▾') + '</span></div>' +
+      (collapsed ? '' : available.filter(c => c.cat === cat).map(c =>
+        '<div class="hcat-row" onclick="addCatalogHabit(\'' + c.key + '\')">' +
+          '<span class="hcat-ico">' + hcatIconMarkup(c) + '</span>' +
+          '<span class="hcat-name">' + c.name + '</span>' +
+          '<span class="hcat-plus">+</span>' +
+        '</div>'
+      ).join(''));
+  }).join('');
+}
+function deleteHabit(id) {
+  state.habits = state.habits.filter(h => h.id !== id);
+  if (habitEditingId === id) closeHabitEditModal();
+  save(); renderHabits();
+}
+function confirmDeleteHabit(id) {
+  const h = state.habits.find(x => x.id === id);
+  if (!h) return;
+  if (confirm('Удалить привычку «' + h.name + '»?')) deleteHabit(id);
+}
+function toggleHabitToday(id) {
+  const h = state.habits.find(x => x.id === id);
+  if (!h) return;
+  const t = todayStr();
+  const i = h.log.indexOf(t);
+  if (i >= 0) h.log.splice(i, 1);
+  else { h.log.push(t); sndStar(); vib(15); }
+  save();
+  renderHabits();
+}
+function incrementHabitCounter(id) {
+  const h = state.habits.find(x => x.id === id);
+  if (!h) return;
+  const t = todayStr();
+  if (!h.counts) h.counts = {};
+  const cur = h.counts[t] || 0;
+  if (cur >= h.target) return; // цель уже достигнута сегодня
+  h.counts[t] = cur + 1;
+  if (h.counts[t] >= h.target && !h.log.includes(t)) { h.log.push(t); sndStar(); vib(15); }
+  save();
+  renderHabits();
+}
+function decrementHabitCounter(id) {
+  const h = state.habits.find(x => x.id === id);
+  if (!h) return;
+  const t = todayStr();
+  if (!h.counts) h.counts = {};
+  const cur = h.counts[t] || 0;
+  h.counts[t] = Math.max(0, cur - 1);
+  const i = h.log.indexOf(t);
+  if (h.counts[t] < h.target && i >= 0) h.log.splice(i, 1);
+  save();
+  renderHabits();
+}
+let habitPressTimer = null, habitPeekTimer = null, habitLongPressFired = false;
+function habitPressStart(id) {
+  clearTimeout(habitPressTimer);
+  clearTimeout(habitPeekTimer);
+  habitLongPressFired = false;
+  // подержал чуть-чуть — показываем заметку «зачем»; додержал до конца — открывается редактирование
+  habitPeekTimer = setTimeout(() => showWhyPop(id), 350);
+  habitPressTimer = setTimeout(() => {
+    habitLongPressFired = true; hideWhyPop(); vib(20); openHabitEdit(id);
+  }, 1000);
+}
+function habitPressEnd() {
+  clearTimeout(habitPressTimer);
+  clearTimeout(habitPeekTimer);
+  setTimeout(hideWhyPop, 900);   // заметка ещё мгновение видна после отпускания
+}
+function habitTileClick(id) {
+  if (habitLongPressFired) { habitLongPressFired = false; return; }
+  const h = state.habits.find(x => x.id === id);
+  if (h && isCounterHabit(h)) incrementHabitCounter(id);
+  else toggleHabitToday(id);
+  const ring = document.querySelector('#habitsGrid .q-ring[data-hid="' + id + '"]');
+  if (ring) { ring.classList.remove('q-pop'); void ring.offsetWidth; ring.classList.add('q-pop'); }
+}
+// ---------- календарь привычек (месяц, день = все привычки на этот день выполнены) ----------
+let habitCalMonth = (() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); })();
+function habitCalShift(delta) {
+  habitCalMonth.setMonth(habitCalMonth.getMonth() + delta);
+  renderHabitCal();
+}
+function habitExistedOn(h, dStr) {
+  // привычка становится обязательной только со СЛЕДУЮЩЕГО дня после создания (id = timestamp создания):
+  // добавление новой привычки не ломает ни прошлые дни, ни сегодняшний
+  try { return todayStr(new Date(h.id)) < dStr; } catch(e) { return true; }
+}
+function habitAllDoneOn(dStr, dow) {
+  const scheduled = state.habits.filter(h =>
+    habitExistedOn(h, dStr) &&
+    ((h.days && h.days.length) ? h.days : [0, 1, 2, 3, 4, 5, 6]).includes(dow));
+  if (!scheduled.length) return null; // в этот день нет запланированных привычек
+  return scheduled.every(h => h.log.includes(dStr));
+}
+let hcalPrevTodayDone = null; // предыдущее состояние «сегодня всё закрыто» — чтобы поймать именно момент завершения
+function renderHabitCal() {
+  const titleEl = document.getElementById('hcalTitle');
+  const gridEl = document.getElementById('hcalGrid');
+  const nextBtn = document.getElementById('hcalNext');
+  if (!titleEl || !gridEl) return;
+  const y = habitCalMonth.getFullYear(), m = habitCalMonth.getMonth();
+  titleEl.textContent = habitCalMonth.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
+  const now = new Date();
+  const isCurMonth = (y === now.getFullYear() && m === now.getMonth());
+  if (nextBtn) nextBtn.disabled = isCurMonth;
+  const firstDow = (new Date(y, m, 1).getDay() + 6) % 7; // приводим к Пн=0
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const todayS = todayStr();
+  let html = '';
+  for (let i = 0; i < firstDow; i++) html += '<div class="hcal-day pad"></div>';
+  let todayDone = null;
+  for (let day = 1; day <= daysInMonth; day++) {
+    const d = new Date(y, m, day);
+    const dStr = todayStr(d);
+    const dow = d.getDay();
+    let cls = 'hcal-day';
+    if (dStr === todayS) cls += ' today';
+    if (dStr <= todayS) {
+      const status = habitAllDoneOn(dStr, dow);
+      if (status === true) cls += ' done';
+      else {
+        const frac = habitDayFraction(dStr, dow);
+        if (frac !== null && frac > 0) cls += ' part';
+      }
+      if (dStr === todayS) todayDone = status;
+    } else cls += ' future';
+    html += '<div class="' + cls + '" data-date="' + dStr + '"' + (dStr <= todayS ? ' onclick="hcalShowDay(\'' + dStr + '\')" style="cursor:pointer"' : '') + '>' + day + '</div>';
+  }
+  gridEl.innerHTML = html;
+  // если сегодня только что закрыли ВСЕ привычки — прыжок-«торнадо» + звёздный взрыв
+  if (isCurMonth && todayDone === true && hcalPrevTodayDone === false) {
+    const cell = gridEl.querySelector('.hcal-day.today');
+    if (cell) {
+      cell.classList.add('celebrate');
+      sparkBurst(cell);
+      setTimeout(() => cell.classList.remove('celebrate'), 720);
+    }
+  }
+  if (isCurMonth) hcalPrevTodayDone = todayDone;
+}
+// ---------- общий стрик «Огонька»: все привычки дня выполнены подряд ----------
+function combinedStreakCurrent() {
+  if (!state.habits.length) return 0;
+  let d = parseD(todayStr());
+  const todayStatus = habitAllDoneOn(todayStr(d), d.getDay());
+  if (todayStatus === false) d.setDate(d.getDate() - 1); // сегодня ещё не всё закрыто — не обнуляем раньше времени
+  let streak = 0, guard = 0;
+  while (guard++ < 3650) {
+    const status = habitAllDoneOn(todayStr(d), d.getDay());
+    if (status === null) { d.setDate(d.getDate() - 1); continue; } // нет запланированных привычек в этот день — не рвём стрик
+    if (status === false) break;
+    streak++;
+    d.setDate(d.getDate() - 1);
+  }
+  return streak;
+}
+function combinedStreakRecord() {
+  if (!state.habits.length) return 0;
+  let minDate = null;
+  state.habits.forEach(h => {
+    const created = parseD(todayStr(new Date(h.id)));
+    if (!minDate || created < minDate) minDate = created;
+  });
+  if (!minDate) return 0;
+  const today = parseD(todayStr());
+  let run = 0, record = 0, guard = 0;
+  const d = new Date(minDate);
+  while (d <= today && guard++ < 3650) {
+    const status = habitAllDoneOn(todayStr(d), d.getDay());
+    if (status === true) { run++; if (run > record) record = run; }
+    else if (status === false) { run = 0; }
+    d.setDate(d.getDate() + 1);
+  }
+  return Math.max(record, combinedStreakCurrent());
+}
+
+// ---------- маскот «Огонёк»: настроение, глаза, аура ----------
+// 5 настроений по прогрессу дня: sad → meh → neutral → good → happy
+const FLAME_MOODS = ['sad', 'meh', 'neutral', 'good', 'happy'];
+function flameMood() {
+  const total = state.habits.length;
+  if (!total) return 'neutral';
+  const doneToday = state.habits.filter(h => h.log.includes(todayStr())).length;
+  if (doneToday === 0) return 'sad';            // ничего не сделано — грустит и тухнет
+  if (doneToday === total) return 'happy';      // всё закрыто — восторг
+  const frac = doneToday / total;
+  if (frac < 1 / 3) return 'meh';               // еле начал — недовольный
+  if (frac < 2 / 3) return 'neutral';           // половина — спокойный
+  return 'good';                                // почти всё — довольный
+}
+// уровни огонька: сколько идеальных дней нужно (XP = 1 за идеальный день)
+const FLAME_LVLS = [0, 2, 5, 10, 20, 35];
+function flameLevel() {
+  const xp = state.flameXP || 0;
+  let lvl = 1;
+  for (let i = 0; i < FLAME_LVLS.length; i++) if (xp >= FLAME_LVLS[i]) lvl = i + 1;
+  return lvl;
+}
+// фразы: случайная на день из подходящей категории (с юмором)
+const FLAME_PHRASES = {
+  sad: ['«Я тут гасну вообще-то!»', '«Ноль дровишек с утра… подкинь!»', '«Алло, пожарные? Меня забыли зажечь»', '«Холодно мне без твоих привычек»', '«Тлею. Обидно. Отметь хоть одну!»'],
+  meh: ['«И это всё? Ещё {n} давай»', '«Одна искра — не пожар. Ещё {n}»', '«Так себе разогрев, честно. {n} осталось»', '«Я почти не чувствую тепла. Ещё {n}»', '«Начало есть, но {n} висит»'],
+  neutral: ['«Половина есть, дожимай: ещё {n}»', '«Уже теплее! Минус {n} до идеала»', '«Норм горю. Но {n} мешает»', '«Осталось {n} — и я разойдусь»', '«Идём по плану, ещё {n}»'],
+  good: ['«Ещё {n} — и устрою салют!»', '«Почти! Дай мне эти {n}»', '«Разгораюсь! {n} до идеала»', '«Чувствую жар! Ещё {n}»', '«{n} — и день закрыт. Ну же!»'],
+  happy: ['«Горю как не в себя!»', '«Идеальный день! Я в ударе»', '«Салют в твою честь!»', '«Меня теперь не потушить»', '«Вот это пламя! Так держать»']
+};
+function flamePhrase(doneToday, total) {
+  const cat = flameMood();
+  const arr = FLAME_PHRASES[cat] || FLAME_PHRASES.neutral;
+  let hash = 0;
+  const seed = todayStr() + cat;
+  for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) % 9973;
+  const ph = arr[hash % arr.length];
+  return ph.replace('{n}', total - doneToday);
+}
+// мини-иконка привычки (SVG плитки, уменьшенная; фолбэк — эмодзи)
+function habitMiniIcon(h, done) {
+  if (done === undefined) done = h.log.includes(todayStr());
+  if (h.customIcon && CUSTOM_ICONS[h.customIcon]) return customIconSVG(h.customIcon, done);
+  const entry = catalogEntryFor(h);
+  if (entry) {
+    if (entry.key === 'sunrise') return habitSunMoonSVG(done);
+    if (entry.key === 'reading') return habitBookSVG(done);
+    if (entry.key === 'water') return habitVesselSVG('mini' + h.id, done ? 1 : (h.target ? Math.min(1, habitCounterToday(h) / h.target) : 0), done ? '#30d158' : '#5ac8fa');
+    if (HABIT_OBJECTS[entry.key]) return habitCatalogObjectSVG(entry.key, done);
+  }
+  return '<span style="font-size:15px">' + habitIcon(h.name) + '</span>';
+}
+// скролл к плитке запущенной привычки + подсветка
+function flameGoToHabit(id) {
+  const tile = document.querySelector('#habitsGrid [onclick="habitTileClick(' + id + ')"]');
+  if (!tile) return;
+  tile.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  tile.classList.remove('q-hint'); void tile.offsetWidth; tile.classList.add('q-hint');
+  setTimeout(() => tile.classList.remove('q-hint'), 2500);
+}
+// салют огонька за идеальный день
+function flameCelebrate() {
+  const wrap = document.querySelector('.flame-wrap');
+  const svg = document.getElementById('flameSvg');
+  if (svg) {
+    svg.classList.remove('tap'); void svg.offsetWidth; svg.classList.add('tap');
+    setTimeout(() => svg.classList.remove('tap'), 560);
+  }
+  if (wrap) {
+    const r = svg.getBoundingClientRect(), wr = wrap.getBoundingClientRect();
+    for (let i = 0; i < 10; i++) {
+      const s = document.createElement('span');
+      s.className = 'lvl-spark';
+      s.textContent = '✦';
+      s.style.fontSize = (10 + Math.random() * 10) + 'px';
+      s.style.left = (r.left - wr.left + Math.random() * r.width) + 'px';
+      s.style.top = (r.top - wr.top + Math.random() * r.height * .9) + 'px';
+      wrap.appendChild(s);
+      setTimeout(() => s.remove(), 1000);
+    }
+  }
+  const cell = document.querySelector('#hcalWeekGrid .wd-cell.today .wd-ring');
+  if (cell) {
+    cell.classList.add('celebrate');
+    try { sparkBurst(cell); } catch(e) {}
+    setTimeout(() => cell.classList.remove('celebrate'), 720);
+  }
+  try { sndStar(); } catch(e) {}
+  vib([20, 30, 20]);
+}
+function renderFlame() {
+  const svg = document.getElementById('flameSvg');
+  const aura = document.getElementById('flameAura');
+  const fiToday = document.getElementById('fiToday');
+  const fiStreak = document.getElementById('fiStreak');
+  const fiRecord = document.getElementById('fiRecord');
+  const fiPhrase = document.getElementById('fiPhrase');
+  const fiNeglect = document.getElementById('fiNeglect');
+  const fiRemaining = document.getElementById('fiRemaining');
+  if (!svg) return;
+  if (!state.habits.length) {
+    FLAME_MOODS.forEach(m => svg.classList.remove('mood-' + m));
+    svg.classList.add('mood-neutral');
+    aura.style.width = '110px'; aura.style.height = '110px'; aura.style.opacity = '.35';
+    fiToday.textContent = 'Пока нет привычек — добавь первую ниже';
+    [fiStreak, fiRecord, fiPhrase, fiNeglect, document.getElementById('fiBarRow')].forEach(el => el.style.display = 'none');
+    setFlameEyesMouth('neutral');
+    return;
+  }
+  const t = todayStr();
+  const doneToday = state.habits.filter(h => h.log.includes(t)).length;
+  const total = state.habits.length;
+  // идеальный день — по тем же правилам, что стрик и календарь:
+  // привычки, созданные сегодня, станут обязательными только с завтра
+  const dayPerfect = habitAllDoneOn(t, parseD(t).getDay()) === true;
+
+  // XP за идеальный день: начисляем сразу, снимаем если день «расклеился»
+  if (!state.flameAwarded) state.flameAwarded = {};
+  if (dayPerfect && !state.flameAwarded[t]) {
+    state.flameAwarded[t] = 1;
+    state.flameXP = (state.flameXP || 0) + 1;
+    const lvl = flameLevel();
+    if (lvl > (state.flameLvl || 1)) { state.flameLvl = lvl; setTimeout(() => toast('🔥 Огонёк подрос!'), 600); }
+    save();
+    flameCelebrate();
+  } else if (!dayPerfect && state.flameAwarded[t]) {
+    delete state.flameAwarded[t];
+    state.flameXP = Math.max(0, (state.flameXP || 0) - 1);
+    state.flameLvl = flameLevel();
+    save();
+  }
+
+  const streak = combinedStreakCurrent();
+  const record = combinedStreakRecord();
+  const mood = flameMood();
+  const lvl = flameLevel();
+  FLAME_MOODS.forEach(m => svg.classList.remove('mood-' + m));
+  svg.classList.add('mood-' + mood);
+  setFlameEyesMouth(mood);
+
+  // рост с уровнем: 146px на ур.1 → 186px на ур.6
+  const w = 146 + (lvl - 1) * 8;
+  svg.setAttribute('width', w);
+  svg.setAttribute('height', Math.round(w * 172 / 140));
+
+  fiToday.innerHTML = 'Сегодня <b>' + doneToday + '/' + total + '</b>';
+  document.getElementById('fiBarRow').style.display = '';
+  document.getElementById('fiBarFill').style.width = Math.round(doneToday / total * 100) + '%';
+
+  // хвост прогрессбара: мини-иконки невыполненных (тап — перейти к плитке привычки)
+  const undone = state.habits.filter(h => !h.log.includes(t));
+  fiRemaining.innerHTML = undone.slice(0, 5).map(h =>
+      '<span class="fr-ico" title="' + h.name + '" onclick="event.stopPropagation(); flameGoToHabit(' + h.id + ')">' + habitMiniIcon(h) + '</span>'
+    ).join('') +
+    (undone.length > 5 ? '<span class="fr-more">+' + (undone.length - 5) + '</span>' : '');
+
+  fiStreak.style.display = '';
+  fiRecord.style.display = 'none'; // рекорд слит в строку стрика
+  fiStreak.innerHTML = (streak > 0 ? '🔥 ' + streak + ' ' + ruDays(streak) + ' подряд' : 'Начни стрик сегодня') +
+    ' <span style="color:var(--text2); font-weight:600">· рекорд ' + record + '</span>';
+
+  fiPhrase.style.display = '';
+  fiPhrase.textContent = flamePhrase(doneToday, total);
+
+  // самая запущенная привычка (от 2 пропущенных плановых дней)
+  let worst = null, worstMissed = 1;
+  state.habits.forEach(h => {
+    const m = habitMissedStreak(h);
+    if (m >= 2 && m > worstMissed) { worstMissed = m; worst = h; }
+  });
+  if (worst) {
+    fiNeglect.style.display = '';
+    fiNeglect.textContent = 'Давно не было: ' + worst.name + ' (' + worstMissed + ' дн.)';
+    fiNeglect.onclick = () => flameGoToHabit(worst.id);
+  } else fiNeglect.style.display = 'none';
+
+  // аура: тёплое свечение, растёт со стриком и уровнем
+  const size = Math.round(96 + Math.min(streak, 30) * 2.4 + (lvl - 1) * 7);
+  aura.style.width = size + 'px';
+  aura.style.height = size + 'px';
+  // яркость ауры тоже по настроению (5 ступеней)
+  const auraBase = { sad: .4, meh: .55, neutral: .72, good: .85, happy: .95 }[mood] || .72;
+  aura.style.opacity = String(Math.min(auraBase + streak * .01 + (lvl - 1) * .02, 1));
+}
+function ruDays(n) {
+  const n10 = n % 10, n100 = n % 100;
+  if (n100 >= 11 && n100 <= 14) return 'дней';
+  if (n10 === 1) return 'день';
+  if (n10 >= 2 && n10 <= 4) return 'дня';
+  return 'дней';
+}
+function setFlameEyesMouth(mood) {
+  const eOpen = document.getElementById('flEyesOpen');
+  if (!eOpen) return;
+  const sleep = document.body.classList.contains('sleep');
+  const eyeFor = { sad: 'flEyesSad', meh: 'flEyesMeh', neutral: 'flEyesOpen', good: 'flEyesGood', happy: 'flEyesHappy' };
+  const mouthFor = { sad: 'flMouthSad', meh: 'flMouthMeh', neutral: 'flMouthNeutral', good: 'flMouthGood', happy: 'flMouthHappy' };
+  const eSleep = document.getElementById('flEyesSleep');
+  if (eSleep) eSleep.style.display = sleep ? '' : 'none';
+  Object.values(eyeFor).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = (!sleep && eyeFor[mood] === id) ? '' : 'none';
+  });
+  Object.values(mouthFor).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = ((sleep && id === 'flMouthNeutral') || (!sleep && mouthFor[mood] === id)) ? '' : 'none';
+  });
+}
+// ---------- полоска текущей недели (превью; полный месяц — в модалке) ----------
+// доля выполненных привычек за конкретный день (0..1), null — нет запланированных
+function habitDayFraction(dStr, dow) {
+  const scheduled = state.habits.filter(h =>
+    habitExistedOn(h, dStr) &&
+    ((h.days && h.days.length) ? h.days : [0, 1, 2, 3, 4, 5, 6]).includes(dow));
+  if (!scheduled.length) return null;
+  const done = scheduled.filter(h => h.log.includes(dStr)).length;
+  return done / scheduled.length;
+}
+const WD_LABELS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+function renderHabitWeekStrip() {
+  const gridEl = document.getElementById('hcalWeekGrid');
+  if (!gridEl) return;
+  const week = weekDates(); // Пн..Вс дат текущей недели, строками
+  const todayS = todayStr();
+  gridEl.innerHTML = week.map((dStr, i) => {
+    const d = parseD(dStr);
+    const dow = d.getDay();
+    const isToday = dStr === todayS;
+    const isFuture = dStr > todayS;
+    const frac = isFuture ? 0 : (habitDayFraction(dStr, dow) || 0);
+    const isDone = !isFuture && frac >= 1;
+    // все дни одного размера; сегодня отличается оранжевой подписью и обводкой
+    const size = 34, r = 14, c = size / 2, sw = 2.8;
+    const circ = 2 * Math.PI * r;
+    let cls = 'wd-ring';
+    if (isDone) cls += ' done';
+    if (isFuture) cls += ' future';
+    return '<div class="wd-cell' + (isToday ? ' today' : '') + '" onclick="openHabitCalModal()">' +
+      '<span class="wd-lab">' + WD_LABELS[i] + '</span>' +
+      '<svg class="' + cls + '" data-date="' + dStr + '" width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '">' +
+        (isToday ? '<circle class="wr-halo" cx="' + c + '" cy="' + c + '" r="' + (r + 2.4) + '" fill="none" stroke-width="1.6"/>' : '') +
+        '<circle class="wr-fill" cx="' + c + '" cy="' + c + '" r="' + r + '"/>' +
+        '<circle class="wr-bg" cx="' + c + '" cy="' + c + '" r="' + r + '" fill="none" stroke-width="' + sw + '"/>' +
+        (!isDone && frac > 0
+          ? '<circle class="wr-fg" cx="' + c + '" cy="' + c + '" r="' + r + '" fill="none" stroke-width="' + sw + '" stroke-linecap="round" stroke-dasharray="' + circ.toFixed(1) + '" stroke-dashoffset="' + (circ * (1 - frac)).toFixed(1) + '" transform="rotate(-90 ' + c + ' ' + c + ')"/>'
+          : '') +
+        '<text class="wr-num" x="' + c + '" y="' + (c + 4) + '" text-anchor="middle">' + d.getDate() + '</text>' +
+      '</svg>' +
+    '</div>';
+  }).join('');
+}
+// ---------- мини-сводка дня (модалка поверх календаря) ----------
+function hcalShowDay(dStr) {
+  const d = parseD(dStr);
+  const dow = d.getDay();
+  const titleEl = document.getElementById('hdTitle');
+  const listEl = document.getElementById('hdList');
+  titleEl.textContent = d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', weekday: 'long' });
+  const scheduled = state.habits.filter(h =>
+    habitExistedOn(h, dStr) &&
+    ((h.days && h.days.length) ? h.days : [0, 1, 2, 3, 4, 5, 6]).includes(dow));
+  if (!scheduled.length) {
+    listEl.innerHTML = '<div class="hd-empty">Не было запланированных привычек</div>';
+  } else {
+    listEl.innerHTML = scheduled.map(h => {
+      const done = h.log.includes(dStr);
+      let st;
+      if (isCounterHabit(h)) {
+        const cnt = (h.counts && h.counts[dStr]) || 0;
+        st = '<span class="hd-st ' + (done ? 'ok' : 'no') + '">' + cnt + '/' + h.target + (done ? ' ✓' : '') + '</span>';
+      } else {
+        st = '<span class="hd-st ' + (done ? 'ok' : 'no') + '">' + (done ? '✓' : '✗') + '</span>';
+      }
+      return '<div class="hd-row">' + habitMiniIcon(h, done) + '<span class="hd-name">' + h.name + '</span>' + st + '</div>';
+    }).join('');
+  }
+  document.getElementById('habitDayModal').classList.add('show');
+}
+function closeHabitDayModal() {
+  document.getElementById('habitDayModal').classList.remove('show');
+}
+function openHabitCalModal() {
+  renderHabitCal();
+  document.getElementById('habitCalModal').classList.add('show');
+}
+function closeHabitCalModal() {
+  document.getElementById('habitCalModal').classList.remove('show');
+}
+function openAddHabitModal() {
+  hcatCollapsed = {};        // при каждом открытии все категории свёрнуты
+  chTypeMulti = false;
+  renderHabitCatalogList();
+  document.getElementById('addHabitModal').classList.add('show');
+}
+function closeAddHabitModal() {
+  document.getElementById('addHabitModal').classList.remove('show');
+}
+// ---------- взаимодействие с огоньком: тап (только анимация) / долгий тап (календарь) ----------
+let flamePressTimer = null, flameLongPressFired = false;
+function flamePressStart() {
+  clearTimeout(flamePressTimer);
+  flameLongPressFired = false;
+  flamePressTimer = setTimeout(() => { flameLongPressFired = true; vib(20); openHabitCalModal(); }, 1000);
+}
+function flamePressEnd() { clearTimeout(flamePressTimer); }
+function flameTap() {
+  if (flameLongPressFired) { flameLongPressFired = false; return; }
+  const svg = document.getElementById('flameSvg');
+  svg.classList.remove('tap'); void svg.offsetWidth; svg.classList.add('tap');
+  setTimeout(() => svg.classList.remove('tap'), 560);
+  sndFlameCrackle();
+  vib(15);
+}
+function sndFlameCrackle() {
+  try {
+    const ctx = ac(), t = ctx.currentTime, dur = .22;
+    const buf = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 1.6);
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1800; f.Q.value = .8;
+    const g = ctx.createGain(); g.gain.value = .12;
+    src.connect(f); f.connect(g); g.connect(ctx.destination);
+    src.start(t);
+    tone(520, .14, .02, 'sine', .05);
+  } catch(e) {}
+}
+document.getElementById('flameSvg').addEventListener('click', flameTap);
+// глаза огонька следят за пальцем/мышкой (только пока открыта вкладка «Привычки»)
+let flameEyeRaf = null;
+document.addEventListener('pointermove', e => {
+  if (flameEyeRaf) return;
+  flameEyeRaf = requestAnimationFrame(() => {
+    flameEyeRaf = null;
+    const svg = document.getElementById('flameSvg');
+    const view = document.getElementById('viewHabits');
+    if (!svg || !view || view.style.display === 'none') return;
+    const r = svg.getBoundingClientRect();
+    if (!r.width) return;
+    const ex = r.left + r.width * .5, ey = r.top + r.height * .68;
+    const dx = e.clientX - ex, dy = e.clientY - ey;
+    const d = Math.hypot(dx, dy) || 1;
+    const k = Math.min(1, d / 55) * 2.8;
+    const gL = document.getElementById('flEyeGL'), gR = document.getElementById('flEyeGR');
+    const tx = (dx / d * k).toFixed(2), ty = (dy / d * k).toFixed(2);
+    if (gL) gL.setAttribute('transform', 'translate(' + tx + ',' + ty + ')');
+    if (gR) gR.setAttribute('transform', 'translate(' + tx + ',' + ty + ')');
+  });
+}, { passive: true });
+
+function renderHabits() {
+  renderHabitCal();
+  renderHabitWeekStrip();
+  renderFlame();
+  const grid = document.getElementById('habitsGrid');
+  const card = document.getElementById('habitsCard');
+  renderHabitCatalogList();
+  if (!state.habits.length) {
+    grid.innerHTML = '';
+    if (card) card.style.display = 'none';
+    return;
+  }
+  if (card) card.style.display = '';
+  grid.innerHTML = state.habits.map(h => {
+    const done = h.log.includes(todayStr());
+    const streak = habitStreak(h);
+    const entry = catalogEntryFor(h);
+    const icon = habitIcon(h.name);
+    const counter = isCounterHabit(h);
+    let p, valLine, valFull;
+    if (counter) {
+      const cur = habitCounterToday(h);
+      p = Math.min(1, cur / h.target);
+      valFull = cur >= h.target;
+      valLine = cur + '/' + h.target + (h.unit ? ' ' + h.unit : '') + (streak > 0 ? ' · <span class="q-flame">🔥' + streak + '</span>' : '');
+    } else {
+      const target = (h.days && h.days.length) ? h.days.length : 7;
+      const wc = habitWeekCount(h);
+      p = Math.min(1, wc / target);
+      valFull = wc >= target;
+      valLine = wc + '/' + target + (streak > 0 ? ' · <span class="q-flame">🔥' + streak + '</span>' : '');
+    }
+    const vesselColor = done ? '#30d158' : (entry && entry.key === 'water' ? '#5ac8fa' : habitColor(h.name));
+    let objectMarkup, showBadge;
+    if (h.customIcon && CUSTOM_ICONS[h.customIcon]) { objectMarkup = customIconSVG(h.customIcon, done, counter ? p : undefined); showBadge = false; }
+    else if (entry && entry.key === 'sunrise') { objectMarkup = habitSunMoonSVG(done); showBadge = false; }
+    else if (entry && entry.key === 'reading') { objectMarkup = habitBookSVG(done); showBadge = false; }
+    else if (entry && entry.key === 'water') { objectMarkup = habitVesselSVG(h.id, p, vesselColor); showBadge = false; }
+    else if (entry && HABIT_OBJECTS[entry.key]) { objectMarkup = habitCatalogObjectSVG(entry.key, done, counter ? p : undefined); showBadge = false; }
+    else { objectMarkup = habitVesselSVG(h.id, p, vesselColor); showBadge = true; }
+    return (
+      '<div class="q-tile' + (done ? ' done' : '') + '" onclick="habitTileClick(' + h.id + ')" ' +
+        'onpointerdown="habitPressStart(' + h.id + ')" onpointerup="habitPressEnd()" onpointerleave="habitPressEnd()">' +
+        '<div class="q-ring" data-hid="' + h.id + '">' +
+          objectMarkup +
+          (showBadge ? '<div class="q-ico"><span class="q-emo" style="background:#78c69626">' + icon + '</span></div>' : '') +
+          (done ? '<div class="q-check">✓</div>' : '') +
+        '</div>' +
+        '<div class="q-name">' + h.name + '</div>' +
+        '<div class="q-val' + (valFull ? ' full' : '') + '">' + valLine + '</div>' +
+      '</div>'
+    );
+  }).join('') +
+  // добивка пустыми слотами до кратного трём: фон растёт ровными рядами (3, 6, 9…)
+  Array((3 - (state.habits.length % 3)) % 3).fill(
+    '<div class="q-tile q-empty" aria-hidden="true">' +
+      '<div class="q-ring"></div><div class="q-name">&nbsp;</div><div class="q-val">&nbsp;</div>' +
+    '</div>'
+  ).join('');
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      grid.querySelectorAll('.q-vessel-fill').forEach(r => {
+        r.setAttribute('y', r.dataset.y);
+        r.setAttribute('height', r.dataset.h);
+      });
+    });
+  });
+}
+
+
 // ---------- общие помощники прогноза (нужны и статистике, и «что если») ----------
 function daysSinceStart() {
   return Math.max(1, Math.round((parseD(todayStr()) - parseD(state.startDate)) / 864e5) + 1);
@@ -3306,6 +5348,28 @@ function allCats() {
 function catById(id) {
   return allCats().find(c => c.id === id) || CATS[CATS.length - 1];
 }
+// склонение названия категории в родительный падеж — для «День без …»
+const CAT_GENITIVE = {
+  cafe: 'кафе', food: 'еды', transport: 'транспорта', home: 'дома', fun: 'развлечений',
+  clothes: 'одежды', health: 'здоровья', phone: 'связи', sport: 'спорта', other: 'другого'
+};
+function declineGenitive(name) {
+  const n = name;
+  if (/ие$/i.test(n)) return n.slice(0, -2) + 'ия';
+  if (/ье$/i.test(n)) return n.slice(0, -2) + 'ья';
+  if (/[кгх]а$/i.test(n)) return n.slice(0, -1) + 'и';
+  if (/а$/i.test(n)) return n.slice(0, -1) + 'ы';
+  if (/я$/i.test(n)) return n.slice(0, -1) + 'и';
+  if (/ь$/i.test(n)) return n.slice(0, -1) + 'и';
+  if (/[бвгджзклмнпрстфхцчшщ]$/i.test(n)) return n + 'а';
+  return n; // индеклинируемые/неоднозначные окончания — оставляем как есть
+}
+function catGenitive(catId) {
+  const c = catById(catId);
+  if (CAT_GENITIVE[c.id]) return CAT_GENITIVE[c.id];
+  return declineGenitive(c.name);
+}
+function capFirst(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 function catBadge(c, lg) {
   return '<div class="cbadge' + (lg ? ' lg' : '') + ' cb-' + (c.id || 'x') + '" style="background:' + c.color + '26; color:' + c.color + '">' +
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + c.svg + '</svg></div>';
@@ -3449,15 +5513,19 @@ function saveGoal() {
   sndAch();
 }
 
+const TAB_VIEWS = { save: 'viewSave', spend: 'viewSpend', habits: 'viewHabits' };
 function switchTab(t) {
   tourGen++; tourHide();   // ручное переключение вкладки — отменяем и прячем любой текущий тур
-  const show = document.getElementById(t === 'save' ? 'viewSave' : 'viewSpend');
-  const hide = document.getElementById(t === 'save' ? 'viewSpend' : 'viewSave');
-  hide.style.display = 'none';
+  const show = document.getElementById(TAB_VIEWS[t]);
+  Object.keys(TAB_VIEWS).forEach(k => {
+    if (k !== t) document.getElementById(TAB_VIEWS[k]).style.display = 'none';
+  });
   show.style.display = '';
   document.getElementById('tabSave').classList.toggle('active', t === 'save');
   document.getElementById('tabSpend').classList.toggle('active', t === 'spend');
+  document.getElementById('tabHabits').classList.toggle('active', t === 'habits');
   if (t === 'spend' && spendDirty) renderSpend();   // пересобираем только при изменениях
+  if (t === 'habits') { renderHabits(); setTimeout(checkHabitNeglect, 400); }
   // первое посещение расходов — знакомство с хомяком
   if (t === 'spend' && state.onboarded && !state.hamboarded && !onbPreview && !hamPreview) {
     state.hamboarded = true;
@@ -3904,14 +5972,14 @@ function renderInsight() {
         const spent = state.expenses
           .filter(e => e.date === ch.day && e.cat === ch.cat)
           .reduce((a, e) => a + e.amount, 0);
-        const cname = catById(ch.cat).name;
+        const cgen = catGenitive(ch.cat);
         const reward = ch.reward || 2;
         if (spent === 0) {
           state.stars += reward;
-          toast('🏆 Челлендж выполнен: день без «' + cname + '»! +' + reward + '⭐');
+          toast('🏆 Челлендж выполнен: день без ' + cgen + '! +' + reward + '⭐');
           sndAch(); vib([20, 30, 20]);
         } else {
-          toast('🐹 Челлендж «день без ' + cname + '» не удался. Бывает!');
+          toast('🐹 Челлендж «День без ' + cgen + '» не удался. Бывает!');
         }
       } else stillActive.push(ch);
     }
@@ -3925,9 +5993,8 @@ function renderInsight() {
 
   let html = '<div class="chal-list">';
   for (const ch of state.chals) {
-    const cn = catById(ch.cat).name;
     html += '<div class="chal-row active">' + catBadge(catById(ch.cat)) +
-      '<div class="chal-txt"><b>День без «' + cn + '»</b>' +
+      '<div class="chal-txt"><b>' + capFirst('день без ' + catGenitive(ch.cat)) + '</b>' +
       '<div class="chal-sub">' + (ch.day === todayStr() ? '🔥 сегодня — держись!' : 'начнётся завтра') + '</div></div>' +
       '<div class="chal-reward">+' + (ch.reward || 2) + '⭐</div></div>';
   }
@@ -3935,7 +6002,7 @@ function renderInsight() {
     html += '<div class="chal-row">' + catBadge(catById(s.cat)) +
       '<div class="chal-txt"><b>' + s.reason + '</b>' +
       '<div class="chal-sub">Живое задание — система заметила это в твоих тратах</div></div>' +
-      '<button onclick="startChal(\'' + s.cat + '\',' + s.reward + ')">День без «' + catById(s.cat).name + '» (+' + s.reward + '⭐)</button></div>';
+      '<button onclick="startChal(\'' + s.cat + '\',' + s.reward + ')">' + capFirst('день без ' + catGenitive(s.cat)) + ' (+' + s.reward + '⭐)</button></div>';
   }
   html += '</div>';
   box.innerHTML = html;
@@ -5361,10 +7428,6 @@ document.getElementById('viewSave').classList.add('animin');
 greetCheck();
 setTimeout(checkEvening, 2500);   // итог дня — после приветствий
 maybeBackup();
-</script>
-<script>
-// OneSignal сам регистрирует OneSignalSDKWorker.js — наша задача только
-// иногда проверять есть ли уже активный воркер и не мешать ему
 </script>
 </body>
 </html>
