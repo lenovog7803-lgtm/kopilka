@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#e8ecf4">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -24,6 +24,11 @@
     -webkit-user-select:text; -moz-user-select:text; -ms-user-select:text; user-select:text;
     -webkit-touch-callout:default;
   }
+  /* никакого зума пальцами и двойным тапом — разрешён только вертикальный скролл */
+  html, body { touch-action: pan-y; -ms-touch-action: pan-y; }
+  /* на кликабельном — manipulation: убирает задержку и двойной тап-зум */
+  button, a, .q-tile, .chip, .pchip, .dchip, .tab, .cat, .hcat-row, .hcat-custom,
+  .stat, .limit-box, .wd-strip, .hcal-day, .hc-day, .fr-ico, .flame { touch-action: manipulation; }
 
   :root {
     --text: #1c1c2e;
@@ -224,7 +229,11 @@
 
   /* ---- хомяк ---- */
   .ham-wrap { display:flex; justify-content:center; padding:6px 0 2px; }
-  #hamSvg { overflow:visible; cursor:pointer; filter: drop-shadow(0 10px 20px rgba(205,165,105,.3)); }
+  /* на узком экране хомяк ужимается, а не выдавливает текст */
+  #hamSvg {
+    overflow:visible; cursor:pointer; filter: drop-shadow(0 10px 20px rgba(205,165,105,.3));
+    width:200px; max-width:42vw; height:auto; flex-shrink:0;
+  }
   /* бодрый хомяк: мягкое пружинистое дыхание-подскок */
   #hamSvg.fit #hamAll { animation: hamBob 1.1s ease-in-out infinite alternate; }
   @keyframes hamBob { to { transform: translateY(-3px) scale(1.015, .99); } }
@@ -239,9 +248,12 @@
     transform-origin: 115px 133px;
     transition: transform .9s cubic-bezier(.22,1,.36,1);
   }
-  #hamCheeks { transform-origin: 115px 103px; transition: transform .9s; }
-  #hamCheeks.cheekPop { animation: cheekP .5s ease; }
-  @keyframes cheekP { 40% { transform: scale(1.28); } }
+  /* каждая щека пухнет вокруг себя, а не отъезжает от головы */
+  #cheekL { transform-origin: 93px 104px; }
+  #cheekR { transform-origin: 137px 104px; }
+  #cheekL, #cheekR { transform: scale(var(--cheek, 1)); transition: transform .9s; }
+  #hamCheeks.cheekPop #cheekL, #hamCheeks.cheekPop #cheekR { animation: cheekP .5s ease; }
+  @keyframes cheekP { 40% { transform: scale(calc(var(--cheek, 1) * 1.2)); } }
 
   /* моргание (на внутренней группе, дёрганье глаз — на обёртке) */
   #hamEyes { animation: hamBlink 5.6s infinite; transform-origin: 115px 96px; }
@@ -302,7 +314,11 @@
   #cheekL, #cheekR { transform-origin: center; transform-box: fill-box; }
   #hamSvg.stashL #cheekL { animation: cheekStash .85s cubic-bezier(.3,1.6,.4,1); }
   #hamSvg.stashR #cheekR { animation: cheekStash .85s cubic-bezier(.3,1.6,.4,1); }
-  @keyframes cheekStash { 30% { transform: scale(1.55); } 55% { transform: scale(1.15); } 75% { transform: scale(1.32); } }
+  @keyframes cheekStash {
+    30% { transform: scale(calc(var(--cheek, 1) * 1.3)); }
+    55% { transform: scale(calc(var(--cheek, 1) * 1.05)); }
+    75% { transform: scale(calc(var(--cheek, 1) * 1.16)); }
+  }
   /* праздник похудения: отряхивается */
   #hamSvg.shakeoff #hamAll { animation: hamShakeOff .9s ease; }
   @keyframes hamShakeOff {
@@ -1106,6 +1122,7 @@
     /* вечные микро-анимации SVG заставляют перерисовывать зверей каждый кадр */
     #tail, #ear, #hamWhisk { animation: none; }
     .wave-move, .wave-move2, .bub, #shineEl { animation: none; }
+    #fdLiquid { transition: none; }
     /* анимации теней — самое дорогое: на телефоне статичный вариант */
     .env.rich .face.front {
       animation: none;
@@ -1787,6 +1804,297 @@
   }
   .hcat-row:last-child { margin-bottom:0; }
   .hcat-row:active { background:rgba(120,140,180,.16); }
+  /* ================= вкладка «Питание» ================= */
+  /* четыре вкладки в ряд — шрифт мельче */
+  .tabbar .tab { font-size:13px; padding-left:4px; padding-right:4px; }
+  @media (max-width:380px) { .tabbar .tab { font-size:12px; } }
+  /* первый вход: анкета */
+  .fd-setup-ico { display:flex; justify-content:center; margin-bottom:10px; }
+  .fd-setup-h { font-size:17px; font-weight:800; text-align:center; margin-bottom:5px; }
+  .fd-setup-p { font-size:13px; color:var(--text2); text-align:center; line-height:1.45; margin-bottom:14px; }
+  .fd-setup-btn, .fd-ok {
+    display:block; width:100%; border:none; cursor:pointer; font-family:inherit;
+    font-size:15px; font-weight:700; padding:13px 0; border-radius:16px; color:#fff;
+    background:linear-gradient(160deg,#5fe08a,#26a349);
+    box-shadow:0 6px 15px rgba(38,163,73,.3);
+  }
+  .fd-ok { box-shadow:none; }
+  .fd-setup-btn:active, .fd-ok:active { transform:scale(.97); }
+  /* переключатель даты */
+  .fd-datebar { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
+  .fd-dnav {
+    width:32px; height:32px; border-radius:50%; border:none; cursor:pointer; flex-shrink:0;
+    font-size:17px; font-weight:700; color:#1d7a3c; background:rgba(38,163,73,.12);
+    display:flex; align-items:center; justify-content:center; font-family:inherit;
+  }
+  .fd-dnav:active { transform:scale(.9); }
+  .fd-dnav:disabled { opacity:.3; }
+  .fd-date { flex:1; text-align:center; font-size:14px; font-weight:700; color:var(--text); cursor:pointer; }
+  /* круг-стакан */
+  .fd-hero { gap:12px; }
+  .fd-circle-wrap { position:relative; width:200px; height:200px; }
+  .fd-circle { display:block; }
+  /* уровень поднимается плавно, а не прыгает */
+  #fdLiquid { transition: transform 1s cubic-bezier(.34,.9,.35,1); }
+  /* всплеск в момент добавления еды */
+  .fd-circle-wrap.splash #fdLiquid .wave-move  { animation: waveSlide 3.4s linear infinite, fdSplash .85s ease-out; }
+  .fd-circle-wrap.splash #fdLiquid .wave-move2 { animation: waveSlide 5.2s linear infinite reverse, fdSplash .85s ease-out .06s; }
+  @keyframes fdSplash {
+    0%   { transform: translateX(0) translateY(0)   scaleY(1); }
+    28%  { transform: translateX(0) translateY(-9px) scaleY(1.35); }
+    55%  { transform: translateX(0) translateY(4px)  scaleY(.82); }
+    78%  { transform: translateX(0) translateY(-2px) scaleY(1.1); }
+    100% { transform: translateX(0) translateY(0)   scaleY(1); }
+  }
+  .fd-circle-wrap.splash .fd-circle { animation: fdNudge .5s ease-out; }
+  @keyframes fdNudge { 0%,100% { transform:scale(1); } 35% { transform:scale(1.035); } }
+  .fd-center {
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; pointer-events:none; text-align:center;
+  }
+  .fd-left { font-size:40px; font-weight:800; letter-spacing:-1.4px; line-height:1; color:var(--text); font-variant-numeric:tabular-nums; }
+  .fd-left-lab { font-size:11.5px; color:var(--text2); margin-top:3px; font-weight:600; }
+  .fd-formula { font-size:11px; color:var(--text2); margin-top:5px; opacity:.85; }
+  .fd-circle-wrap.over .fd-left { color:#c33; }
+  /* БЖУ */
+  .fd-macros { display:flex; gap:9px; width:100%; }
+  .fd-macro { flex:1; }
+  .fd-m-head { display:flex; justify-content:space-between; align-items:baseline; font-size:11.5px; color:var(--text2); font-weight:600; margin-bottom:4px; }
+  .fd-m-head b { font-size:12px; color:var(--text); font-variant-numeric:tabular-nums; }
+  .fd-m-bar { height:6px; border-radius:3px; background:rgba(120,130,160,.16); overflow:hidden; }
+  .fd-m-bar i { display:block; height:100%; border-radius:3px; transition:width .6s cubic-bezier(.22,1,.36,1); }
+  .fd-m-bar i.m-p { background:linear-gradient(90deg,#5fe08a,#26a349); }
+  .fd-m-bar i.m-f { background:linear-gradient(90deg,#ffd36a,#f0a72e); }
+  .fd-m-bar i.m-c { background:linear-gradient(90deg,#8fb8ff,#4a7fe0); }
+  .fd-m-bar i.over { background:linear-gradient(90deg,#ff8080,#d63a3a) !important; }
+  /* вода и сожжённое */
+  .fd-extra { display:flex; gap:9px; width:100%; }
+  .fd-ex {
+    flex:1; display:flex; align-items:center; gap:7px; padding:9px 11px; border-radius:14px;
+    background:rgba(255,255,255,.45); border:1px solid rgba(255,255,255,.6);
+  }
+  #fdWaterBox { cursor:pointer; }
+  #fdWaterBox:active { transform:scale(.97); }
+  .fd-ex-t { flex:1; font-size:12px; color:var(--text2); font-weight:600; }
+  .fd-ex b { font-size:13.5px; font-weight:800; font-variant-numeric:tabular-nums; }
+  /* приёмы пищи */
+  /* новые окна питания */
+  #repeatModal, #dishModal, #quickModal, #rowMenu {
+    position:fixed; inset:0; z-index:130; display:none;
+    align-items:flex-start; justify-content:center; padding:12vh 16px 16px;
+    background:rgba(20,26,40,.45); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
+  }
+  #repeatModal.show, #dishModal.show, #quickModal.show, #rowMenu.show { display:flex; }
+  #dishModal input, #quickModal input {
+    width:100%; border:1px solid rgba(120,130,160,.3); background:#fff; border-radius:14px;
+    padding:11px 13px; font-size:15px; font-family:inherit; color:var(--text); outline:none; margin-bottom:10px;
+  }
+  #dishModal input:focus, #quickModal input:focus { border-color:rgba(38,163,73,.6); }
+  /* повтор приёма */
+  .rp-opt {
+    display:flex; align-items:center; gap:10px; padding:11px 12px; border-radius:14px; cursor:pointer;
+    background:rgba(255,255,255,.6); border:1px solid rgba(255,255,255,.8); margin-bottom:8px;
+  }
+  .rp-opt:active { transform:scale(.985); }
+  .rp-opt-n { flex:1; min-width:0; }
+  .rp-opt-d { font-size:11px; color:var(--text2); font-weight:700; text-transform:uppercase; letter-spacing:.3px; }
+  .rp-opt-l { font-size:13px; color:var(--text); margin-top:2px; line-height:1.35; }
+  .rp-opt-k { font-size:13px; font-weight:800; color:#1d7a3c; flex-shrink:0; font-variant-numeric:tabular-nums; }
+  /* блюдо */
+  .dish-items { margin:2px 0 10px; }
+  .dish-row { display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:12px; background:rgba(255,255,255,.55); margin-bottom:6px; }
+  .dish-row-n { flex:1; min-width:0; font-size:13px; }
+  .dish-row-g { font-size:11.5px; color:var(--text2); }
+  .dish-row-x { border:none; background:none; color:var(--text2); font-size:15px; cursor:pointer; padding:2px 4px; }
+  .dish-total {
+    padding:9px 12px; border-radius:13px; background:rgba(38,163,73,.1);
+    font-size:12.5px; font-weight:700; color:#1d7a3c; text-align:center; margin-bottom:10px;
+  }
+  .dish-total:empty { display:none; }
+  .fa-dish { border-color:rgba(90,120,255,.4) !important; background:linear-gradient(135deg, rgba(120,150,255,.2), rgba(70,110,255,.14)) !important; color:#2b46a8 !important; }
+  /* просто калории */
+  .qk-more {
+    display:block; width:100%; margin:8px 0 2px; padding:10px; border:none; border-radius:13px;
+    background:rgba(255,255,255,.55); color:var(--text2); font-size:12.5px; font-weight:700; cursor:pointer;
+  }
+  /* меню строки */
+  .rm-sec { font-size:11px; font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:.4px; margin:6px 0 7px; }
+  .rm-acts { display:flex; flex-direction:column; gap:6px; margin-top:12px; }
+  .rm-act {
+    width:100%; padding:12px; border:none; border-radius:14px; cursor:pointer;
+    background:rgba(255,255,255,.6); color:var(--text); font-size:13.5px; font-weight:700; font-family:inherit;
+  }
+  .rm-act.danger { color:#c33; }
+  .rm-act:active { transform:scale(.985); }
+  .fd-row.pressed { background:rgba(38,163,73,.1); border-radius:12px; }
+  /* чем добрать */
+  .fd-tip-sub { font-size:12.5px; color:var(--text2); margin:-4px 0 10px; line-height:1.4; }
+  .fd-tips { display:flex; flex-direction:column; gap:7px; }
+  .fd-tip {
+    display:flex; align-items:center; gap:10px; padding:11px 12px; border-radius:14px; cursor:pointer;
+    background:rgba(255,255,255,.55); border:1px solid rgba(255,255,255,.75); text-align:left;
+    font-family:inherit; width:100%;
+  }
+  .fd-tip:active { transform:scale(.985); }
+  .fd-tip-n { flex:1; min-width:0; font-size:13.5px; font-weight:700; color:var(--text); }
+  .fd-tip-g { display:block; font-size:11px; color:var(--text2); font-weight:600; margin-top:2px; }
+  .fd-tip-k { font-size:12.5px; font-weight:800; color:#1d7a3c; flex-shrink:0; font-variant-numeric:tabular-nums; }
+  .pt-mode { display:flex; gap:6px; margin:0 0 12px; }
+  .pt-mode .pchip { flex:1; font-size:13px; padding:9px 4px; }
+  .fd-meal-head { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+  .fd-meal-name { flex:1; font-size:14px; font-weight:800; }
+  .fd-meal-kcal { font-size:12.5px; color:var(--text2); font-weight:700; font-variant-numeric:tabular-nums; }
+  .fd-meal-rep {
+    border:none; border-radius:11px; padding:6px 10px; cursor:pointer; font-family:inherit;
+    background:rgba(38,163,73,.12); color:#1d7a3c; font-size:11.5px; font-weight:700; flex-shrink:0;
+  }
+  .fd-meal-rep:active { transform:scale(.95); }
+  .fd-meal-add {
+    width:28px; height:28px; border-radius:50%; border:none; cursor:pointer; flex-shrink:0;
+    font-size:17px; font-weight:800; line-height:1; color:#fff; font-family:inherit;
+    background:linear-gradient(160deg,#5fe08a,#26a349);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .fd-meal-add:active { transform:scale(.9); }
+  .fd-row {
+    display:flex; align-items:center; gap:9px; padding:8px 4px;
+    border-bottom:1px solid rgba(120,130,160,.12); font-size:13px;
+  }
+  .fd-row:last-child { border-bottom:none; }
+  .fd-row-n { flex:1; min-width:0; }
+  .fd-row-name { font-weight:600; color:var(--text); }
+  .fd-row-sub { font-size:11px; color:var(--text2); margin-top:1px; }
+  .fd-row-k { font-weight:800; font-size:13px; font-variant-numeric:tabular-nums; flex-shrink:0; }
+  .fd-row-x {
+    width:22px; height:22px; border-radius:50%; border:none; cursor:pointer; flex-shrink:0;
+    font-size:12px; color:rgba(200,60,60,.7); background:rgba(200,60,60,.1); font-family:inherit;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .fd-row-x:active { background:rgba(200,60,60,.25); }
+  .fd-empty { font-size:12.5px; color:var(--text2); padding:6px 4px; }
+  .fd-sec { display:flex; align-items:center; justify-content:space-between; }
+  .fd-add-w {
+    border:none; cursor:pointer; font-family:inherit; font-size:12px; font-weight:700;
+    color:#1d7a3c; background:rgba(38,163,73,.12); border-radius:11px; padding:6px 11px;
+  }
+  .fd-add-w:active { transform:scale(.94); }
+  /* вес */
+  .fd-w-now { display:flex; align-items:baseline; gap:8px; margin-bottom:8px; }
+  .fd-w-val { font-size:26px; font-weight:800; letter-spacing:-.6px; font-variant-numeric:tabular-nums; }
+  .fd-w-unit { font-size:13px; color:var(--text2); }
+  .fd-w-delta { font-size:12.5px; font-weight:700; }
+  .fd-w-delta.down { color:#26a349; }
+  .fd-w-delta.up { color:#d63a3a; }
+  .fd-w-goal { font-size:12px; color:var(--text2); margin-top:2px; }
+  /* неделя */
+  .fd-week { display:grid; grid-template-columns:repeat(7,1fr); gap:5px; align-items:end; }
+  .fd-wd { text-align:center; }
+  .fd-wd-bar { height:56px; display:flex; align-items:flex-end; justify-content:center; }
+  .fd-wd-bar i {
+    display:block; width:70%; border-radius:5px 5px 3px 3px; min-height:3px;
+    background:linear-gradient(180deg,#5fe08a,#26a349); transition:height .6s cubic-bezier(.22,1,.36,1);
+  }
+  .fd-wd-bar i.over { background:linear-gradient(180deg,#ff8080,#d63a3a); }
+  .fd-wd-bar i.empty { background:rgba(120,130,160,.18); }
+  .fd-wd-lab { font-size:9px; color:var(--text2); text-transform:uppercase; margin-top:4px; font-weight:600; }
+  .fd-wd.today .fd-wd-lab { color:#1d7a3c; font-weight:800; }
+  .fd-wd-k { font-size:9.5px; color:var(--text2); font-variant-numeric:tabular-nums; }
+  /* модалки питания */
+  #foodAddModal, #portionModal, #myFoodModal, #foodWizard {
+    position:fixed; inset:0; z-index:110; display:none;
+    align-items:flex-start; justify-content:center; padding-top:9vh;
+    background:rgba(30,32,50,.35);
+    -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
+  }
+  #portionModal, #myFoodModal { z-index:120; padding-top:16vh; }
+  #foodAddModal.show, #portionModal.show, #myFoodModal.show, #foodWizard.show { display:flex; }
+  .fa-card { max-height:80vh; display:flex; flex-direction:column; }
+  .fa-search { margin-bottom:10px; flex-shrink:0; }
+  .fa-list { flex:1; overflow-y:auto; min-height:0; }
+  .fa-cat-title {
+    display:flex; align-items:center; justify-content:space-between; cursor:pointer;
+    font-size:11px; font-weight:700; color:var(--text2); text-transform:uppercase;
+    letter-spacing:.4px; padding:8px 2px 5px;
+  }
+  .fa-item {
+    display:flex; align-items:center; gap:9px; padding:9px 11px; border-radius:13px;
+    background:rgba(120,140,180,.07); margin-bottom:6px; cursor:pointer;
+  }
+  .fa-item:active { background:rgba(120,140,180,.16); }
+  .fa-item-n { flex:1; min-width:0; font-size:13.5px; font-weight:600; }
+  .fa-item-k { font-size:12px; color:var(--text2); font-variant-numeric:tabular-nums; flex-shrink:0; }
+  .fa-item-m { font-size:10.5px; color:var(--text2); opacity:.8; margin-top:1px; }
+  .fa-my {
+    display:flex; align-items:center; gap:9px; padding:10px 12px; border-radius:14px; cursor:pointer;
+    background:linear-gradient(135deg, rgba(95,224,138,.22), rgba(38,163,73,.16));
+    border:1.5px dashed rgba(38,163,73,.4); margin-bottom:10px;
+    font-size:13.5px; font-weight:700; color:#1d7a3c;
+  }
+  .fa-none { font-size:13px; color:var(--text2); text-align:center; padding:14px 0; }
+  /* порция */
+  .pt-sub { font-size:12px; color:var(--text2); text-align:center; margin:0 0 12px; line-height:1.4; white-space:pre-line; }
+  .pt-grams {
+    font-size:30px !important; font-weight:800 !important; text-align:center;
+    letter-spacing:-.8px; padding:13px 12px !important; font-variant-numeric:tabular-nums;
+  }
+  .pt-unit { text-align:center; font-size:12px; color:var(--text2); margin-top:5px; font-weight:600; }
+  #ptPresets { margin-top:11px; }
+  #ptPresets .pchip { font-size:12.5px; padding:9px 2px; }
+  .pt-preview {
+    margin-top:12px; padding:10px; border-radius:14px; text-align:center;
+    background:rgba(38,163,73,.1); font-size:12.5px; font-weight:700; color:#1d7a3c;
+  }
+  .pt-preview:empty { display:none; }
+  /* свой продукт и анкета */
+  .mf-grid { display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-top:10px; }
+  .mf-lab { display:block; font-size:10.5px; font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:.3px; margin:0 0 4px 3px; }
+  #myFoodModal input, #foodWizard input {
+    width:100%; border:1px solid rgba(120,130,160,.3); background:#fff; border-radius:14px;
+    padding:11px 13px; font-size:15px; font-family:inherit; color:var(--text); outline:none;
+  }
+  #myFoodModal input:focus, #foodWizard input:focus { border-color:rgba(38,163,73,.6); }
+  /* карточки внутри питания живут в обычной колонке — те же отступы, что и на других вкладках */
+  #foodMain, #fdMeals { display:flex; flex-direction:column; gap:16px; }
+  .fd-week { display:flex; align-items:flex-end; justify-content:space-between; gap:5px; padding-top:4px; }
+  .fd-wd { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .fd-wd-bar { height:56px; display:flex; align-items:flex-end; width:100%; }
+  .fd-wd-bar i {
+    display:block; width:100%; border-radius:6px 6px 3px 3px;
+    background:linear-gradient(180deg,#5fe08a,#26a349); transition:height .35s cubic-bezier(.4,1.4,.5,1);
+  }
+  .fd-wd-bar i.over { background:linear-gradient(180deg,#ff8080,#d63a3a); }
+  .fd-wd-bar i.empty { background:rgba(0,0,0,.07); }
+  .fd-wd-k { font-size:10.5px; color:var(--text2); font-variant-numeric:tabular-nums; }
+  .fd-wd-lab { font-size:11px; color:var(--text2); font-weight:600; }
+  .fd-wd.today .fd-wd-lab { color:#26a349; }
+  .fd-w-now { display:flex; align-items:baseline; gap:6px; }
+  .fd-w-val { font-size:30px; font-weight:800; color:var(--text); letter-spacing:-.5px; }
+  .fd-w-unit { font-size:14px; color:var(--text2); font-weight:600; }
+  .fd-w-delta { margin-left:auto; font-size:13px; font-weight:700; }
+  .fd-w-delta.down { color:#26a349; }
+  .fd-w-delta.up { color:#d68b1f; }
+  .fd-w-goal { font-size:12.5px; color:var(--text2); margin-top:3px; }
+  .fw-acts { display:flex; flex-direction:column; gap:7px; }
+  .fw-act {
+    text-align:left; border:1.5px solid rgba(150,165,200,.35); cursor:pointer; font-family:inherit;
+    background:rgba(255,255,255,.55); border-radius:14px; padding:10px 13px;
+  }
+  .fw-act b { display:block; font-size:13.5px; font-weight:700; color:var(--text); }
+  .fw-act small { display:block; font-size:11px; color:var(--text2); margin-top:1px; }
+  .fw-act.sel { background:rgba(38,163,73,.12); border-color:#26a349; }
+  .fw-act.sel b { color:#1d7a3c; }
+  #foodWizard .pchip.sel {
+    background:linear-gradient(135deg,#5fe08a,#26a349);
+    color:#fff; border-color:transparent;
+    box-shadow:0 5px 14px rgba(38,163,73,.32);
+  }
+  .fw-pace { margin-top:10px; padding:9px 12px; border-radius:13px; background:rgba(38,163,73,.1); font-size:12px; font-weight:600; color:#1d7a3c; text-align:center; }
+  .fw-pace:empty { display:none; }
+  .fw-pace.warn { background:rgba(224,115,15,.13); color:#a85c0c; }
+  .fw-result { padding:14px; border-radius:16px; background:rgba(38,163,73,.1); text-align:center; }
+  .fw-r-k { font-size:34px; font-weight:800; letter-spacing:-1px; color:#1d7a3c; line-height:1; }
+  .fw-r-lab { font-size:11.5px; color:var(--text2); margin-top:3px; font-weight:600; }
+  .fw-r-m { font-size:12.5px; color:var(--text2); margin-top:8px; font-weight:600; }
   .hcat-ico { font-size:22px; display:flex; align-items:center; justify-content:center; width:30px; }
   .hcat-ico svg { width:28px; height:26px; display:block; }
   .hcat-name { font-size:13.5px; font-weight:600; color:var(--text); flex:1; }
@@ -1906,15 +2214,19 @@
   .flame-wrap { position:relative; flex-shrink:0; }
   .flame-info { position:relative; z-index:2; display:flex; flex-direction:column; align-items:flex-start; justify-content:center; align-self:center; text-align:left; flex:1; min-width:0; }
   .flame-info .fi-today { font-size:19px; font-weight:800; letter-spacing:-.3px; }
-  .fi-bar-row { display:flex; align-items:center; gap:7px; width:100%; margin-top:8px; }
-  /* бару гарантирован минимум ширины, иконки не могут его съесть */
-  .fi-bar { flex:1 1 auto; min-width:56px; height:6px; border-radius:3px; background:rgba(120,130,160,.18); overflow:hidden; }
+  .fi-bar-row { display:flex; align-items:center; width:100%; margin-top:8px; }
+  .fi-bar { flex:1 1 auto; min-width:0; height:6px; border-radius:3px; background:rgba(120,130,160,.18); overflow:hidden; }
   .fi-bar i { display:block; height:100%; border-radius:3px; background:linear-gradient(90deg,#ffb056,#f2632a); transition: width .6s cubic-bezier(.22,1,.36,1); }
-  .fi-rem-icons { display:flex; align-items:center; gap:4px; flex:0 0 auto; max-width:56%; overflow:hidden; }
+  /* невыполненные — отдельной строкой под баром: переносятся, за карточку не вылезают */
+  .fi-rem-icons {
+    display:flex; align-items:center; gap:4px; flex-wrap:wrap;
+    width:100%; max-width:100%; min-width:0; margin-top:7px;
+  }
+  .fi-rem-icons:empty { display:none; margin-top:0; }
   .flame-info .fi-streak { font-size:14.5px; font-weight:700; color:#c76a1a; margin-top:7px; }
   .flame-info .fi-record { font-size:12.5px; color:var(--text2); margin-top:4px; }
   .fi-remaining { display:flex; align-items:center; gap:5px; margin-top:7px; flex-wrap:wrap; font-size:12.5px; font-weight:700; color:var(--text2); }
-  .fr-ico { cursor:pointer; background:rgba(255,150,50,.13); border-radius:9px; padding:2px 4px; display:inline-flex; align-items:center; transition: transform .15s; }
+  .fr-ico { cursor:pointer; background:rgba(255,150,50,.13); border-radius:9px; padding:2px 4px; display:inline-flex; align-items:center; transition: transform .15s; flex:0 0 auto; }
   .fr-ico:active { transform: scale(.85); }
   .fr-ico svg { width:22px; height:20px; display:block; }
   .fr-ico .q-before:not(.show), .fr-ico .q-after:not(.show),
@@ -1946,6 +2258,10 @@
   .hd-st.ok { color:#30d158; }
   .hd-st.no { color:rgba(200,60,60,.8); }
   .hd-empty { font-size:13px; color:var(--text2); text-align:center; padding:8px 0; }
+  /* плитка плавно прижимается, пока держишь палец */
+  #habitsGrid .q-tile { transition: transform .45s cubic-bezier(.3,.8,.4,1), filter .45s; }
+  #habitsGrid .q-tile.q-hold { transform: scale(.93); filter: brightness(.96); }
+  .flame.hold { transform: scale(.95); transition: transform .45s cubic-bezier(.3,.8,.4,1); }
   .q-tile.q-hint { animation: qHint 1.2s ease 2; }
   @keyframes qHint { 0%,100% { box-shadow:none; transform:scale(1); } 50% { box-shadow:0 0 0 3px rgba(242,99,42,.55), 0 8px 20px rgba(242,99,42,.3); transform:scale(1.06); } }
   .hcal-week-wrap { width:100%; margin-top:6px; }
@@ -2043,6 +2359,7 @@
     <button class="tab active" id="tabSave" onclick="switchTab('save')">Копилка</button>
     <button class="tab" id="tabSpend" onclick="switchTab('spend')">Расходы</button>
     <button class="tab" id="tabHabits" onclick="switchTab('habits')">Привычки</button>
+    <button class="tab" id="tabFood" onclick="switchTab('food')">Питание</button>
   </div>
 
   <div class="view" id="viewSave">
@@ -2276,8 +2593,8 @@
                 <!-- блик -->
                 <ellipse cx="101" cy="88" rx="12" ry="5.5" fill="rgba(255,255,255,.5)" transform="rotate(-20 101 88)"/>
                 <g id="hamCheeks">
-                  <ellipse id="cheekL" cx="86"  cy="103" rx="11" ry="10" fill="#f7dcb8"/>
-                  <ellipse id="cheekR" cx="144" cy="103" rx="11" ry="10" fill="#f7dcb8"/>
+                  <ellipse id="cheekL" cx="93"  cy="104" rx="9.5" ry="8.5" fill="#f7dcb8"/>
+                  <ellipse id="cheekR" cx="137" cy="104" rx="9.5" ry="8.5" fill="#f7dcb8"/>
                 </g>
                 <!-- румянец -->
                 <ellipse cx="93"  cy="108" rx="6" ry="4" fill="rgba(255,110,145,.3)"/>
@@ -2394,7 +2711,8 @@
         <div class="flame-wrap">
         <div class="flame-aura" id="flameAura"></div>
         <svg class="flame" id="flameSvg" viewBox="0 0 140 172" width="146" height="179"
-             onpointerdown="flamePressStart()" onpointerup="flamePressEnd()" onpointerleave="flamePressEnd()">
+             onpointerdown="flamePressStart(event)" onpointermove="flamePressMove(event)"
+             onpointerup="flamePressEnd()" onpointerleave="flamePressEnd()" onpointercancel="flamePressEnd()">
           <defs>
             <mask id="flBodyMask">
               <rect x="0" y="0" width="140" height="172" fill="#fff"/>
@@ -2467,8 +2785,8 @@
           </div>
           <div class="fi-bar-row" id="fiBarRow" style="display:none">
             <div class="fi-bar"><i id="fiBarFill" style="width:0%"></i></div>
-            <span class="fi-rem-icons" id="fiRemaining"></span>
           </div>
+          <div class="fi-rem-icons" id="fiRemaining"></div>
           <div class="fi-streak" id="fiStreak" style="display:none"></div>
           <div class="fi-record" id="fiRecord" style="display:none"></div>
           <div class="fi-phrase" id="fiPhrase" style="display:none"></div>
@@ -2489,6 +2807,124 @@
       <div class="q-grid" id="habitsGrid" style="grid-template-columns:repeat(3,1fr)"></div>
     </div>
   </div><!-- /viewHabits -->
+
+  <!-- ---- питание (КБЖУ) ---- -->
+  <div class="view" id="viewFood" style="display:none">
+    <!-- анкета не заполнена -->
+    <div class="card" id="foodSetupCard" style="display:none">
+      <div class="fd-setup-ico">
+        <svg viewBox="0 0 44 44" width="44" height="44" aria-hidden="true">
+          <circle cx="22" cy="22" r="19" fill="none" stroke="#30d158" stroke-width="3"/>
+          <path d="M13 23 l6 6 l12 -14" fill="none" stroke="#30d158" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h3 class="fd-setup-h">Считаем твою норму</h3>
+      <p class="fd-setup-p">Пара вопросов — и приложение посчитает калории и БЖУ на день</p>
+      <button class="fd-setup-btn" onclick="openFoodWizard()">Заполнить анкету</button>
+    </div>
+
+    <div id="foodMain" style="display:none">
+      <!-- дата -->
+      <div class="fd-datebar">
+        <button class="fd-dnav" onclick="fdShiftDay(-1)" aria-label="Предыдущий день">‹</button>
+        <div class="fd-date" id="fdDateLabel" onclick="fdGoToday()">Сегодня</div>
+        <button class="fd-dnav" id="fdNextBtn" onclick="fdShiftDay(1)" aria-label="Следующий день">›</button>
+      </div>
+
+      <!-- круг-стакан -->
+      <div class="card hero fd-hero">
+        <div class="fd-circle-wrap">
+          <svg class="fd-circle" id="fdCircle" viewBox="0 0 200 200" width="200" height="200">
+            <defs>
+              <clipPath id="fdClip"><circle cx="100" cy="100" r="92"/></clipPath>
+              <linearGradient id="fdLiq" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#5fe08a"/><stop offset="1" stop-color="#26a349"/>
+              </linearGradient>
+              <linearGradient id="fdLiqOver" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#ff8080"/><stop offset="1" stop-color="#d63a3a"/>
+              </linearGradient>
+            </defs>
+            <circle cx="100" cy="100" r="92" fill="rgba(255,255,255,.5)" stroke="rgba(255,255,255,.9)" stroke-width="3"/>
+            <g clip-path="url(#fdClip)">
+              <g id="fdLiquid" style="transform:translateY(200px)">
+                <g class="wave-move2">
+                  <path fill="url(#fdLiq)" opacity=".55" d="M-200 30 Q-175 12 -150 30 T-100 30 T-50 30 T0 30 T50 30 T100 30 T150 30 T200 30 T250 30 T300 30 T350 30 T400 30 L400 260 L-200 260 Z"/>
+                </g>
+                <g class="wave-move">
+                  <path id="fdWave" fill="url(#fdLiq)" d="M-200 24 Q-175 6 -150 24 T-100 24 T-50 24 T0 24 T50 24 T100 24 T150 24 T200 24 T250 24 T300 24 T350 24 T400 24 L400 260 L-200 260 Z"/>
+                </g>
+              </g>
+            </g>
+            <ellipse cx="66" cy="52" rx="26" ry="12" fill="rgba(255,255,255,.4)" transform="rotate(-24 66 52)"/>
+          </svg>
+          <div class="fd-center">
+            <div class="fd-left" id="fdLeft">0</div>
+            <div class="fd-left-lab" id="fdLeftLab">ккал осталось</div>
+            <div class="fd-formula" id="fdFormula"></div>
+          </div>
+        </div>
+
+        <!-- БЖУ -->
+        <div class="fd-macros">
+          <div class="fd-macro">
+            <div class="fd-m-head"><span>Белки</span><b id="fdPVal">0</b></div>
+            <div class="fd-m-bar"><i id="fdPBar" class="m-p"></i></div>
+          </div>
+          <div class="fd-macro">
+            <div class="fd-m-head"><span>Жиры</span><b id="fdFVal">0</b></div>
+            <div class="fd-m-bar"><i id="fdFBar" class="m-f"></i></div>
+          </div>
+          <div class="fd-macro">
+            <div class="fd-m-head"><span>Углеводы</span><b id="fdCVal">0</b></div>
+            <div class="fd-m-bar"><i id="fdCBar" class="m-c"></i></div>
+          </div>
+        </div>
+
+        <!-- вода и сожжённое -->
+        <div class="fd-extra">
+          <div class="fd-ex" id="fdWaterBox" onclick="fdAddWater()">
+            <svg width="18" height="20" viewBox="0 0 18 20" aria-hidden="true"><path d="M9 1 C5 7 2 10 2 13.2 A7 7 0 0 0 16 13.2 C16 10 13 7 9 1 Z" fill="#5ac8fa"/></svg>
+            <span class="fd-ex-t">Вода</span>
+            <b id="fdWaterVal">0/8</b>
+          </div>
+          <div class="fd-ex" id="fdBurnBox">
+            <svg width="18" height="20" viewBox="0 0 18 20" aria-hidden="true"><path d="M9 1 C6 6 4 8 4 11 C4 14 6.2 16 9 16 C11.8 16 14 14 14 11 C14 8 12 6 9 1 Z" fill="#f2712a"/></svg>
+            <span class="fd-ex-t">Сожжено</span>
+            <b id="fdBurnVal">0</b>
+          </div>
+        </div>
+      </div>
+
+      <!-- приёмы пищи -->
+      <div id="fdMeals"></div>
+
+      <!-- чем добрать норму -->
+      <div class="card fd-tip-card" id="fdTipCard" style="display:none">
+        <div class="section-title">Чем добрать</div>
+        <div class="fd-tip-sub" id="fdTipSub"></div>
+        <div class="fd-tips" id="fdTips"></div>
+      </div>
+
+      <!-- вес -->
+      <div class="card">
+        <div class="section-title fd-sec">
+          <span>Вес</span>
+          <button class="fd-add-w" onclick="fdAskWeight()">Записать</button>
+        </div>
+        <div id="fdWeightBox"></div>
+      </div>
+
+      <!-- неделя -->
+      <div class="card">
+        <div class="section-title">Неделя</div>
+        <div id="fdWeek"></div>
+      </div>
+
+      <div class="card more-btn" onclick="openFoodWizard()">
+        <span>Изменить анкету и цель</span><span class="more-arrow">›</span>
+      </div>
+    </div>
+  </div><!-- /viewFood -->
 </div>
 
 <div id="habitCalModal" onclick="if(event.target===this) closeHabitCalModal()">
@@ -2526,6 +2962,186 @@
     <div id="habitCatalogList"></div>
     <div class="modal-btns">
       <button class="m-cancel" onclick="closeAddHabitModal()">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<!-- добавление еды -->
+<div id="foodAddModal" onclick="if(event.target===this) closeFoodAdd()">
+  <div class="modal-card fa-card">
+    <h3 id="faTitle">Завтрак</h3>
+    <input id="faSearch" class="fa-search" placeholder="Найти продукт…" autocomplete="off" oninput="renderFoodList()">
+    <div id="faList" class="fa-list"></div>
+    <div class="modal-btns">
+      <button class="m-cancel" onclick="closeFoodAdd()">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<!-- сколько грамм -->
+<div id="portionModal" onclick="if(event.target===this) closePortion()">
+  <div class="modal-card">
+    <h3 id="ptName">Продукт</h3>
+    <p class="pt-sub" id="ptPer100"></p>
+    <div class="pt-mode" id="ptMode" style="display:none">
+      <button type="button" class="pchip" id="ptModePc" onclick="ptSetMode('pc')">шт</button>
+      <button type="button" class="pchip" id="ptModeG" onclick="ptSetMode('g')">граммы</button>
+    </div>
+    <input id="ptGrams" class="pt-grams" type="number" inputmode="decimal" min="0" max="3000" placeholder="100" oninput="updatePortionPreview()">
+    <div class="pt-unit" id="ptUnit">грамм</div>
+    <div class="preset-row" id="ptPresets"></div>
+    <div class="pt-preview" id="ptPreview"></div>
+    <div class="modal-btns">
+      <button class="m-cancel" onclick="closePortion()">Отмена</button>
+      <button class="m-ok fd-ok" onclick="savePortion()">Добавить</button>
+    </div>
+  </div>
+</div>
+
+<!-- свой продукт -->
+<div id="myFoodModal" onclick="if(event.target===this) closeMyFood()">
+  <div class="modal-card">
+    <h3>Свой продукт</h3>
+    <p class="pt-sub">Перепиши КБЖУ с упаковки — на 100 г</p>
+    <input id="mfName" maxlength="28" placeholder="Название" autocomplete="off">
+    <div class="mf-grid">
+      <div><label class="mf-lab">Ккал</label><input id="mfK" type="number" inputmode="numeric" min="0" max="900" placeholder="0"></div>
+      <div><label class="mf-lab">Белки</label><input id="mfP" type="number" inputmode="decimal" min="0" max="100" placeholder="0"></div>
+      <div><label class="mf-lab">Жиры</label><input id="mfF" type="number" inputmode="decimal" min="0" max="100" placeholder="0"></div>
+      <div><label class="mf-lab">Углеводы</label><input id="mfC" type="number" inputmode="decimal" min="0" max="100" placeholder="0"></div>
+    </div>
+    <div class="modal-btns">
+      <button class="m-cancel" onclick="closeMyFood()">Отмена</button>
+      <button class="m-ok fd-ok" onclick="saveMyFood()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- повторить приём -->
+<div id="repeatModal" onclick="if(event.target===this) closeRepeat()">
+  <div class="modal-card">
+    <h3 id="rpTitle">Повторить завтрак</h3>
+    <p class="pt-sub">Последние разы, когда ты это записывал</p>
+    <div class="fa-list" id="rpList"></div>
+    <div class="modal-btns">
+      <button class="m-cancel" onclick="closeRepeat()">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<!-- конструктор блюда -->
+<div id="dishModal" onclick="if(event.target===this) closeDish()">
+  <div class="modal-card">
+    <h3 id="dishTitle">Своё блюдо</h3>
+    <p class="pt-sub">Собери из продуктов — потом добавишь одной кнопкой</p>
+    <input id="dishName" type="text" maxlength="40" placeholder="Например: мой омлет">
+    <div class="dish-items" id="dishItems"></div>
+    <div class="dish-total" id="dishTotal"></div>
+    <button type="button" class="fa-my" onclick="dishAddProduct()">＋ Добавить продукт</button>
+    <div class="modal-btns">
+      <button class="m-cancel" onclick="closeDish()">Отмена</button>
+      <button class="m-ok fd-ok" onclick="saveDish()">Сохранить блюдо</button>
+    </div>
+  </div>
+</div>
+
+<!-- просто калории -->
+<div id="quickModal" onclick="if(event.target===this) closeQuick()">
+  <div class="modal-card">
+    <h3>Просто калории</h3>
+    <p class="pt-sub">Когда ел не дома и точного состава не знаешь</p>
+    <input id="qkName" type="text" maxlength="40" placeholder="Обед в кафе">
+    <input id="qkK" class="pt-grams" type="number" inputmode="numeric" min="1" max="5000" placeholder="450">
+    <div class="pt-unit">ккал</div>
+    <button type="button" class="qk-more" id="qkMoreBtn" onclick="qkToggleMacros()">Знаю БЖУ — дописать</button>
+    <div class="mf-grid" id="qkMacros" style="display:none">
+      <div><label class="mf-lab">Белки, г</label><input id="qkP" type="number" inputmode="decimal" min="0" max="300" placeholder="0"></div>
+      <div><label class="mf-lab">Жиры, г</label><input id="qkF" type="number" inputmode="decimal" min="0" max="300" placeholder="0"></div>
+      <div><label class="mf-lab">Углеводы, г</label><input id="qkC" type="number" inputmode="decimal" min="0" max="500" placeholder="0"></div>
+    </div>
+    <div class="modal-btns">
+      <button class="m-cancel" onclick="closeQuick()">Отмена</button>
+      <button class="m-ok fd-ok" onclick="saveQuick()">Добавить</button>
+    </div>
+  </div>
+</div>
+
+<!-- меню строки продукта -->
+<div id="rowMenu" onclick="if(event.target===this) closeRowMenu()">
+  <div class="modal-card">
+    <h3 id="rmTitle">Продукт</h3>
+    <p class="pt-sub" id="rmSub"></p>
+    <div class="rm-sec">Перенести в</div>
+    <div class="preset-row" id="rmMeals"></div>
+    <div class="rm-acts">
+      <button type="button" class="rm-act" onclick="rowMenuEdit()">Изменить порцию</button>
+      <button type="button" class="rm-act" onclick="rowMenuDup()">Дублировать</button>
+      <button type="button" class="rm-act danger" onclick="rowMenuDelete()">Удалить</button>
+    </div>
+    <div class="modal-btns">
+      <button class="m-cancel" onclick="closeRowMenu()">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<!-- анкета питания -->
+<div id="foodWizard">
+  <div class="modal-card g-card">
+    <div class="g-dots" id="fwDots"><i></i><i></i><i></i><i></i></div>
+    <h3 id="fwTitle">Кто ты?</h3>
+    <div class="g-sub" id="fwSub">шаг 1 из 4</div>
+
+    <div class="g-step" id="fwStep1">
+      <div class="preset-row" style="grid-template-columns:1fr 1fr">
+        <button type="button" class="pchip" data-sex="m">Мужчина</button>
+        <button type="button" class="pchip" data-sex="f">Женщина</button>
+      </div>
+      <div class="mf-grid" style="margin-top:12px">
+        <div><label class="mf-lab">Возраст</label><input id="fwAge" type="number" inputmode="numeric" min="10" max="100" placeholder="30"></div>
+        <div><label class="mf-lab">Рост, см</label><input id="fwHeight" type="number" inputmode="numeric" min="120" max="230" placeholder="175"></div>
+      </div>
+      <div style="margin-top:10px"><label class="mf-lab">Вес сейчас, кг</label><input id="fwWeight" type="number" inputmode="decimal" min="30" max="300" placeholder="75"></div>
+    </div>
+
+    <div class="g-step" id="fwStep2" style="display:none">
+      <div class="fw-acts" id="fwActs">
+        <button type="button" class="fw-act" data-a="1.2"><b>Сидячий</b><small>офис, мало движения</small></button>
+        <button type="button" class="fw-act" data-a="1.375"><b>Лёгкая активность</b><small>1–3 тренировки в неделю</small></button>
+        <button type="button" class="fw-act" data-a="1.55"><b>Средняя</b><small>3–5 тренировок в неделю</small></button>
+        <button type="button" class="fw-act" data-a="1.725"><b>Высокая</b><small>6–7 тренировок в неделю</small></button>
+        <button type="button" class="fw-act" data-a="1.9"><b>Очень высокая</b><small>физическая работа, спорт</small></button>
+      </div>
+    </div>
+
+    <div class="g-step" id="fwStep3" style="display:none">
+      <div class="preset-row">
+        <button type="button" class="pchip" data-goal="lose">Сбросить</button>
+        <button type="button" class="pchip" data-goal="keep">Удержать</button>
+        <button type="button" class="pchip" data-goal="gain">Набрать</button>
+      </div>
+      <div id="fwTargetBox" style="margin-top:12px">
+        <div class="mf-grid">
+          <div><label class="mf-lab">Целевой вес, кг</label><input id="fwTargetW" type="number" inputmode="decimal" min="30" max="300" placeholder="70"></div>
+          <div><label class="mf-lab">К дате</label><input id="fwTargetD" type="date"></div>
+        </div>
+        <div class="fw-pace" id="fwPace"></div>
+      </div>
+    </div>
+
+    <div class="g-step" id="fwStep4" style="display:none">
+      <div class="fw-result" id="fwResult"></div>
+      <p class="pt-sub" style="margin-top:10px">Можно поправить руками, если у тебя свои цифры</p>
+      <div class="mf-grid">
+        <div><label class="mf-lab">Ккал в день</label><input id="fwKcal" type="number" inputmode="numeric" min="800" max="6000" oninput="fwRecalcMacros()"></div>
+        <div><label class="mf-lab">Белки, г</label><input id="fwP" type="number" inputmode="numeric" min="0" max="400"></div>
+        <div><label class="mf-lab">Жиры, г</label><input id="fwF" type="number" inputmode="numeric" min="0" max="400"></div>
+        <div><label class="mf-lab">Углеводы, г</label><input id="fwC" type="number" inputmode="numeric" min="0" max="800"></div>
+      </div>
+    </div>
+
+    <div class="modal-btns">
+      <button class="m-cancel" id="fwBack" onclick="fwStepBack()">Отмена</button>
+      <button class="m-ok fd-ok" id="fwNext" onclick="fwStepNext()">Далее</button>
     </div>
   </div>
 </div>
@@ -2593,7 +3209,7 @@
     <div id="heCounterRow" style="display:none">
       <p class="he-lab">Сколько раз в день</p>
       <div class="extra-row">
-        <input type="number" id="heTarget" min="2" max="99" placeholder="6">
+        <input type="number" id="heTarget" min="1" max="99" placeholder="6">
         <input type="text" id="heUnit" maxlength="16" placeholder="стакан">
       </div>
     </div>
@@ -2702,6 +3318,21 @@
 </div>
 
 <script>
+// ---------- запрет зума пальцами и двойным тапом (iOS игнорирует метатег и CSS) ----------
+['gesturestart', 'gesturechange', 'gestureend'].forEach(ev =>
+  document.addEventListener(ev, e => e.preventDefault(), { passive: false }));
+// щипок двумя пальцами
+document.addEventListener('touchmove', e => {
+  if (e.touches && e.touches.length > 1) e.preventDefault();
+}, { passive: false });
+// двойной тап-зум: гасим второй быстрый тап, но не мешаем обычным нажатиям
+let lastTapT = 0;
+document.addEventListener('touchend', e => {
+  const now = Date.now();
+  if (now - lastTapT < 300) e.preventDefault();
+  lastTapT = now;
+}, { passive: false });
+
 const KEY = 'kopilkaEnv2026';
 
 // URL базы Firebase Realtime Database (для синхронизации между устройствами)
@@ -2764,8 +3395,16 @@ function load() {
     expenses: [], customCats: [], limit: 0, milestones: [], lastLevel: 1,
     lastVisit: null, onboarded: false, pigName: '', hamboarded: false,
     pending: 0, eveningDay: '', chal: null, chals: [], room: [],
-    habits: [], flameXP: 0, flameLvl: 1, flameAwarded: {}
+    habits: [], flameXP: 0, flameLvl: 1, flameAwarded: {},
+    nutri: null           // анкета и журнал питания появляются после заполнения
   }, s);
+  if (merged.nutri) {
+    merged.nutri.days = merged.nutri.days || {};
+    merged.nutri.weights = merged.nutri.weights || {};
+    merged.nutri.custom = merged.nutri.custom || [];
+    merged.nutri.uses = merged.nutri.uses || {};
+    merged.nutri.dishes = merged.nutri.dishes || [];
+  }
   if (typeof merged.flameAwarded !== 'object' || !merged.flameAwarded) merged.flameAwarded = {};
   if (!Array.isArray(merged.habits)) merged.habits = [];
   // миграция со старой модели частоты (timesPerWeek) на конкретные дни недели
@@ -4301,11 +4940,27 @@ function saveHabitEditModal() {
   const h = state.habits.find(x => x.id === habitEditingId);
   if (h) {
     h.days = days;
-    // тип (обычная/со счётчиком) теперь фиксирован при создании и здесь не меняется —
-    // редактируем только цель/единицу (если привычка со счётчиком) и дни недели
     if (isCounterHabit(h)) {
-      h.target = Math.max(2, parseInt(document.getElementById('heTarget').value, 10) || h.target || 8);
-      h.unit = (document.getElementById('heUnit').value || '').trim() || h.unit || 'раз';
+      const raw = parseInt(document.getElementById('heTarget').value, 10);
+      const tgt = Math.max(1, Math.min(99, raw || h.target || 8));
+      if (tgt === 1) {
+        // «1 раз в день» — это обычная привычка: убираем счётчик,
+        // а дни, где цель была достигнута, остаются отмеченными
+        delete h.target; delete h.unit; delete h.counts;
+      } else {
+        h.target = tgt;
+        h.unit = (document.getElementById('heUnit').value || '').trim() || h.unit || 'раз';
+        // если цель уменьшили — дни, где уже набрано достаточно, считаем выполненными
+        if (h.counts) {
+          Object.keys(h.counts).forEach(d => {
+            if (h.counts[d] >= tgt && !h.log.includes(d)) h.log.push(d);
+            if (h.counts[d] < tgt) {
+              const i = h.log.indexOf(d);
+              if (i >= 0) h.log.splice(i, 1);
+            }
+          });
+        }
+      }
     }
   }
   closeHabitEditModal();
@@ -4771,20 +5426,46 @@ function decrementHabitCounter(id) {
   save();
   renderHabits();
 }
+const LONG_PRESS_MS = 550;   // как в iOS-контекстном меню
+const PRESS_MOVE_TOL = 10;   // сдвиг больше этого = человек скроллит, а не держит
 let habitPressTimer = null, habitPeekTimer = null, habitLongPressFired = false;
-function habitPressStart(id) {
+let pressStartXY = null, pressTileEl = null;
+function habitPressStart(id, ev) {
+  habitPressCancel();
+  habitLongPressFired = false;
+  // запоминаем точку касания, чтобы отменить долгое нажатие при скролле
+  const e = ev || window.event;
+  pressStartXY = e && e.clientX !== undefined ? { x: e.clientX, y: e.clientY } : null;
+  // плитка плавно прижимается, пока держишь — видно, что нажатие считается
+  pressTileEl = document.querySelector('#habitsGrid [onclick="habitTileClick(' + id + ')"]');
+  if (pressTileEl) pressTileEl.classList.add('q-hold');
+  habitPeekTimer = setTimeout(() => showWhyPop(id), 250);
+  habitPressTimer = setTimeout(() => {
+    habitLongPressFired = true;
+    habitPressCancel(true);
+    hideWhyPop(); vib(20); openHabitEdit(id);
+  }, LONG_PRESS_MS);
+}
+// сдвинул палец — значит скроллит, отменяем
+function habitPressMove(ev) {
+  if (!pressStartXY || habitLongPressFired) return;
+  const e = ev || window.event;
+  if (!e || e.clientX === undefined) return;
+  if (Math.hypot(e.clientX - pressStartXY.x, e.clientY - pressStartXY.y) > PRESS_MOVE_TOL) {
+    habitPressCancel();
+    hideWhyPop();
+  }
+}
+function habitPressCancel(keepTile) {
   clearTimeout(habitPressTimer);
   clearTimeout(habitPeekTimer);
-  habitLongPressFired = false;
-  // подержал чуть-чуть — показываем заметку «зачем»; додержал до конца — открывается редактирование
-  habitPeekTimer = setTimeout(() => showWhyPop(id), 350);
-  habitPressTimer = setTimeout(() => {
-    habitLongPressFired = true; hideWhyPop(); vib(20); openHabitEdit(id);
-  }, 1000);
+  pressStartXY = null;
+  if (pressTileEl && !keepTile) pressTileEl.classList.remove('q-hold');
+  if (pressTileEl && keepTile) pressTileEl.classList.remove('q-hold');
+  pressTileEl = null;
 }
 function habitPressEnd() {
-  clearTimeout(habitPressTimer);
-  clearTimeout(habitPeekTimer);
+  habitPressCancel();
   setTimeout(hideWhyPop, 900);   // заметка ещё мгновение видна после отпускания
 }
 function habitTileClick(id) {
@@ -5001,6 +5682,7 @@ function renderFlame() {
     aura.style.width = '110px'; aura.style.height = '110px'; aura.style.opacity = '.35';
     fiToday.textContent = 'Пока нет привычек — добавь первую ниже';
     [fiStreak, fiRecord, fiPhrase, fiNeglect, document.getElementById('fiBarRow')].forEach(el => el.style.display = 'none');
+    fiRemaining.innerHTML = '';   // иначе от прошлого рендера остаются висеть иконки
     setFlameEyesMouth('neutral');
     return;
   }
@@ -5046,7 +5728,7 @@ function renderFlame() {
 
   // хвост прогрессбара: мини-иконки невыполненных (тап — перейти к плитке привычки)
   const undone = state.habits.filter(h => !h.log.includes(t));
-  const SHOW = 3;   // больше трёх иконок не влезает — остальное числом
+  const SHOW = 6;   // строка своя и переносится, но простыню из иконок тоже не нужно
   fiRemaining.innerHTML = undone.slice(0, SHOW).map(h =>
       '<span class="fr-ico" title="' + h.name + '" onclick="event.stopPropagation(); flameGoToHabit(' + h.id + ')">' + habitMiniIcon(h) + '</span>'
     ).join('') +
@@ -5194,13 +5876,32 @@ function closeAddHabitModal() {
   document.getElementById('addHabitModal').classList.remove('show');
 }
 // ---------- взаимодействие с огоньком: тап (только анимация) / долгий тап (календарь) ----------
-let flamePressTimer = null, flameLongPressFired = false;
-function flamePressStart() {
+let flamePressTimer = null, flameLongPressFired = false, flameStartXY = null;
+function flamePressStart(ev) {
   clearTimeout(flamePressTimer);
   flameLongPressFired = false;
-  flamePressTimer = setTimeout(() => { flameLongPressFired = true; vib(20); openHabitCalModal(); }, 1000);
+  const e = ev || window.event;
+  flameStartXY = e && e.clientX !== undefined ? { x: e.clientX, y: e.clientY } : null;
+  const svg = document.getElementById('flameSvg');
+  if (svg) svg.classList.add('hold');
+  flamePressTimer = setTimeout(() => {
+    flameLongPressFired = true;
+    if (svg) svg.classList.remove('hold');
+    vib(20); openHabitCalModal();
+  }, LONG_PRESS_MS);
 }
-function flamePressEnd() { clearTimeout(flamePressTimer); }
+function flamePressMove(ev) {
+  if (!flameStartXY || flameLongPressFired) return;
+  const e = ev || window.event;
+  if (!e || e.clientX === undefined) return;
+  if (Math.hypot(e.clientX - flameStartXY.x, e.clientY - flameStartXY.y) > PRESS_MOVE_TOL) flamePressEnd();
+}
+function flamePressEnd() {
+  clearTimeout(flamePressTimer);
+  flameStartXY = null;
+  const svg = document.getElementById('flameSvg');
+  if (svg) svg.classList.remove('hold');
+}
 function flameTap() {
   if (flameLongPressFired) { flameLongPressFired = false; return; }
   const svg = document.getElementById('flameSvg');
@@ -5288,7 +5989,8 @@ function renderHabits() {
     else { objectMarkup = habitVesselSVG(h.id, p, vesselColor); showBadge = true; }
     return (
       '<div class="q-tile' + (done ? ' done' : '') + '" onclick="habitTileClick(' + h.id + ')" ' +
-        'onpointerdown="habitPressStart(' + h.id + ')" onpointerup="habitPressEnd()" onpointerleave="habitPressEnd()">' +
+        'onpointerdown="habitPressStart(' + h.id + ', event)" onpointermove="habitPressMove(event)" ' +
+        'onpointerup="habitPressEnd()" onpointerleave="habitPressEnd()" onpointercancel="habitPressEnd()">' +
         '<div class="q-ring" data-hid="' + h.id + '">' +
           objectMarkup +
           (showBadge ? '<div class="q-ico"><span class="q-emo" style="background:#78c69626">' + icon + '</span></div>' : '') +
@@ -5722,7 +6424,1308 @@ function saveGoal() {
   sndAch();
 }
 
-const TAB_VIEWS = { save: 'viewSave', spend: 'viewSpend', habits: 'viewHabits' };
+// ============ ПИТАНИЕ: справочник продуктов ============
+// формат: [название, ккал, белки, жиры, углеводы] на 100 г
+const FOOD_DB = {
+  'Крупы и гарниры': [
+    ['Гречка варёная',110,4.2,1.1,21],['Гречка сухая',343,12.6,3.3,62],['Рис белый варёный',116,2.2,0.5,25],
+    ['Рис белый сухой',344,6.7,0.7,78],['Рис бурый варёный',110,2.6,0.9,23],['Овсянка на воде',88,3,1.7,15],
+    ['Овсянка сухая',366,11.9,7.2,59],['Овсянка на молоке',105,3.2,4.1,14],['Перловка варёная',106,3.1,0.4,22],
+    ['Булгур варёная',83,3.1,0.2,19],['Кускус варёный',112,3.8,0.2,23],['Киноа варёная',120,4.4,1.9,21],
+    ['Пшено варёное',90,3,0.7,17],['Манная каша',98,3,3.2,15],['Макароны варёные',112,3.5,0.4,23],
+    ['Макароны твёрдых сортов',132,5,0.6,26],['Спагетти варёные',115,3.6,0.5,23],['Лапша гречневая',132,5.5,0.9,25],
+    ['Картофель варёный',82,2,0.4,17],['Картофель пюре',106,2.1,3.3,16],['Картофель жареный',192,2.8,9.5,23],
+    ['Картофель фри',312,3.4,15,41],['Кукурузная каша',86,2.5,0.6,18],['Ячневая каша',96,2.7,0.4,20],
+    ['Рис для суши',130,2.4,0.2,29]
+  ],
+  'Мясо и птица': [
+    ['Куриная грудка варёная',137,29.8,1.8,0.5],['Куриная грудка жареная',157,30,3.5,1],['Куриное филе гриль',148,29,3,0],
+    ['Курица бедро',185,21,11,0],['Куриная голень',158,20,8,0],['Куриные крылья',186,19,12,0],
+    ['Индейка филе',104,22,1.5,0],['Индейка фарш',150,20,7,0],['Говядина варёная',220,26,15,0],
+    ['Говядина постная',187,26,9,0],['Говяжий стейк',250,26,16,0],['Телятина',97,20,2,0],
+    ['Свинина варёная',270,23,20,0],['Свинина постная',160,21,8,0],['Свиная отбивная',280,22,21,0],
+    ['Баранина',209,16,16,0],['Кролик',156,21,8,0],['Фарш говяжий',254,17,20,0],
+    ['Фарш куриный',143,17,8,0],['Фарш смешанный',263,15,22,1],['Печень куриная',137,20,6,1],
+    ['Печень говяжья',127,18,4,5],['Сердце куриное',158,16,10,1],['Язык говяжий',173,16,12,2],
+    ['Бекон',500,12,50,1],['Ветчина',270,14,23,0],['Колбаса варёная',257,12,22,1],
+    ['Колбаса копчёная',380,17,34,0],['Сосиски',266,11,24,2],['Пельмени варёные',245,12,12,22]
+  ],
+  'Рыба и морепродукты': [
+    ['Лосось',208,20,13,0],['Лосось на пару',180,22,10,0],['Форель',119,20,4,0],
+    ['Сёмга',219,20,15,0],['Тунец свежий',144,23,5,0],['Тунец консервы в воде',96,21,1,0],
+    ['Треска',82,18,0.7,0],['Минтай',72,16,0.9,0],['Хек',86,17,2,0],
+    ['Скумбрия',191,18,13,0],['Сельдь',158,18,9,0],['Сельдь солёная',217,17,17,0],
+    ['Горбуша',142,21,7,0],['Камбала',83,16,2,0],['Карп',112,16,5,0],
+    ['Судак',84,19,1,0],['Креветки варёные',95,20,1,0],['Кальмар',92,18,2,0],
+    ['Мидии',77,12,2,3],['Краб',96,19,2,0],['Икра красная',249,32,15,0],
+    ['Рыбные палочки',236,12,14,17],['Крабовые палочки',88,6,1,14]
+  ],
+  'Молочное и яйца': [
+    ['Молоко 3.2%',60,2.9,3.2,4.7],['Молоко 2.5%',52,2.8,2.5,4.7],['Молоко 1.5%',44,2.8,1.5,4.7],
+    ['Молоко обезжиренное',31,3,0.1,4.8],['Кефир 3.2%',56,2.9,3.2,4],['Кефир 1%',40,3,1,4],
+    ['Ряженка 4%',67,2.9,4,4.2],['Йогурт натуральный',60,4.3,3.2,3.5],['Йогурт греческий 2%',73,10,2,4],
+    ['Йогурт питьевой',70,2.8,1.6,11],['Творог 9%',159,16.7,9,2],['Творог 5%',121,17,5,1.8],
+    ['Творог 2%',103,18,2,3.3],['Творог обезжиренный',71,16.5,0.6,1.3],['Творожок сладкий',170,7,5,25],
+    ['Сметана 20%',206,2.8,20,3.2],['Сметана 15%',162,2.6,15,3],['Сметана 10%',119,3,10,2.9],
+    ['Сыр российский',364,23,29,0.3],['Сыр гауда',356,25,27,2],['Сыр моцарелла',280,22,22,2],
+    ['Сыр пармезан',392,33,28,4],['Сыр фета',264,14,21,4],['Сыр плавленый',257,12,22,3],
+    ['Творожный сыр',253,7,24,3],['Масло сливочное',748,0.5,82,0.8],['Сливки 10%',119,3,10,4],
+    ['Сливки 20%',206,2.8,20,3.7],['Яйцо куриное',157,12.7,11.5,0.7],['Яйцо варёное',160,13,11,1],
+    ['Яичный белок',48,11,0,0],['Яичный желток',352,16,31,1],['Омлет',184,10,15,2],
+    ['Мороженое пломбир',227,3.7,15,21]
+  ],
+  'Овощи и зелень': [
+    ['Огурец',15,0.8,0.1,2.8],['Помидор',20,1.1,0.2,3.7],['Помидоры черри',18,0.9,0.2,3.9],
+    ['Капуста белокочанная',28,1.8,0.1,4.7],['Капуста цветная',30,2.5,0.3,4.2],['Брокколи',34,2.8,0.4,7],
+    ['Капуста пекинская',16,1.2,0.2,2],['Морковь',35,1.3,0.1,6.9],['Свёкла',42,1.5,0.1,8.8],
+    ['Лук репчатый',41,1.4,0,8.2],['Лук зелёный',20,1.3,0,3.2],['Чеснок',143,6.5,0.5,30],
+    ['Перец болгарский',27,1.3,0.1,5.3],['Кабачок',24,0.6,0.3,4.6],['Баклажан',24,1.2,0.1,4.5],
+    ['Тыква',22,1,0.1,4.4],['Редис',20,1.2,0.1,3.4],['Сельдерей стебель',13,0.9,0.1,2.1],
+    ['Шпинат',23,2.9,0.4,3.6],['Салат листовой',15,1.4,0.2,2],['Руккола',25,2.6,0.7,2],
+    ['Укроп',38,2.5,0.5,6.3],['Петрушка',49,3.7,0.4,7.6],['Авокадо',160,2,15,9],
+    ['Кукуруза консервированная',58,2.2,0.4,11],['Горошек зелёный',73,5,0.2,13],['Фасоль стручковая',31,1.8,0.1,7],
+    ['Грибы шампиньоны',22,4.3,1,0.1],['Грибы вешенки',33,3.3,0.4,6],['Квашеная капуста',19,1.8,0.1,3],
+    ['Оливки',115,0.8,10.7,6],['Помидоры вяленые',258,14,3,43]
+  ],
+  'Фрукты и ягоды': [
+    ['Яблоко',47,0.4,0.4,9.8],['Банан',96,1.5,0.2,21],['Апельсин',43,0.9,0.2,8.1],
+    ['Мандарин',38,0.8,0.2,7.5],['Грейпфрут',35,0.7,0.2,6.5],['Лимон',34,0.9,0.1,3],
+    ['Груша',42,0.4,0.3,10.9],['Персик',45,0.9,0.1,11.3],['Абрикос',44,0.9,0.1,9],
+    ['Слива',42,0.8,0.3,9.6],['Виноград',65,0.6,0.2,16],['Киви',47,1,0.6,10],
+    ['Ананас',49,0.4,0.2,12],['Манго',67,0.5,0.3,15],['Хурма',67,0.5,0.4,15.3],
+    ['Гранат',72,0.9,0.6,14],['Арбуз',27,0.6,0.1,5.8],['Дыня',35,0.6,0.3,7.4],
+    ['Клубника',33,0.8,0.4,7.5],['Малина',46,0.8,0.5,8.3],['Черника',44,1.1,0.6,7.6],
+    ['Смородина чёрная',44,1,0.4,7.3],['Вишня',52,0.8,0.5,10.6],['Голубика',39,1,0.5,6.6],
+    ['Клюква',26,0.5,0.2,3.7],['Изюм',264,2.9,0.6,66],['Курага',215,5.2,0.3,51],
+    ['Чернослив',231,2.3,0.7,57],['Финики',292,2.5,0.5,69],['Инжир сушёный',257,3.1,0.8,58]
+  ],
+  'Орехи и семена': [
+    ['Грецкий орех',654,15,65,7],['Миндаль',609,19,54,13],['Фундук',651,15,67,9],
+    ['Кешью',600,18,44,30],['Арахис',567,26,49,16],['Фисташки',560,20,45,28],
+    ['Кедровый орех',673,14,68,13],['Семечки подсолнечные',601,21,53,11],['Семена тыквы',556,24,46,14],
+    ['Семена чиа',486,17,31,42],['Семена льна',534,18,42,29],['Кунжут',573,18,50,23],
+    ['Арахисовая паста',588,25,50,20],['Кокосовая стружка',660,7,65,14]
+  ],
+  'Хлеб и выпечка': [
+    ['Хлеб белый',265,8,3.2,49],['Хлеб чёрный',214,6.6,1.2,41],['Хлеб цельнозерновой',247,13,3.4,41],
+    ['Хлеб бородинский',208,6.8,1.3,40],['Батон',264,7.5,2.9,51],['Лаваш армянский',236,7.9,1,47],
+    ['Багет',274,8.5,2,54],['Тост белый',290,9,4,52],['Хлебцы ржаные',310,11,2.5,58],
+    ['Булочка сдобная',339,7.6,9.4,55],['Круассан',406,8,21,45],['Пита',275,9,1.2,55],
+    ['Блины',233,6,12,26],['Оладьи',210,6,8,29],['Сырники',220,17,9,18],
+    ['Вафли',425,3,20,60],['Печенье овсяное',437,6,15,71],['Печенье песочное',458,6,22,60],
+    ['Пряник',350,5,3,75],['Сухари',390,11,6,72]
+  ],
+  'Сладости и снеки': [
+    ['Шоколад молочный',534,7.6,30,58],['Шоколад тёмный 70%',546,8,42,38],['Шоколад белый',539,6,32,59],
+    ['Конфеты карамель',375,0,0,96],['Мармелад',321,0.4,0.1,79],['Зефир',326,0.8,0,79],
+    ['Халва',516,11,30,54],['Пастила',324,0.5,0,80],['Мёд',329,0.8,0,81],
+    ['Варенье',271,0.4,0,70],['Джем',238,0.3,0,60],['Сахар',399,0,0,100],
+    ['Сгущёнка',320,7.2,8.5,56],['Торт бисквитный',350,4.7,15,50],['Чизкейк',321,6,23,26],
+    ['Круассан с шоколадом',450,7,24,52],['Пончик',452,5,25,51],['Мюсли',352,10,10,57],
+    ['Гранола',471,10,20,64],['Батончик протеиновый',350,30,10,35],['Чипсы',536,6,35,50],
+    ['Сухарики',400,10,15,58],['Попкорн',401,12,4,78],['Крекеры',421,9,14,64],
+    ['Нутелла',539,6,31,58]
+  ],
+  'Напитки': [
+    ['Вода',0,0,0,0],['Чай без сахара',0,0,0,0],['Кофе чёрный',2,0.2,0,0],
+    ['Кофе с молоком',37,1.8,1.5,4],['Капучино',60,3,3,5],['Латте',55,3,2.5,5],
+    ['Сок апельсиновый',45,0.7,0.2,10],['Сок яблочный',46,0.1,0.1,11],['Сок томатный',18,1,0,3.5],
+    ['Кола',42,0,0,11],['Энергетик',45,0,0,11],['Пиво светлое',43,0.5,0,3.6],
+    ['Вино красное сухое',68,0.2,0,0.3],['Вино белое сухое',66,0.1,0,0.6],['Водка',231,0,0,0],
+    ['Компот',60,0.1,0,15],['Морс',41,0.1,0,10],['Смузи фруктовый',60,0.8,0.3,14],
+    ['Протеиновый коктейль',103,20,1.5,3]
+  ],
+  'Масла и соусы': [
+    ['Масло оливковое',898,0,99.8,0],['Масло подсолнечное',899,0,99.9,0],['Масло льняное',898,0,99.8,0],
+    ['Масло кокосовое',862,0,100,0],['Майонез',680,1,72,3.7],['Майонез лёгкий',350,1,33,7],
+    ['Кетчуп',93,1.8,0.2,22],['Горчица',143,9.9,12,5],['Соевый соус',53,8,0,5],
+    ['Сметанный соус',180,2,17,4],['Песто',450,5,45,6],['Хумус',166,8,10,14],
+    ['Аджика',59,1,3.7,5.8],['Терияки',89,3,0,19],['Уксус бальзамический',88,0.5,0,17]
+  ],
+  'Бобовые и соя': [
+    ['Фасоль варёная',123,7.8,0.5,21],['Фасоль красная сухая',298,21,2,47],['Нут варёный',164,8.9,2.6,27],
+    ['Чечевица варёная',112,9,0.4,20],['Чечевица сухая',295,24,1.5,46],['Горох варёный',60,6,0.2,9],
+    ['Соя',364,36,20,30],['Тофу',76,8,4.8,1.9],['Соевое молоко',54,3.3,1.8,6],
+    ['Маш варёный',105,7,0.4,19],['Эдамаме',122,11,5,10]
+  ],
+  'Готовые блюда': [
+    ['Борщ',49,1.1,2.2,6.7],['Щи',32,1,2,2.6],['Суп куриный с лапшой',52,3,2,5],
+    ['Суп гороховый',66,4,2,8],['Солянка',66,4,4,3],['Окрошка',60,2,3.5,5],
+    ['Плов с курицей',180,8,7,22],['Плов с бараниной',220,9,11,23],['Гречка с курицей',150,11,4,18],
+    ['Паста болоньезе',180,9,7,20],['Паста карбонара',290,11,17,23],['Лазанья',180,10,9,15],
+    ['Пицца пепперони',280,12,13,29],['Пицца маргарита',240,10,9,30],['Бургер',280,14,15,24],
+    ['Чизбургер',300,15,16,26],['Шаурма',210,12,10,18],['Хот-дог',270,10,16,22],
+    ['Роллы Филадельфия',185,7,8,20],['Суши с лососем',150,6,3,24],['Салат цезарь',190,11,13,6],
+    ['Салат оливье',198,5,16,8],['Салат греческий',110,3,9,5],['Винегрет',76,1.3,5,6],
+    ['Голубцы',110,6,5,9],['Котлета куриная',180,15,10,8],['Котлета по-киевски',290,18,20,10],
+    ['Наггетсы',290,15,18,16],['Стейк из индейки',140,25,4,0],['Запеканка творожная',168,17,4,15],
+    ['Яичница с беконом',250,14,20,1],['Тушёные овощи',85,2,5,8]
+  ]
+};
+// плоский список для поиска: {n, k, p, f, c, cat}
+const FOOD_FLAT = (() => {
+  const out = [];
+  Object.keys(FOOD_DB).forEach(cat => FOOD_DB[cat].forEach(r =>
+    out.push({ n: r[0], k: r[1], p: r[2], f: r[3], c: r[4], cat })));
+  return out;
+})();
+
+// ============ ПИТАНИЕ: штучные меры ============
+// склонения мерок: [1, 2-4, 5+]
+const UNIT_FORMS = {
+  pc:    ['шт', 'шт', 'шт'],
+  slice: ['ломтик', 'ломтика', 'ломтиков'],
+  piece: ['кусок', 'куска', 'кусков'],
+  clove: ['зубчик', 'зубчика', 'зубчиков'],
+  square:['долька', 'дольки', 'долек'],
+  tsp:   ['ч. ложка', 'ч. ложки', 'ч. ложек'],
+  tbsp:  ['ст. ложка', 'ст. ложки', 'ст. ложек'],
+  glass: ['стакан', 'стакана', 'стаканов'],
+  cup:   ['чашка', 'чашки', 'чашек'],
+  can:   ['банка', 'банки', 'банок'],
+  wine:  ['бокал', 'бокала', 'бокалов'],
+  shot:  ['рюмка', 'рюмки', 'рюмок'],
+  bowl:  ['тарелка', 'тарелки', 'тарелок'],
+  serv:  ['порция', 'порции', 'порций']
+};
+// сколько граммов в одной мерке
+const PIECE_UNITS = {
+  // яйца
+  'Яйцо куриное': ['pc', 55], 'Яйцо варёное': ['pc', 55], 'Яичный белок': ['pc', 33], 'Яичный желток': ['pc', 18],
+  // фрукты
+  'Яблоко': ['pc', 180], 'Банан': ['pc', 120], 'Апельсин': ['pc', 180], 'Мандарин': ['pc', 80],
+  'Грейпфрут': ['pc', 250], 'Лимон': ['pc', 100], 'Груша': ['pc', 170], 'Персик': ['pc', 130],
+  'Абрикос': ['pc', 40], 'Слива': ['pc', 40], 'Киви': ['pc', 75], 'Хурма': ['pc', 170],
+  'Гранат': ['pc', 250], 'Изюм': ['tbsp', 15], 'Курага': ['pc', 8], 'Чернослив': ['pc', 8],
+  'Финики': ['pc', 8], 'Инжир сушёный': ['pc', 20],
+  // овощи
+  'Огурец': ['pc', 100], 'Помидор': ['pc', 120], 'Помидоры черри': ['pc', 15], 'Морковь': ['pc', 85],
+  'Свёкла': ['pc', 150], 'Лук репчатый': ['pc', 90], 'Чеснок': ['clove', 4], 'Перец болгарский': ['pc', 130],
+  'Кабачок': ['pc', 300], 'Баклажан': ['pc', 250], 'Редис': ['pc', 15], 'Авокадо': ['pc', 200],
+  'Оливки': ['pc', 4], 'Помидоры вяленые': ['pc', 6],
+  // хлеб и выпечка
+  'Хлеб белый': ['slice', 25], 'Хлеб чёрный': ['slice', 30], 'Хлеб цельнозерновой': ['slice', 30],
+  'Хлеб бородинский': ['slice', 30], 'Батон': ['slice', 25], 'Тост белый': ['slice', 25],
+  'Хлебцы ржаные': ['pc', 10], 'Булочка сдобная': ['pc', 70], 'Круассан': ['pc', 60], 'Пита': ['pc', 60],
+  'Лаваш армянский': ['slice', 45], 'Багет': ['slice', 30],
+  'Блины': ['pc', 50], 'Оладьи': ['pc', 40], 'Сырники': ['pc', 70], 'Вафли': ['pc', 15],
+  'Печенье овсяное': ['pc', 20], 'Печенье песочное': ['pc', 15], 'Пряник': ['pc', 40], 'Сухари': ['pc', 10],
+  // мясное
+  'Сосиски': ['pc', 50], 'Пельмени варёные': ['pc', 13], 'Бекон': ['slice', 15], 'Ветчина': ['slice', 20],
+  'Колбаса варёная': ['slice', 20], 'Колбаса копчёная': ['slice', 12],
+  // рыба
+  'Креветки варёные': ['pc', 10], 'Мидии': ['pc', 10], 'Крабовые палочки': ['pc', 25], 'Рыбные палочки': ['pc', 30],
+  // молочное
+  'Молоко 3.2%': ['glass', 250], 'Молоко 2.5%': ['glass', 250], 'Молоко 1.5%': ['glass', 250],
+  'Молоко обезжиренное': ['glass', 250], 'Кефир 3.2%': ['glass', 250], 'Кефир 1%': ['glass', 250],
+  'Ряженка 4%': ['glass', 250], 'Йогурт питьевой': ['glass', 250], 'Соевое молоко': ['glass', 250],
+  'Йогурт натуральный': ['serv', 125], 'Йогурт греческий 2%': ['serv', 150], 'Творожок сладкий': ['pc', 100],
+  'Сметана 20%': ['tbsp', 20], 'Сметана 15%': ['tbsp', 20], 'Сметана 10%': ['tbsp', 20],
+  'Сливки 10%': ['tbsp', 15], 'Сливки 20%': ['tbsp', 15],
+  'Сыр российский': ['slice', 20], 'Сыр гауда': ['slice', 20], 'Сыр плавленый': ['pc', 25],
+  'Творожный сыр': ['tbsp', 20], 'Масло сливочное': ['tsp', 8], 'Мороженое пломбир': ['serv', 80],
+  // орехи
+  'Грецкий орех': ['pc', 5], 'Миндаль': ['pc', 1.2], 'Фундук': ['pc', 1.5], 'Кешью': ['pc', 1.5],
+  'Арахисовая паста': ['tsp', 16], 'Семечки подсолнечные': ['tbsp', 10], 'Семена тыквы': ['tbsp', 10],
+  'Семена чиа': ['tsp', 5], 'Семена льна': ['tsp', 5], 'Кунжут': ['tsp', 4],
+  // сладкое
+  'Шоколад молочный': ['square', 5], 'Шоколад тёмный 70%': ['square', 5], 'Шоколад белый': ['square', 5],
+  'Конфеты карамель': ['pc', 6], 'Мармелад': ['pc', 10], 'Зефир': ['pc', 33], 'Пастила': ['pc', 15],
+  'Мёд': ['tsp', 9], 'Варенье': ['tsp', 12], 'Джем': ['tsp', 12], 'Сахар': ['tsp', 5],
+  'Сгущёнка': ['tbsp', 20], 'Нутелла': ['tsp', 15], 'Пончик': ['pc', 60],
+  'Круассан с шоколадом': ['pc', 70], 'Батончик протеиновый': ['pc', 50], 'Крекеры': ['pc', 5],
+  'Торт бисквитный': ['piece', 120], 'Чизкейк': ['piece', 120], 'Мюсли': ['tbsp', 15], 'Гранола': ['tbsp', 15],
+  // напитки
+  'Вода': ['glass', 250], 'Чай без сахара': ['cup', 200], 'Кофе чёрный': ['cup', 200],
+  'Кофе с молоком': ['cup', 200], 'Капучино': ['cup', 180], 'Латте': ['cup', 250],
+  'Сок апельсиновый': ['glass', 250], 'Сок яблочный': ['glass', 250], 'Сок томатный': ['glass', 250],
+  'Кола': ['glass', 250], 'Энергетик': ['can', 250], 'Пиво светлое': ['wine', 500],
+  'Вино красное сухое': ['wine', 150], 'Вино белое сухое': ['wine', 150], 'Водка': ['shot', 50],
+  'Компот': ['glass', 250], 'Морс': ['glass', 250], 'Смузи фруктовый': ['glass', 250],
+  'Протеиновый коктейль': ['serv', 300],
+  // масла и соусы
+  'Масло оливковое': ['tbsp', 14], 'Масло подсолнечное': ['tbsp', 14], 'Масло льняное': ['tbsp', 14],
+  'Масло кокосовое': ['tbsp', 13], 'Майонез': ['tbsp', 15], 'Майонез лёгкий': ['tbsp', 15],
+  'Кетчуп': ['tbsp', 17], 'Горчица': ['tsp', 5], 'Соевый соус': ['tbsp', 16],
+  'Сметанный соус': ['tbsp', 18], 'Песто': ['tbsp', 15], 'Хумус': ['tbsp', 15],
+  'Аджика': ['tsp', 6], 'Терияки': ['tbsp', 18], 'Уксус бальзамический': ['tsp', 5],
+  // готовые блюда
+  'Борщ': ['bowl', 300], 'Щи': ['bowl', 300], 'Суп куриный с лапшой': ['bowl', 300],
+  'Суп гороховый': ['bowl', 300], 'Солянка': ['bowl', 300], 'Окрошка': ['bowl', 300],
+  'Пицца пепперони': ['piece', 110], 'Пицца маргарита': ['piece', 100], 'Лазанья': ['serv', 250],
+  'Бургер': ['pc', 220], 'Чизбургер': ['pc', 200], 'Шаурма': ['pc', 300], 'Хот-дог': ['pc', 150],
+  'Роллы Филадельфия': ['pc', 40], 'Суши с лососем': ['pc', 30], 'Голубцы': ['pc', 150],
+  'Котлета куриная': ['pc', 90], 'Котлета по-киевски': ['pc', 130], 'Наггетсы': ['pc', 18],
+  'Стейк из индейки': ['pc', 150], 'Запеканка творожная': ['piece', 130], 'Тофу': ['serv', 100],
+  'Плов с курицей': ['serv', 250], 'Плов с бараниной': ['serv', 250], 'Гречка с курицей': ['serv', 250],
+  'Паста болоньезе': ['serv', 250], 'Паста карбонара': ['serv', 250],
+  'Салат цезарь': ['serv', 200], 'Салат оливье': ['serv', 150], 'Салат греческий': ['serv', 180],
+  'Винегрет': ['serv', 150], 'Яичница с беконом': ['serv', 150], 'Тушёные овощи': ['serv', 200]
+};
+function pieceOf(name) { return PIECE_UNITS[name] || null; }
+function unitLabel(key, n) {
+  const f = UNIT_FORMS[key] || UNIT_FORMS.pc;
+  return plural(Math.round(n) === n ? n : 2, f[0], f[1], f[2]);
+}
+// «2 шт», «1,5 ст. ложки»
+function qtyLabel(q, key) {
+  const num = Math.round(q * 10) / 10;
+  return String(num).replace('.', ',') + ' ' + unitLabel(key, num);
+}
+
+// ============ ПИТАНИЕ: расчёты ============
+const MEALS = [['b', 'Завтрак'], ['l', 'Обед'], ['d', 'Ужин'], ['s', 'Перекус']];
+// пропорции БЖУ по цели (проценты от калорий)
+const MACRO_SPLIT = {
+  lose: { p: 40, f: 30, c: 30 },   // сушка: белок выше, мышцы целее
+  keep: { p: 30, f: 30, c: 40 },   // поддержание
+  gain: { p: 25, f: 25, c: 50 }    // набор: разницу добирают углеводы
+};
+// базовый обмен по Миффлину–Сан Жеору
+function bmr(n) {
+  const base = 10 * n.weight + 6.25 * n.height - 5 * n.age;
+  return n.sex === 'm' ? base + 5 : base - 161;
+}
+// норма калорий с учётом активности и цели
+function calcKcal(n) {
+  const tdee = bmr(n) * (n.activity || 1.2);
+  const k = n.goal === 'lose' ? tdee * 0.85 : n.goal === 'gain' ? tdee * 1.15 : tdee;
+  return Math.round(k / 10) * 10;
+}
+function calcMacros(kcal, goal) {
+  const s = MACRO_SPLIT[goal] || MACRO_SPLIT.keep;
+  return {
+    p: Math.round(kcal * s.p / 100 / 4),
+    f: Math.round(kcal * s.f / 100 / 9),
+    c: Math.round(kcal * s.c / 100 / 4)
+  };
+}
+let fdDate = null;   // выбранный день (null = сегодня)
+function fdDay() { return fdDate || todayStr(); }
+function fdDayData(d) {
+  const n = state.nutri;
+  if (!n) return null;
+  if (!n.days[d]) n.days[d] = { b: [], l: [], d: [], s: [] };
+  const day = n.days[d];
+  MEALS.forEach(([k]) => { if (!day[k]) day[k] = []; });
+  return day;
+}
+// итог по дню
+function fdTotals(d) {
+  const day = fdDayData(d);
+  const t = { k: 0, p: 0, f: 0, c: 0 };
+  if (!day) return t;
+  MEALS.forEach(([mk]) => day[mk].forEach(it => {
+    const g = it.g / 100;
+    t.k += it.k * g; t.p += it.p * g; t.f += it.f * g; t.c += it.c * g;
+  }));
+  return { k: Math.round(t.k), p: Math.round(t.p), f: Math.round(t.f), c: Math.round(t.c) };
+}
+// сожжённое: привычка «Тренировка» отмечена в этот день → 4,5 ккал на кг в час
+function fdBurned(d) {
+  const n = state.nutri;
+  if (!n) return 0;
+  const h = state.habits.find(x => /тренировк/i.test(x.name));
+  if (!h || !h.log.includes(d)) return 0;
+  return Math.round(4.5 * (n.weight || 70));
+}
+// вода берётся из привычки «Пить воду» — данные общие
+function fdWaterHabit() { return state.habits.find(h => isWaterHabit(h)); }
+function fdWater(d) {
+  const h = fdWaterHabit();
+  if (!h) return null;
+  const cur = (h.counts && h.counts[d]) || 0;
+  return { cur, target: h.target || 8 };
+}
+function fdAddWater() {
+  const h = fdWaterHabit();
+  if (!h) { toast('Добавь привычку «Пить воду» на вкладке Привычки'); return; }
+  if (fdDay() !== todayStr()) { toast('Воду можно отмечать только за сегодня'); return; }
+  incrementHabitCounter(h.id);
+  renderFood();
+}
+// ---------- анимация круга ----------
+let fdLevel = 0;          // текущая доля заполнения, 0..1
+let fdLeftShown = null;   // число, которое сейчас на экране
+let fdNumTimer = null;
+// поднимаем уровень; при первом показе стартуем с пустого, чтобы было видно наполнение
+function fdSetLevel(frac, instant) {
+  const liq = document.getElementById('fdLiquid');
+  if (!liq) return;
+  if (instant) {
+    liq.style.transition = 'none';
+    liq.style.transform = 'translateY(' + (200 - frac * 200) + 'px)';
+    void liq.getBoundingClientRect();
+    liq.style.transition = '';
+  } else {
+    liq.style.transform = 'translateY(' + (200 - frac * 200) + 'px)';
+  }
+  fdLevel = frac;
+}
+// число «осталось» перебегает к новому значению, а не подменяется
+function fdSetLeft(text, value) {
+  const el = document.getElementById('fdLeft');
+  if (!el) return;
+  const prefix = text.charAt(0) === '+' ? '+' : '';
+  if (fdLeftShown === null || Math.abs(value - fdLeftShown) < 2 || prefersReducedMotion()) {
+    if (fdNumTimer) { clearInterval(fdNumTimer); fdNumTimer = null; }
+    el.textContent = text; fdLeftShown = value; return;
+  }
+  const from = fdLeftShown, to = value, t0 = Date.now(), dur = 700;
+  if (fdNumTimer) clearInterval(fdNumTimer);
+  fdNumTimer = setInterval(() => {
+    const p = Math.min(1, (Date.now() - t0) / dur);
+    const e = 1 - Math.pow(1 - p, 3);
+    const v = Math.round(from + (to - from) * e);
+    el.textContent = prefix + fmt(v);
+    if (p >= 1) { clearInterval(fdNumTimer); fdNumTimer = null; fdLeftShown = to; el.textContent = text; }
+  }, 16);
+}
+function prefersReducedMotion() {
+  try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; }
+}
+// короткий всплеск волны — вызывается, когда еда добавлена
+function fdSplash() {
+  const wrap = document.querySelector('.fd-circle-wrap');
+  if (!wrap || prefersReducedMotion()) return;
+  wrap.classList.remove('splash');
+  void wrap.offsetWidth;
+  wrap.classList.add('splash');
+  setTimeout(() => wrap.classList.remove('splash'), 900);
+}
+
+// ---------- рендер вкладки ----------
+function renderFood() {
+  const n = state.nutri;
+  const setup = document.getElementById('foodSetupCard');
+  const main = document.getElementById('foodMain');
+  if (!n) { setup.style.display = ''; main.style.display = 'none'; return; }
+  setup.style.display = 'none';
+  main.style.display = '';
+
+  const d = fdDay(), today = todayStr();
+  // дата
+  const dd = parseD(d);
+  const lab = d === today ? 'Сегодня'
+    : d === todayStr(new Date(Date.now() - 864e5)) ? 'Вчера'
+    : dd.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', weekday: 'short' });
+  document.getElementById('fdDateLabel').textContent = lab;
+  document.getElementById('fdNextBtn').disabled = d >= today;
+
+  const t = fdTotals(d);
+  const burned = fdBurned(d);
+  const norm = n.kcal;
+  const left = norm + burned - t.k;
+  const over = left < 0;
+
+  // круг
+  const wrap = document.querySelector('.fd-circle-wrap');
+  wrap.classList.toggle('over', over);
+  const frac = Math.max(0, Math.min(1, t.k / Math.max(1, norm + burned)));
+  fdSetLevel(frac);
+  document.querySelectorAll('#fdLiquid path').forEach(p =>
+    p.setAttribute('fill', over ? 'url(#fdLiqOver)' : 'url(#fdLiq)'));
+  fdSetLeft(over ? '+' + fmt(Math.abs(left)) : fmt(left), over ? Math.abs(left) : left);
+  document.getElementById('fdLeftLab').textContent = over ? 'ккал перебор' : 'ккал осталось';
+  document.getElementById('fdFormula').textContent =
+    fmt(t.k) + ' съедено' + (burned ? ' · ' + fmt(burned) + ' сожжено' : '') + ' · норма ' + fmt(norm);
+
+  // БЖУ
+  [['P', 'p'], ['F', 'f'], ['C', 'c']].forEach(([id, key]) => {
+    const cur = t[key], goal = n[key] || 1;
+    document.getElementById('fd' + id + 'Val').textContent = cur + ' / ' + goal + ' г';
+    const bar = document.getElementById('fd' + id + 'Bar');
+    bar.style.width = Math.min(100, cur / goal * 100) + '%';
+    bar.classList.toggle('over', cur > goal * 1.05);
+  });
+
+  // вода и сожжённое
+  const w = fdWater(d);
+  const wBox = document.getElementById('fdWaterBox');
+  if (w) { wBox.style.display = ''; document.getElementById('fdWaterVal').textContent = w.cur + '/' + w.target; }
+  else { wBox.style.display = 'none'; }
+  document.getElementById('fdBurnVal').textContent = burned ? fmt(burned) : '—';
+
+  renderFoodMeals(d);
+  renderFoodTips();
+  renderFoodWeight();
+  renderFoodWeek();
+}
+// как подписать порцию: «2 шт · 110 г», «150 г» или ничего для быстрых калорий
+function portionLabel(it) {
+  if (it.qk) return 'записано вручную';
+  if (it.q && it.u) return qtyLabel(it.q, it.u) + ' · ' + it.g + ' г';
+  return it.g + ' г';
+}
+function renderFoodMeals(d) {
+  const day = fdDayData(d);
+  document.getElementById('fdMeals').innerHTML = MEALS.map(([mk, name]) => {
+    const items = day[mk];
+    const kcal = Math.round(items.reduce((s, it) => s + it.k * it.g / 100, 0));
+    const canRepeat = !items.length && lastMealVariants(mk).length > 0;
+    return '<div class="card fd-meal">' +
+      '<div class="fd-meal-head">' +
+        '<span class="fd-meal-name">' + name + '</span>' +
+        '<span class="fd-meal-kcal">' + (kcal ? fmt(kcal) + ' ккал' : '') + '</span>' +
+        (canRepeat ? '<button class="fd-meal-rep" onclick="openRepeat(\'' + mk + '\')">Повторить</button>' : '') +
+        '<button class="fd-meal-add" onclick="openFoodAdd(\'' + mk + '\')" aria-label="Добавить">+</button>' +
+      '</div>' +
+      (items.length
+        ? items.map((it, i) =>
+            '<div class="fd-row" data-mk="' + mk + '" data-i="' + i + '"' +
+                ' onpointerdown="fdRowPressStart(\'' + mk + '\',' + i + ', event)"' +
+                ' onpointermove="fdRowPressMove(event)"' +
+                ' onpointerup="fdRowPressEnd()" onpointercancel="fdRowPressEnd()"' +
+                ' onpointerleave="fdRowPressEnd()">' +
+              '<span class="fd-row-n" onclick="fdRowTap(\'' + mk + '\',' + i + ')">' +
+                '<span class="fd-row-name">' + escFood(it.n) + '</span>' +
+                '<span class="fd-row-sub">' + portionLabel(it) + ' · ' +
+                  Math.round(it.p * it.g / 100) + '/' + Math.round(it.f * it.g / 100) + '/' + Math.round(it.c * it.g / 100) + ' Б-Ж-У</span>' +
+              '</span>' +
+              '<span class="fd-row-k">' + Math.round(it.k * it.g / 100) + '</span>' +
+              '<button class="fd-row-x" onclick="delFood(\'' + mk + '\',' + i + ')" aria-label="Удалить">✕</button>' +
+            '</div>')
+          .join('')
+        : '<div class="fd-empty">Пусто — нажми +</div>') +
+    '</div>';
+  }).join('');
+}
+
+// ---------- долгое нажатие на строке продукта ----------
+let fdRowTimer = null, fdRowXY = null, fdRowEl = null, fdRowFired = false;
+function fdRowPressStart(mk, i, ev) {
+  fdRowPressEnd();
+  fdRowFired = false;
+  const e = ev || window.event;
+  fdRowXY = e && e.clientX !== undefined ? { x: e.clientX, y: e.clientY } : null;
+  fdRowEl = document.querySelector('#fdMeals .fd-row[data-mk="' + mk + '"][data-i="' + i + '"]');
+  if (fdRowEl) fdRowEl.classList.add('pressed');
+  fdRowTimer = setTimeout(() => {
+    fdRowFired = true;
+    if (fdRowEl) fdRowEl.classList.remove('pressed');
+    vib(20);
+    openRowMenu(mk, i);
+  }, LONG_PRESS_MS);
+}
+function fdRowPressMove(ev) {
+  if (!fdRowXY || fdRowFired) return;
+  const e = ev || window.event;
+  if (!e || e.clientX === undefined) return;
+  if (Math.hypot(e.clientX - fdRowXY.x, e.clientY - fdRowXY.y) > PRESS_MOVE_TOL) fdRowPressEnd();
+}
+function fdRowPressEnd() {
+  clearTimeout(fdRowTimer);
+  fdRowXY = null;
+  if (fdRowEl) fdRowEl.classList.remove('pressed');
+  fdRowEl = null;
+}
+// обычный тап — правка порции, но не сразу после долгого нажатия
+function fdRowTap(mk, i) {
+  if (fdRowFired) { fdRowFired = false; return; }
+  editPortion(mk, i);
+}
+function delFood(mk, i) {
+  const day = fdDayData(fdDay());
+  day[mk].splice(i, 1);
+  save(); renderFood();
+}
+// ---------- добавление еды ----------
+let faMeal = 'b', faCatOpen = {}, faEditing = null, ptItem = null;
+function escFood(s) {
+  return String(s).replace(/[&<>"']/g, ch =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
+}
+function openFoodAdd(mk, forDish) {
+  faMeal = mk;
+  faEditing = null;
+  faCatOpen = {};
+  dishPickMode = !!forDish;
+  document.getElementById('faTitle').textContent = forDish
+    ? 'Продукт в блюдо'
+    : (MEALS.find(m => m[0] === mk) || [, 'Еда'])[1];
+  document.getElementById('faSearch').value = '';
+  renderFoodList();
+  document.getElementById('foodAddModal').classList.add('show');
+}
+function closeFoodAdd() { document.getElementById('foodAddModal').classList.remove('show'); }
+function faToggleCat(el) {
+  const c = el.dataset.cat;
+  faCatOpen[c] = !faCatOpen[c];
+  renderFoodList();
+}
+// топ-8 самого частого
+function fdFrequent() {
+  const uses = (state.nutri && state.nutri.uses) || {};
+  const names = Object.keys(uses).sort((a, b) => uses[b] - uses[a]).slice(0, 8);
+  return names.map(nm => fdFindItem(nm)).filter(Boolean);
+}
+function fdFindItem(name) {
+  const custom = (state.nutri && state.nutri.custom) || [];
+  return custom.find(x => x.n === name) || FOOD_FLAT.find(x => x.n === name) || null;
+}
+let faRendered = [];   // продукты текущего списка — по индексу, чтобы не пихать JSON в атрибут
+function renderFoodList() {
+  const q = (document.getElementById('faSearch').value || '').trim().toLowerCase();
+  const custom = (state.nutri && state.nutri.custom) || [];
+  const box = document.getElementById('faList');
+  faRendered = [];
+  const row = it => {
+    const i = faRendered.push(it) - 1;
+    const pc = pieceOf(it.n);
+    return '<div class="fa-item" onclick="pickFoodAt(' + i + ')">' +
+      '<span class="fa-item-n">' + escFood(it.n) +
+        '<span class="fa-item-m">Б ' + it.p + ' · Ж ' + it.f + ' · У ' + it.c +
+          (pc ? ' · 1 ' + unitLabel(pc[0], 1) + ' ≈ ' + pc[1] + ' г' : '') + '</span>' +
+      '</span>' +
+      '<span class="fa-item-k">' + it.k + ' ккал</span>' +
+    '</div>';
+  };
+
+  // в режиме сборки блюда лишние кнопки только мешают
+  const myBtn = dishPickMode
+    ? ''
+    : '<div class="fa-my" onclick="openQuick()">⚡ Просто калории — без взвешивания</div>' +
+      '<div class="fa-my fa-dish" onclick="openDish()">＋ Собрать своё блюдо</div>' +
+      '<div class="fa-my" onclick="openMyFood()">＋ Свой продукт с упаковки</div>';
+
+  if (q) {
+    const hits = custom.concat(FOOD_FLAT).filter(x => x.n.toLowerCase().includes(q)).slice(0, 40);
+    box.innerHTML = myBtn + (hits.length ? hits.map(row).join('') : '<div class="fa-none">Ничего не нашлось</div>');
+    return;
+  }
+  let html = myBtn;
+  // готовые блюда — первым делом, ради них всё и затевалось
+  const dishes = (!dishPickMode && state.nutri && state.nutri.dishes) || [];
+  if (dishes.length) {
+    html += '<div class="fa-cat-title" style="cursor:default"><span>Мои блюда</span></div>' +
+      dishes.map(d => {
+        const t = d.items.reduce((s, it) => s + it.k * it.g / 100, 0);
+        return '<div class="fa-item" onclick="addDish(' + d.id + ')">' +
+          '<span class="fa-item-n">' + escFood(d.n) +
+            '<span class="fa-item-m">' + d.items.length + ' ' +
+              plural(d.items.length, 'продукт', 'продукта', 'продуктов') + ' · ' +
+              d.items.map(i => escFood(i.n)).join(', ') + '</span>' +
+          '</span>' +
+          '<span class="fa-item-k">' + Math.round(t) + ' ккал</span>' +
+          '<button class="fd-row-x" onclick="delDish(' + d.id + ', event)" aria-label="Удалить блюдо">✕</button>' +
+        '</div>';
+      }).join('');
+  }
+  const freq = fdFrequent();
+  if (freq.length) {
+    html += '<div class="fa-cat-title" style="cursor:default"><span>Частое</span></div>' + freq.map(row).join('');
+  }
+  if (custom.length) {
+    const open = faCatOpen['Мои продукты'];
+    html += '<div class="fa-cat-title" data-cat="Мои продукты" onclick="faToggleCat(this)">' +
+      '<span>Мои продукты</span><span>' + (open ? '▾' : '▸') + '</span></div>' +
+      (open ? custom.map(row).join('') : '');
+  }
+  Object.keys(FOOD_DB).forEach(cat => {
+    const open = faCatOpen[cat];
+    html += '<div class="fa-cat-title" data-cat="' + cat + '" onclick="faToggleCat(this)">' +
+      '<span>' + cat + '</span><span>' + (open ? '▾' : '▸') + '</span></div>' +
+      (open ? FOOD_DB[cat].map(r => row({ n: r[0], k: r[1], p: r[2], f: r[3], c: r[4] })).join('') : '');
+  });
+  box.innerHTML = html;
+}
+function pickFoodAt(i) {
+  const it = faRendered[i];
+  if (!it) return;
+  pickFood(it);
+}
+function pickFood(json) {
+  ptItem = typeof json === 'string' ? JSON.parse(json) : json;
+  faEditing = null;
+  openPortion(null);   // размер по умолчанию решает openPortion: 1 мерка или 100 г
+}
+let ptMode = 'g', ptPiece = null;   // 'pc' — считаем в штуках/ложках, 'g' — в граммах
+const PC_PRESETS = [0.5, 1, 1.5, 2, 3, 4];
+const G_PRESETS = [30, 50, 100, 150, 200, 300];
+function openPortion(grams) {
+  document.getElementById('ptName').textContent = ptItem.n;
+  ptPiece = pieceOf(ptItem.n);
+  const per100 = 'На 100 г: ' + ptItem.k + ' ккал · Б ' + ptItem.p + ' · Ж ' + ptItem.f + ' · У ' + ptItem.c;
+  document.getElementById('ptPer100').textContent = ptPiece
+    ? per100 + '\n1 ' + unitLabel(ptPiece[0], 1) + ' ≈ ' + ptPiece[1] + ' г'
+    : per100;
+  const modeBox = document.getElementById('ptMode');
+  if (ptPiece) {
+    modeBox.style.display = '';
+    document.getElementById('ptModePc').textContent = unitLabel(ptPiece[0], 2);
+    // новая порция штучного — это одна штука, а не 100 г
+    ptSetMode('pc', grams != null ? grams : ptPiece[1]);
+  } else {
+    modeBox.style.display = 'none';
+    ptSetMode('g', grams != null ? grams : 100);
+  }
+  document.getElementById('portionModal').classList.add('show');
+}
+// grams не обязателен — при ручном переключении пересчитываем из текущего значения
+function ptSetMode(mode, grams) {
+  const inp = document.getElementById('ptGrams');
+  const g = grams != null ? grams : ptCurrentGrams();
+  ptMode = ptPiece ? mode : 'g';
+  document.getElementById('ptModePc').classList.toggle('sel', ptMode === 'pc');
+  document.getElementById('ptModeG').classList.toggle('sel', ptMode === 'g');
+  if (ptMode === 'pc') {
+    const q = Math.round(g / ptPiece[1] * 10) / 10;
+    inp.value = q || 1;
+    inp.step = '0.5';
+    document.getElementById('ptUnit').textContent = unitLabel(ptPiece[0], q || 1);
+  } else {
+    inp.value = Math.round(g) || 100;
+    inp.step = '1';
+    document.getElementById('ptUnit').textContent = 'грамм';
+  }
+  renderPtPresets();
+  updatePortionPreview();
+}
+function renderPtPresets() {
+  const list = ptMode === 'pc' ? PC_PRESETS : G_PRESETS;
+  document.getElementById('ptPresets').innerHTML = list.map(v =>
+    '<button type="button" class="pchip" data-v="' + v + '" onclick="ptPreset(' + v + ')">' +
+      String(v).replace('.', ',') + '</button>').join('');
+}
+function ptPreset(v) {
+  document.getElementById('ptGrams').value = v;
+  updatePortionPreview();
+}
+// сколько граммов сейчас набрано, независимо от режима
+function ptCurrentGrams() {
+  const v = parseFloat(String(document.getElementById('ptGrams').value).replace(',', '.')) || 0;
+  return ptMode === 'pc' && ptPiece ? v * ptPiece[1] : v;
+}
+function closePortion() { document.getElementById('portionModal').classList.remove('show'); }
+function updatePortionPreview() {
+  const g = ptCurrentGrams();
+  const p = document.getElementById('ptPreview');
+  if (ptMode === 'pc' && ptPiece) {
+    const q = parseFloat(String(document.getElementById('ptGrams').value).replace(',', '.')) || 0;
+    document.getElementById('ptUnit').textContent = unitLabel(ptPiece[0], q || 1);
+  }
+  if (!g || !ptItem) { p.textContent = ''; return; }
+  p.textContent = Math.round(ptItem.k * g / 100) + ' ккал · Б ' + Math.round(ptItem.p * g / 100) +
+    ' · Ж ' + Math.round(ptItem.f * g / 100) + ' · У ' + Math.round(ptItem.c * g / 100) +
+    (ptMode === 'pc' ? '  ·  ' + Math.round(g) + ' г' : '');
+}
+function savePortion() {
+  const g = Math.round(ptCurrentGrams());
+  if (!g || g <= 0) { toast(ptMode === 'pc' ? 'Укажи количество' : 'Укажи вес порции'); return; }
+  const q = ptMode === 'pc' && ptPiece
+    ? parseFloat(String(document.getElementById('ptGrams').value).replace(',', '.'))
+    : null;
+  // собираем блюдо — продукт уходит в него, день не трогаем
+  if (dishPickMode && dishDraft) {
+    const it = { n: ptItem.n, g, k: ptItem.k, p: ptItem.p, f: ptItem.f, c: ptItem.c };
+    if (q) { it.q = q; it.u = ptPiece[0]; }
+    dishDraft.items.push(it);
+    closePortion(); closeFoodAdd();
+    dishPickMode = true;                       // closeFoodAdd сбрасывает — возвращаем
+    renderDish();
+    document.getElementById('dishModal').classList.add('show');
+    vib(10);
+    return;
+  }
+  const day = fdDayData(fdDay());
+  if (faEditing) {
+    const it = day[faEditing.mk][faEditing.i];
+    it.g = g;
+    if (q) { it.q = q; it.u = ptPiece[0]; } else { delete it.q; delete it.u; }
+  } else {
+    const it = { n: ptItem.n, g, k: ptItem.k, p: ptItem.p, f: ptItem.f, c: ptItem.c };
+    if (q) { it.q = q; it.u = ptPiece[0]; }
+    day[faMeal].push(it);
+    state.nutri.uses[ptItem.n] = (state.nutri.uses[ptItem.n] || 0) + 1;
+  }
+  save();
+  closePortion(); closeFoodAdd();
+  renderFood();
+  fdSplash();
+  if (!faEditing) vib(12);
+  faEditing = null;
+}
+function editPortion(mk, i) {
+  const it = fdDayData(fdDay())[mk][i];
+  if (!it) return;
+  ptItem = { n: it.n, k: it.k, p: it.p, f: it.f, c: it.c };
+  faEditing = { mk, i };
+  openPortion(it.g);
+  // в чём записывали, в том и правим
+  if (!it.q && pieceOf(it.n)) ptSetMode('g', it.g);
+}
+// ============ ПОВТОРИТЬ ПРИЁМ ============
+// последние непустые версии этого приёма — с самых свежих дней, без дублей по составу
+function lastMealVariants(mk, limit) {
+  const n = state.nutri;
+  if (!n) return [];
+  const cur = fdDay();
+  const days = Object.keys(n.days).filter(d => d < cur).sort().reverse();
+  const out = [], seen = {};
+  for (const d of days) {
+    const items = (n.days[d] || {})[mk];
+    if (!items || !items.length) continue;
+    const key = items.map(i => i.n + '|' + i.g).join(';');
+    if (seen[key]) continue;
+    seen[key] = 1;
+    out.push({ d, items });
+    if (out.length >= (limit || 5)) break;
+  }
+  return out;
+}
+let rpMeal = 'b';
+function openRepeat(mk) {
+  rpMeal = mk;
+  const name = (MEALS.find(m => m[0] === mk) || [, 'приём'])[1].toLowerCase();
+  document.getElementById('rpTitle').textContent = 'Повторить ' + name;
+  const vars = lastMealVariants(mk);
+  document.getElementById('rpList').innerHTML = vars.length
+    ? vars.map((v, i) => {
+        const k = Math.round(v.items.reduce((s, it) => s + it.k * it.g / 100, 0));
+        return '<div class="rp-opt" onclick="applyRepeat(' + i + ')">' +
+          '<span class="rp-opt-n">' +
+            '<span class="rp-opt-d">' + fdDayName(v.d) + '</span>' +
+            '<span class="rp-opt-l">' + v.items.map(it => escFood(it.n)).join(', ') + '</span>' +
+          '</span>' +
+          '<span class="rp-opt-k">' + fmt(k) + '</span>' +
+        '</div>';
+      }).join('')
+    : '<div class="fa-none">Пока нечего повторять</div>';
+  document.getElementById('repeatModal').classList.add('show');
+}
+function closeRepeat() { document.getElementById('repeatModal').classList.remove('show'); }
+function fdDayName(d) {
+  const today = todayStr();
+  if (d === todayStr(new Date(Date.now() - 864e5))) return 'вчера';
+  const diff = Math.round((parseD(today) - parseD(d)) / 864e5);
+  if (diff <= 7) return diff + ' ' + plural(diff, 'день назад', 'дня назад', 'дней назад');
+  return parseD(d).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+}
+function applyRepeat(idx) {
+  const v = lastMealVariants(rpMeal)[idx];
+  if (!v) return;
+  const day = fdDayData(fdDay());
+  v.items.forEach(it => {
+    day[rpMeal].push(Object.assign({}, it));
+    state.nutri.uses[it.n] = (state.nutri.uses[it.n] || 0) + 1;
+  });
+  const added = v.items.length;
+  save();
+  closeRepeat();
+  renderFood();
+  fdSplash(); vib(12);
+  toast('Добавлено: ' + added + ' ' + plural(added, 'позиция', 'позиции', 'позиций'), () => {
+    const d = fdDayData(fdDay());
+    d[rpMeal].splice(d[rpMeal].length - added, added);
+    save(); renderFood();
+  });
+}
+
+// ============ СВОИ БЛЮДА ============
+let dishDraft = null;      // { id, n, items[] }
+let dishPickMode = false;  // список продуктов открыт ради блюда, а не ради дня
+function openDish(id) {
+  const ex = id ? (state.nutri.dishes || []).find(x => x.id === id) : null;
+  dishDraft = ex
+    ? { id: ex.id, n: ex.n, items: ex.items.map(i => Object.assign({}, i)) }
+    : { id: Date.now(), n: '', items: [] };
+  document.getElementById('dishTitle').textContent = ex ? 'Изменить блюдо' : 'Своё блюдо';
+  document.getElementById('dishName').value = dishDraft.n;
+  renderDish();
+  document.getElementById('dishModal').classList.add('show');
+}
+function closeDish() {
+  document.getElementById('dishModal').classList.remove('show');
+  dishPickMode = false;
+}
+function renderDish() {
+  const box = document.getElementById('dishItems');
+  box.innerHTML = dishDraft.items.length
+    ? dishDraft.items.map((it, i) =>
+        '<div class="dish-row">' +
+          '<span class="dish-row-n">' + escFood(it.n) +
+            '<span class="dish-row-g"> · ' + portionLabel(it) + '</span></span>' +
+          '<button class="dish-row-x" onclick="dishDel(' + i + ')" aria-label="Убрать">✕</button>' +
+        '</div>').join('')
+    : '<div class="fd-empty">Пока пусто — добавь продукты</div>';
+  document.getElementById('dishTotal').textContent = dishDraft.items.length ? dishTotalText() : '';
+}
+function dishTotals() {
+  const t = { k: 0, p: 0, f: 0, c: 0 };
+  dishDraft.items.forEach(it => {
+    const g = it.g / 100;
+    t.k += it.k * g; t.p += it.p * g; t.f += it.f * g; t.c += it.c * g;
+  });
+  return { k: Math.round(t.k), p: Math.round(t.p), f: Math.round(t.f), c: Math.round(t.c) };
+}
+function dishTotalText() {
+  const t = dishTotals();
+  return 'Всего: ' + fmt(t.k) + ' ккал · Б ' + t.p + ' · Ж ' + t.f + ' · У ' + t.c;
+}
+function dishDel(i) { dishDraft.items.splice(i, 1); renderDish(); }
+function dishAddProduct() {
+  dishDraft.n = document.getElementById('dishName').value;   // не терять набранное имя
+  dishPickMode = true;
+  document.getElementById('dishModal').classList.remove('show');
+  openFoodAdd(faMeal, true);
+}
+function saveDish() {
+  const name = (document.getElementById('dishName').value || '').trim();
+  if (!name) { toast('Как назовём блюдо?'); return; }
+  if (!dishDraft.items.length) { toast('Добавь хотя бы один продукт'); return; }
+  state.nutri.dishes = state.nutri.dishes || [];
+  const i = state.nutri.dishes.findIndex(d => d.id === dishDraft.id);
+  const rec = { id: dishDraft.id, n: name, items: dishDraft.items.map(x => Object.assign({}, x)) };
+  if (i >= 0) state.nutri.dishes[i] = rec; else state.nutri.dishes.unshift(rec);
+  save();
+  closeDish();
+  renderFood();
+  toast('Блюдо «' + name + '» сохранено');
+}
+// добавить готовое блюдо в приём — одной кнопкой
+function addDish(id) {
+  const dish = (state.nutri.dishes || []).find(d => d.id === id);
+  if (!dish) return;
+  const day = fdDayData(fdDay());
+  dish.items.forEach(it => day[faMeal].push(Object.assign({}, it)));
+  const added = dish.items.length;
+  const mk = faMeal;
+  save();
+  closeFoodAdd();
+  renderFood();
+  fdSplash(); vib(12);
+  toast('«' + dish.n + '» добавлено', () => {
+    const d = fdDayData(fdDay());
+    d[mk].splice(d[mk].length - added, added);
+    save(); renderFood();
+  });
+}
+function delDish(id, ev) {
+  if (ev) ev.stopPropagation();
+  const dish = (state.nutri.dishes || []).find(d => d.id === id);
+  if (!dish) return;
+  state.nutri.dishes = state.nutri.dishes.filter(d => d.id !== id);
+  save();
+  renderFoodList();
+  toast('Блюдо удалено', () => {
+    state.nutri.dishes.unshift(dish); save(); renderFoodList();
+  });
+}
+
+// ============ ПРОСТО КАЛОРИИ ============
+function openQuick() {
+  ['qkName', 'qkK', 'qkP', 'qkF', 'qkC'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('qkMacros').style.display = 'none';
+  document.getElementById('qkMoreBtn').style.display = '';
+  document.getElementById('quickModal').classList.add('show');
+}
+function closeQuick() { document.getElementById('quickModal').classList.remove('show'); }
+function qkToggleMacros() {
+  document.getElementById('qkMacros').style.display = '';
+  document.getElementById('qkMoreBtn').style.display = 'none';
+}
+function saveQuick() {
+  const k = Math.round(parseFloat(String(document.getElementById('qkK').value).replace(',', '.')) || 0);
+  if (!k || k <= 0) { toast('Сколько примерно калорий?'); return; }
+  const num = id => +(parseFloat(String(document.getElementById(id).value).replace(',', '.')) || 0);
+  const name = (document.getElementById('qkName').value || '').trim() || 'Еда без взвешивания';
+  // g=100 держим специально: итоги считаются как k*g/100, значит ровно k ккал
+  const it = { n: name, g: 100, k, p: num('qkP'), f: num('qkF'), c: num('qkC'), qk: true };
+  const mk = faMeal;
+  fdDayData(fdDay())[mk].push(it);
+  save();
+  closeQuick(); closeFoodAdd();
+  renderFood();
+  fdSplash(); vib(12);
+  toast(fmt(k) + ' ккал записано', () => {
+    fdDayData(fdDay())[mk].pop(); save(); renderFood();
+  });
+}
+
+// ============ МЕНЮ СТРОКИ ПРОДУКТА ============
+let rmRef = null;
+function openRowMenu(mk, i) {
+  const it = fdDayData(fdDay())[mk][i];
+  if (!it) return;
+  rmRef = { mk, i };
+  document.getElementById('rmTitle').textContent = it.n;
+  document.getElementById('rmSub').textContent =
+    portionLabel(it) + ' · ' + Math.round(it.k * it.g / 100) + ' ккал';
+  document.getElementById('rmMeals').innerHTML = MEALS
+    .filter(([k]) => k !== mk)
+    .map(([k, name]) => '<button type="button" class="pchip" onclick="rowMenuMove(\'' + k + '\')">' + name + '</button>')
+    .join('');
+  document.getElementById('rowMenu').classList.add('show');
+}
+function closeRowMenu() { document.getElementById('rowMenu').classList.remove('show'); }
+function rowMenuMove(to) {
+  if (!rmRef) return;
+  const day = fdDayData(fdDay());
+  const from = rmRef.mk, idx = rmRef.i;
+  const it = day[from][idx];
+  if (!it) return;
+  day[from].splice(idx, 1);
+  day[to].push(it);
+  save();
+  closeRowMenu();
+  renderFood();
+  vib(10);
+  const toName = (MEALS.find(m => m[0] === to) || [, ''])[1];
+  toast('Перенесено в «' + toName + '»', () => {
+    const d = fdDayData(fdDay());
+    const back = d[to].pop();
+    d[from].splice(idx, 0, back);
+    save(); renderFood();
+  });
+}
+function rowMenuDup() {
+  if (!rmRef) return;
+  const day = fdDayData(fdDay());
+  const it = day[rmRef.mk][rmRef.i];
+  if (!it) return;
+  const mk = rmRef.mk;
+  day[mk].push(Object.assign({}, it));
+  save();
+  closeRowMenu();
+  renderFood();
+  fdSplash(); vib(10);
+  toast('Дублировано', () => { fdDayData(fdDay())[mk].pop(); save(); renderFood(); });
+}
+function rowMenuEdit() {
+  if (!rmRef) return;
+  const { mk, i } = rmRef;
+  closeRowMenu();
+  editPortion(mk, i);
+}
+function rowMenuDelete() {
+  if (!rmRef) return;
+  const { mk, i } = rmRef;
+  closeRowMenu();
+  delFood(mk, i);
+}
+
+// ============ ЧЕМ ДОБРАТЬ ============
+// продукты этих категорий не советуем: маслом и колой норму не добирают
+const TIP_SKIP_CATS = { 'Масла и соусы': 1, 'Напитки': 1, 'Сладости и снеки': 1 };
+const MACRO_NAMES = { p: 'белка', f: 'жиров', c: 'углеводов' };
+function fdSuggestions() {
+  const n = state.nutri;
+  if (!n) return null;
+  const d = fdDay(), t = fdTotals(d);
+  const remK = n.kcal + fdBurned(d) - t.k;
+  if (remK < 120) return null;                       // почти добрал — советовать нечего
+  const rem = { p: n.p - t.p, f: n.f - t.f, c: n.c - t.c };
+  // самый отстающий макрос по доле выполнения
+  const fill = { p: t.p / (n.p || 1), f: t.f / (n.f || 1), c: t.c / (n.c || 1) };
+  const key = ['p', 'f', 'c'].sort((a, b) => fill[a] - fill[b])[0];
+  if (rem[key] <= 3) return null;
+  const cands = [];
+  FOOD_FLAT.forEach(x => {
+    if (TIP_SKIP_CATS[x.cat] || !x.k) return;
+    if (x[key] <= 0) return;
+    const pc = pieceOf(x.n);
+    const base = pc ? pc[1] : 100;
+    // берём порцию, которая закрывает нужный макрос, но влезает в остаток калорий
+    let g = Math.min(rem[key] / x[key] * 100, remK / x.k * 100, base * 3);
+    g = pc ? Math.max(pc[1], Math.round(g / pc[1]) * pc[1]) : Math.round(g / 10) * 10;
+    const kcal = x.k * g / 100;
+    if (g < 10 || kcal < 40 || kcal > remK) return;
+    cands.push({ x, g, kcal, gain: x[key] * g / 100, dens: x[key] / x.k });
+  });
+  cands.sort((a, b) => b.dens - a.dens);
+  const out = [], usedCat = {};
+  for (const c of cands) {
+    if (usedCat[c.x.cat]) continue;                  // по одному из категории — чтобы не было трёх творогов
+    usedCat[c.x.cat] = 1;
+    out.push(c);
+    if (out.length === 3) break;
+  }
+  return { key, remK, rem, list: out };
+}
+function renderFoodTips() {
+  const card = document.getElementById('fdTipCard');
+  const s = fdSuggestions();
+  if (!s || !s.list.length) { card.style.display = 'none'; return; }
+  card.style.display = '';
+  document.getElementById('fdTipSub').textContent =
+    'Осталось ' + fmt(s.remK) + ' ккал и ' + Math.round(s.rem[s.key]) + ' г ' + MACRO_NAMES[s.key] + '. Вот чем закрыть:';
+  document.getElementById('fdTips').innerHTML = s.list.map((c, i) =>
+    '<button type="button" class="fd-tip" onclick="applyTip(' + i + ')">' +
+      '<span class="fd-tip-n">' + escFood(c.x.n) +
+        '<span class="fd-tip-g">' + fdTipPortion(c) + ' · +' + Math.round(c.gain) + ' г ' + MACRO_NAMES[s.key] + '</span>' +
+      '</span>' +
+      '<span class="fd-tip-k">' + Math.round(c.kcal) + ' ккал</span>' +
+    '</button>').join('');
+}
+function fdTipPortion(c) {
+  const pc = pieceOf(c.x.n);
+  return pc ? qtyLabel(c.g / pc[1], pc[0]) + ' · ' + Math.round(c.g) + ' г' : Math.round(c.g) + ' г';
+}
+function applyTip(i) {
+  const s = fdSuggestions();
+  const c = s && s.list[i];
+  if (!c) return;
+  faMeal = 's';                  // подсказки идут в перекус
+  faEditing = null;
+  ptItem = { n: c.x.n, k: c.x.k, p: c.x.p, f: c.x.f, c: c.x.c };
+  openPortion(Math.round(c.g));
+}
+
+// ---------- свой продукт ----------
+function openMyFood() {
+  ['mfName', 'mfK', 'mfP', 'mfF', 'mfC'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('myFoodModal').classList.add('show');
+}
+function closeMyFood() { document.getElementById('myFoodModal').classList.remove('show'); }
+function saveMyFood() {
+  const v = id => document.getElementById(id).value;
+  const n = (v('mfName') || '').trim();
+  if (!n) { toast('Как называется продукт?'); return; }
+  const k = parseFloat(v('mfK')) || 0;
+  if (!k) { toast('Укажи калорийность на 100 г'); return; }
+  const item = { n, k: Math.round(k), p: +(parseFloat(v('mfP')) || 0), f: +(parseFloat(v('mfF')) || 0), c: +(parseFloat(v('mfC')) || 0) };
+  state.nutri.custom = state.nutri.custom.filter(x => x.n !== n);
+  state.nutri.custom.unshift(item);
+  save();
+  closeMyFood();
+  ptItem = item; faEditing = null;
+  openPortion(100);
+}
+// ---------- вес ----------
+function fdAskWeight() {
+  const n = state.nutri;
+  askValue('Твой вес сегодня, кг', { type: 'number', placeholder: '75', value: String(n.weight || '') }, v => {
+    if (v === null) return;
+    const w = parseFloat(String(v).replace(',', '.'));
+    if (!w || w < 25 || w > 350) { toast('Проверь цифру'); return; }
+    n.weights[todayStr()] = w;
+    n.weight = w;
+    n.kcal = n.manual ? n.kcal : calcKcal(n);
+    if (!n.manual) { const m = calcMacros(n.kcal, n.goal); n.p = m.p; n.f = m.f; n.c = m.c; }
+    save(); renderFood();
+    toast('Вес записан');
+  });
+}
+function renderFoodWeight() {
+  const n = state.nutri;
+  const box = document.getElementById('fdWeightBox');
+  const days = Object.keys(n.weights).sort();
+  if (!days.length) {
+    box.innerHTML = '<div class="fd-empty">Ещё не записывал — нажми «Записать»</div>';
+    return;
+  }
+  const last = n.weights[days[days.length - 1]];
+  const first = n.weights[days[0]];
+  const delta = Math.round((last - first) * 10) / 10;
+  let html = '<div class="fd-w-now">' +
+    '<span class="fd-w-val">' + last + '</span><span class="fd-w-unit">кг</span>' +
+    (days.length > 1 && delta !== 0
+      ? '<span class="fd-w-delta ' + (delta < 0 ? 'down' : 'up') + '">' + (delta > 0 ? '+' : '') + delta + ' кг</span>'
+      : '') +
+  '</div>';
+  if (n.targetW) {
+    const togo = Math.round((last - n.targetW) * 10) / 10;
+    html += '<div class="fd-w-goal">Цель ' + n.targetW + ' кг · ' +
+      (Math.abs(togo) < 0.15 ? 'достигнута!' : 'осталось ' + Math.abs(togo) + ' кг') + '</div>';
+  }
+  // график последних 12 записей
+  const pts = days.slice(-12).map(d => n.weights[d]);
+  if (pts.length > 1) {
+    const mn = Math.min(...pts), mx = Math.max(...pts), rng = Math.max(0.5, mx - mn);
+    const W = 300, H = 60;
+    const coords = pts.map((v, i) => [
+      (i / (pts.length - 1)) * W,
+      H - ((v - mn) / rng) * (H - 12) - 6
+    ]);
+    const line = coords.map((c, i) => (i ? 'L' : 'M') + c[0].toFixed(1) + ' ' + c[1].toFixed(1)).join(' ');
+    html += '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" height="' + H + '" style="margin-top:10px;display:block">' +
+      '<path d="' + line + '" fill="none" stroke="#26a349" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+      coords.map((c, i) => '<circle cx="' + c[0].toFixed(1) + '" cy="' + c[1].toFixed(1) + '" r="' +
+        (i === coords.length - 1 ? 4 : 2.5) + '" fill="#26a349"/>').join('') +
+    '</svg>';
+  }
+  box.innerHTML = html;
+}
+// ---------- неделя ----------
+function renderFoodWeek() {
+  const n = state.nutri, today = todayStr();
+  const week = weekDates();
+  const L = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+  const vals = week.map(d => (d <= today && n.days[d]) ? fdTotals(d).k : 0);
+  const mx = Math.max(n.kcal, ...vals) || 1;
+  document.getElementById('fdWeek').innerHTML =
+    '<div class="fd-week">' + week.map((d, i) => {
+      const v = vals[i];
+      const h = Math.max(3, Math.round(v / mx * 56));
+      const cls = !v ? 'empty' : (v > n.kcal * 1.05 ? 'over' : '');
+      return '<div class="fd-wd' + (d === today ? ' today' : '') + '">' +
+        '<div class="fd-wd-bar"><i class="' + cls + '" style="height:' + h + 'px"></i></div>' +
+        '<div class="fd-wd-k">' + (v ? Math.round(v / 100) / 10 + 'к' : '—') + '</div>' +
+        '<div class="fd-wd-lab">' + L[i] + '</div>' +
+      '</div>';
+    }).join('') + '</div>';
+}
+// ---------- переключение дня ----------
+function fdShiftDay(delta) {
+  const d = parseD(fdDay());
+  d.setDate(d.getDate() + delta);
+  const s = todayStr(d);
+  if (s > todayStr()) return;
+  fdDate = s === todayStr() ? null : s;
+  renderFood();
+}
+function fdGoToday() { fdDate = null; renderFood(); }
+
+// ---------- анкета ----------
+let fwStep = 1, fwData = {};
+const FW_STEPS = [
+  { t: 'Кто ты?', s: 'шаг 1 из 4' },
+  { t: 'Насколько активен?', s: 'шаг 2 из 4' },
+  { t: 'Какая цель?', s: 'шаг 3 из 4' },
+  { t: 'Твоя норма', s: 'шаг 4 из 4' }
+];
+function openFoodWizard() {
+  const n = state.nutri;
+  fwData = n ? Object.assign({}, n) : { sex: 'm', activity: 1.375, goal: 'keep' };
+  document.getElementById('fwAge').value = fwData.age || '';
+  document.getElementById('fwHeight').value = fwData.height || '';
+  document.getElementById('fwWeight').value = fwData.weight || '';
+  document.getElementById('fwTargetW').value = fwData.targetW || '';
+  document.getElementById('fwTargetD').value = fwData.targetD || '';
+  document.querySelectorAll('#fwStep1 .pchip[data-sex]').forEach(c =>
+    c.classList.toggle('sel', c.dataset.sex === fwData.sex));
+  document.querySelectorAll('.fw-act').forEach(c =>
+    c.classList.toggle('sel', +c.dataset.a === fwData.activity));
+  document.querySelectorAll('#fwStep3 .pchip[data-goal]').forEach(c =>
+    c.classList.toggle('sel', c.dataset.goal === fwData.goal));
+  fwLastAuto = null;
+  fwStep = 1; fwRender();
+  document.getElementById('foodWizard').classList.add('show');
+}
+function closeFoodWizard() { document.getElementById('foodWizard').classList.remove('show'); }
+function fwRender() {
+  const st = FW_STEPS[fwStep - 1];
+  document.getElementById('fwTitle').textContent = st.t;
+  document.getElementById('fwSub').textContent = st.s;
+  for (let i = 1; i <= 4; i++) document.getElementById('fwStep' + i).style.display = i === fwStep ? '' : 'none';
+  document.querySelectorAll('#fwDots i').forEach((d, i) => d.classList.toggle('on', i === fwStep - 1));
+  document.getElementById('fwBack').textContent = fwStep === 1 ? 'Отмена' : 'Назад';
+  document.getElementById('fwNext').textContent = fwStep === 4 ? 'Готово' : 'Далее';
+  if (fwStep === 3) fwUpdatePace();
+  if (fwStep === 4) fwFillResult();
+}
+document.querySelectorAll('#fwStep1 .pchip[data-sex]').forEach(c => c.onclick = () => {
+  fwData.sex = c.dataset.sex;
+  document.querySelectorAll('#fwStep1 .pchip[data-sex]').forEach(x => x.classList.toggle('sel', x === c));
+});
+document.querySelectorAll('.fw-act').forEach(c => c.onclick = () => {
+  fwData.activity = +c.dataset.a;
+  document.querySelectorAll('.fw-act').forEach(x => x.classList.toggle('sel', x === c));
+});
+document.querySelectorAll('#fwStep3 .pchip[data-goal]').forEach(c => c.onclick = () => {
+  fwData.goal = c.dataset.goal;
+  document.querySelectorAll('#fwStep3 .pchip[data-goal]').forEach(x => x.classList.toggle('sel', x === c));
+  fwUpdatePace();
+});
+['fwTargetW', 'fwTargetD'].forEach(id =>
+  document.getElementById(id).addEventListener('input', fwUpdatePace));
+function fwUpdatePace() {
+  const box = document.getElementById('fwTargetBox');
+  const pace = document.getElementById('fwPace');
+  if (fwData.goal === 'keep') { box.style.display = 'none'; pace.textContent = ''; return; }
+  box.style.display = '';
+  const cur = parseFloat(document.getElementById('fwWeight').value) || fwData.weight;
+  const tw = parseFloat(document.getElementById('fwTargetW').value);
+  const td = document.getElementById('fwTargetD').value;
+  if (!cur || !tw || !td) { pace.textContent = ''; return; }
+  const days = Math.round((parseD(td) - parseD(todayStr())) / 864e5);
+  if (days <= 0) { pace.textContent = 'Срок должен быть в будущем'; pace.className = 'fw-pace warn'; return; }
+  const diff = Math.abs(tw - cur);
+  const perWeek = diff / (days / 7);
+  const fast = perWeek > 1;
+  pace.className = 'fw-pace' + (fast ? ' warn' : '');
+  pace.textContent = days + ' ' + plural(days, 'день', 'дня', 'дней') + ' · ' +
+    (Math.round(perWeek * 100) / 100) + ' кг в неделю' +
+    (fast ? ' — это быстро, лучше помедленнее' : '');
+}
+let fwLastAuto = null;   // последняя автоматически подставленная норма
+function fwFillResult() {
+  const k = calcKcal(fwData);
+  const m = calcMacros(k, fwData.goal);
+  const nameGoal = { lose: 'на сушке', keep: 'на поддержании', gain: 'на наборе' }[fwData.goal];
+  document.getElementById('fwResult').innerHTML =
+    '<div class="fw-r-k">' + fmt(k) + '</div>' +
+    '<div class="fw-r-lab">ккал в день ' + nameGoal + '</div>' +
+    '<div class="fw-r-m">Б ' + m.p + ' г · Ж ' + m.f + ' г · У ' + m.c + ' г</div>';
+  const cur = parseInt(document.getElementById('fwKcal').value, 10);
+  // если человек уже поправил цифры руками, а исходные данные не менялись — не затираем
+  const edited = cur && fwLastAuto !== null && cur !== fwLastAuto && k === fwLastAuto;
+  fwLastAuto = k;
+  if (edited) return;
+  document.getElementById('fwKcal').value = k;
+  document.getElementById('fwP').value = m.p;
+  document.getElementById('fwF').value = m.f;
+  document.getElementById('fwC').value = m.c;
+}
+function fwRecalcMacros() {
+  const k = parseInt(document.getElementById('fwKcal').value, 10);
+  if (!k) return;
+  const m = calcMacros(k, fwData.goal);
+  document.getElementById('fwP').value = m.p;
+  document.getElementById('fwF').value = m.f;
+  document.getElementById('fwC').value = m.c;
+}
+function fwStepNext() {
+  if (fwStep === 1) {
+    const age = parseInt(document.getElementById('fwAge').value, 10);
+    const height = parseInt(document.getElementById('fwHeight').value, 10);
+    const weight = parseFloat(String(document.getElementById('fwWeight').value).replace(',', '.'));
+    if (!age || age < 10 || age > 100) { toast('Проверь возраст'); return; }
+    if (!height || height < 120 || height > 230) { toast('Проверь рост'); return; }
+    if (!weight || weight < 30 || weight > 300) { toast('Проверь вес'); return; }
+    Object.assign(fwData, { age, height, weight });
+    fwStep = 2; fwRender(); return;
+  }
+  if (fwStep === 2) {
+    if (!fwData.activity) { toast('Выбери уровень активности'); return; }
+    fwStep = 3; fwRender(); return;
+  }
+  if (fwStep === 3) {
+    if (fwData.goal !== 'keep') {
+      const tw = parseFloat(String(document.getElementById('fwTargetW').value).replace(',', '.'));
+      const td = document.getElementById('fwTargetD').value;
+      if (tw) fwData.targetW = tw;
+      if (td) fwData.targetD = td;
+    } else { delete fwData.targetW; delete fwData.targetD; }
+    fwStep = 4; fwRender(); return;
+  }
+  saveFoodWizard();
+}
+function fwStepBack() {
+  if (fwStep === 1) { closeFoodWizard(); return; }
+  fwStep--; fwRender();
+}
+function saveFoodWizard() {
+  const auto = calcKcal(fwData);
+  const k = parseInt(document.getElementById('fwKcal').value, 10) || auto;
+  const p = parseInt(document.getElementById('fwP').value, 10) || calcMacros(k, fwData.goal).p;
+  const f = parseInt(document.getElementById('fwF').value, 10) || calcMacros(k, fwData.goal).f;
+  const c = parseInt(document.getElementById('fwC').value, 10) || calcMacros(k, fwData.goal).c;
+  const prev = state.nutri || {};
+  state.nutri = Object.assign({}, prev, fwData, {
+    kcal: k, p, f, c,
+    manual: k !== auto,
+    days: prev.days || {}, weights: prev.weights || {}, custom: prev.custom || [],
+    uses: prev.uses || {}, dishes: prev.dishes || []
+  });
+  if (!state.nutri.weights[todayStr()]) state.nutri.weights[todayStr()] = fwData.weight;
+  save();
+  closeFoodWizard();
+  renderFood();
+  toast('Норма: ' + fmt(k) + ' ккал в день');
+}
+
+const TAB_VIEWS = { save: 'viewSave', spend: 'viewSpend', habits: 'viewHabits', food: 'viewFood' };
 function switchTab(t) {
   tourGen++; tourHide();   // ручное переключение вкладки — отменяем и прячем любой текущий тур
   const show = document.getElementById(TAB_VIEWS[t]);
@@ -5733,8 +7736,15 @@ function switchTab(t) {
   document.getElementById('tabSave').classList.toggle('active', t === 'save');
   document.getElementById('tabSpend').classList.toggle('active', t === 'spend');
   document.getElementById('tabHabits').classList.toggle('active', t === 'habits');
+  document.getElementById('tabFood').classList.toggle('active', t === 'food');
   if (t === 'spend' && spendDirty) renderSpend();   // пересобираем только при изменениях
   if (t === 'habits') { renderHabits(); setTimeout(checkHabitNeglect, 400); }
+  // круг наливается на глазах: обнуляем уровень и число, потом рисуем настоящие
+  if (t === 'food') {
+    fdSetLevel(0, true);
+    fdLeftShown = null;
+    renderFood();
+  }
   // первое посещение расходов — знакомство с хомяком
   if (t === 'spend' && state.onboarded && !state.hamboarded && !onbPreview && !hamPreview) {
     state.hamboarded = true;
@@ -6340,7 +8350,7 @@ function renderHamster(monthExps) {
     svg.classList.add('fit');
     svg.classList.remove('alarm');
     body.style.transform = '';
-    cheeks.style.transform = '';
+    cheeks.style.removeProperty('--cheek');
     document.getElementById('hamSweat').style.display = 'none';
     hamFat = 0; hamPrevFat = 0;
     refreshHamEyes();
@@ -6387,7 +8397,7 @@ function renderHamster(monthExps) {
   svg.classList.toggle('fit', fat === 0);
   svg.classList.toggle('alarm', fat < 3 && monthSpent() >= L * .8);  // чует беду
   body.style.transform = 'scale(' + (1 + fat * .13) + ',' + (1 + fat * .10) + ')';
-  cheeks.style.transform = 'scale(' + (1 + fat * .17) + ')';
+  cheeks.style.setProperty('--cheek', 1 + fat * .12);   // щёки набивает умеренно, до 1.36
   document.getElementById('hamSweat').style.display = fat >= 2 ? '' : 'none';
   refreshHamEyes();
 
