@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#e8ecf4">
+<meta name="theme-color" content="#f2f2f7">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Копилка">
@@ -28,24 +28,36 @@
   html, body { touch-action: pan-y; -ms-touch-action: pan-y; }
   /* на кликабельном — manipulation: убирает задержку и двойной тап-зум */
   button, a, .q-tile, .chip, .pchip, .dchip, .tab, .cat, .hcat-row, .hcat-custom,
-  .stat, .limit-box, .wd-strip, .hcal-day, .hc-day, .fr-ico, .flame { touch-action: manipulation; }
+  .stat, .limit-box, .wd-strip, .hcal-day, .hc-day, .fr-ico, .flame,
+  .fd-circle-wrap, .fd-tip, .fd-ex, .rm-act { touch-action: manipulation; }
 
   :root {
-    --text: #1c1c2e;
-    --text2: rgba(28,28,46,.55);
-    --glass: rgba(255,255,255,.52);
-    --glass-border: rgba(255,255,255,.65);
-    --accent: #0a84ff;
-    --green: #30d158;
-    --radius: 28px;
+    /* системная палитра iOS: серые по ролям, а не по прихоти */
+    --text: #1c1c1e;
+    --text2: #8e8e93;
+    --text3: #c7c7cc;
+    --bg: #f2f2f7;               /* фон приложения */
+    --surface: #ffffff;          /* карточки */
+    --hair: rgba(60,60,67,.10);  /* волосяной разделитель */
+    --glass: #ffffff;
+    --glass-border: rgba(60,60,67,.06);
+    --accent: #007aff;
+    --accent-soft: rgba(0,122,255,.12);
+    --green: #34c759;
+    --red: #ff3b30;
+    --orange: #ff9500;
+    --yellow: #ffcc00;
+    --radius: 16px;
   }
 
   html, body { height:100%; }
 
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
     color: var(--text);
-    background: #e8ecf4;
+    background: var(--bg);
+    letter-spacing: -.24px;
+    -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
     min-height: 100vh;
     padding: 24px 16px 48px;
@@ -54,7 +66,7 @@
   }
 
   /* ---- animated pastel blobs ---- */
-  .blobs { position:fixed; inset:0; z-index:-1; overflow:hidden; filter:blur(70px); }
+  .blobs { display:none; }
   .blob { position:absolute; border-radius:50%; opacity:.65; animation: drift 22s ease-in-out infinite alternate; }
   .b1 { width:55vmax; height:55vmax; background:#a8c8ff; top:-15%; left:-15%; }
   .b2 { width:45vmax; height:45vmax; background:#ffd6e8; bottom:-10%; right:-10%; animation-delay:-6s; }
@@ -379,16 +391,17 @@
 
   .card {
     position:relative;
-    background: var(--glass);
-    -webkit-backdrop-filter: blur(28px) saturate(180%);
-    backdrop-filter: blur(28px) saturate(180%);
-    border: 1px solid var(--glass-border);
+    background: var(--surface);
+    border: none;
     border-radius: var(--radius);
-    box-shadow: 0 8px 32px rgba(60,70,110,.12), inset 0 1px 0 rgba(255,255,255,.7);
-    padding: 22px;
+    box-shadow: 0 1px 3px rgba(60,65,85,.07);
+    padding: 16px;
   }
 
-  .section-title { font-size:13px; font-weight:600; color:var(--text2); text-transform:uppercase; letter-spacing:.6px; margin-bottom:10px; }
+  .section-title {
+    font-size:13px; font-weight:600; color:var(--text2);
+    text-transform:none; letter-spacing:-.1px; margin-bottom:12px;
+  }
 
   /* ---- гирлянда (декабрь) ---- */
   .garland {
@@ -1096,11 +1109,8 @@
     transition: transform .12s, filter .12s, box-shadow .12s;
   }
   .add-btn:active, .extra-row button:active, .chip:active, .tab:active,
-  .m-ok:active, .m-cancel:active, .cat:active,
-  .q-tile:active, .limit-box:active, .hist-head:active, .undo button:active, .h-del:active {
-    transform: scale(.94) translateY(1px);
-    filter: brightness(.93);
-    box-shadow: inset 0 3px 8px rgba(0,0,0,.12);
+  .cat:active, .q-tile:active, .limit-box:active, .hist-head:active, .h-del:active {
+    opacity:.6;
   }
 
   /* ---- оптимизация для телефона ---- */
@@ -1108,7 +1118,7 @@
   .ach-grid { content-visibility: auto; contain-intrinsic-size: auto 300px; }
   @media (max-width: 700px) {
     /* карточки без blur-подложки: выглядит почти так же, работает в разы легче */
-    .card, .tabbar {
+    .card, .sec-bar {
       -webkit-backdrop-filter: none;
       backdrop-filter: none;
       background: rgba(252,253,255,.82);
@@ -1122,7 +1132,12 @@
     /* вечные микро-анимации SVG заставляют перерисовывать зверей каждый кадр */
     #tail, #ear, #hamWhisk { animation: none; }
     .wave-move, .wave-move2, .bub, #shineEl { animation: none; }
-    #fdLiquid { transition: none; }
+    /* но круг калорий оживляем обратно: это один небольшой SVG, он того стоит */
+    #fdLiquid .wave-move  { animation: waveSlide 3.4s linear infinite; }
+    #fdLiquid .wave-move2 { animation: waveSlide 5.2s linear infinite reverse; }
+    .sph-liquid .bub { animation: bubUp 4.4s ease-in infinite; }
+    .sph-liquid .wave-move  { animation: waveSlide 3.4s linear infinite; }
+    .sph-liquid .wave-move2 { animation: waveSlide 5.2s linear infinite reverse; }
     /* анимации теней — самое дорогое: на телефоне статичный вариант */
     .env.rich .face.front {
       animation: none;
@@ -1417,31 +1432,39 @@
     background:none; border:none; padding:7px 0;
   }
   .he-delete:active { color:rgba(200,60,60,1); }
+  /* лист снизу: одинаковый для всех окон приложения */
   .modal-card {
-    width: min(330px, 88vw);
-    background: rgba(255,255,255,.88);
-    -webkit-backdrop-filter: blur(30px); backdrop-filter: blur(30px);
-    border:1px solid rgba(255,255,255,.9);
-    border-radius:26px; padding:22px;
-    box-shadow: 0 24px 60px rgba(0,0,0,.28);
-    animation: finaleIn .35s cubic-bezier(.22,1.4,.36,1);
+    width: 100%; max-width: 520px;
+    background: var(--bg);
+    border: none;
+    border-radius: 22px 22px 0 0;
+    padding: 20px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+    box-shadow: 0 -6px 24px rgba(60,65,85,.14);
+    animation: sheetUp .42s cubic-bezier(.32,.72,0,1);
   }
-  .modal-card h3 { font-size:17px; font-weight:700; margin-bottom:14px; text-align:center; }
+  .modal-card::before {
+    content:''; display:block; width:36px; height:5px; border-radius:3px;
+    background: rgba(60,60,67,.18); margin:-8px auto 14px;
+  }
+  @keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .modal-card h3 { font-size:17px; font-weight:650; margin-bottom:16px; text-align:center; letter-spacing:-.4px; }
   .modal-card input {
-    width:100%; border:1px solid rgba(120,130,160,.3);
-    background:#fff; border-radius:16px; padding:13px 16px;
-    font-size:16px; font-family:inherit; color:var(--text); outline:none;
+    width:100%; border:none;
+    background: var(--surface); border-radius:12px; padding:14px 16px;
+    font-size:17px; font-family:inherit; color:var(--text); outline:none;
   }
-  .modal-card input:focus { border-color: rgba(10,132,255,.6); }
-  .modal-btns { display:flex; gap:10px; margin-top:16px; }
+  .modal-card input:focus { box-shadow: 0 0 0 2px var(--accent-soft); }
+  .modal-btns { display:flex; gap:10px; margin-top:20px; }
   .modal-btns button {
     flex:1; border:none; cursor:pointer; font-family:inherit;
-    font-size:15px; font-weight:700; padding:12px 0; border-radius:16px;
-    transition: transform .15s;
+    font-size:17px; font-weight:600; height:50px; border-radius:14px;
+    transition: opacity .15s; letter-spacing:-.4px;
   }
+  .modal-btns button:active { opacity:.55; transform:none !important; }
   .modal-btns button:active { transform: scale(.95); }
-  .m-cancel { background: rgba(120,130,160,.15); color:var(--text2); }
-  .m-ok { background: linear-gradient(135deg,#0a84ff,#5e9dff); color:#fff; box-shadow: 0 6px 16px rgba(10,132,255,.35); }
+  .m-cancel { background: transparent; color: var(--accent); font-weight:500; }
+  .m-ok { background: var(--accent); color:#fff; box-shadow:none; }
+  .m-ok:disabled { background: var(--accent-soft); color: rgba(0,122,255,.4); }
 
   /* ---- интерактивное знакомство ---- */
   #onb {
@@ -1624,14 +1647,8 @@
     color:#fff; border-color: transparent;
     box-shadow: 0 5px 14px rgba(10,132,255,.35), inset 0 1px 0 rgba(255,255,255,.3);
   }
-  /* мастер цели — стеклянный */
-  .g-card {
-    background: linear-gradient(170deg, rgba(255,255,255,.92), rgba(240,244,255,.88)) !important;
-    -webkit-backdrop-filter: blur(30px); backdrop-filter: blur(30px);
-    border:1px solid rgba(255,255,255,.95) !important;
-    border-radius:30px !important;
-    box-shadow: 0 30px 70px rgba(60,70,120,.35), inset 0 1px 0 #fff !important;
-  }
+  /* мастер цели живёт по общим правилам листа */
+  .g-card { background: var(--bg) !important; }
   .g-emoji { font-size:38px; text-align:center; margin-bottom:2px; }
   .g-card h3 { margin-bottom:2px !important; }
   .g-sub { font-size:12.5px; color:var(--text2); text-align:center; margin-bottom:14px; }
@@ -1806,8 +1823,6 @@
   .hcat-row:active { background:rgba(120,140,180,.16); }
   /* ================= вкладка «Питание» ================= */
   /* четыре вкладки в ряд — шрифт мельче */
-  .tabbar .tab { font-size:13px; padding-left:4px; padding-right:4px; }
-  @media (max-width:380px) { .tabbar .tab { font-size:12px; } }
   /* первый вход: анкета */
   .fd-setup-ico { display:flex; justify-content:center; margin-bottom:10px; }
   .fd-setup-h { font-size:17px; font-weight:800; text-align:center; margin-bottom:5px; }
@@ -1846,8 +1861,18 @@
     78%  { transform: translateX(0) translateY(-2px) scaleY(1.1); }
     100% { transform: translateX(0) translateY(0)   scaleY(1); }
   }
-  .fd-circle-wrap.splash .fd-circle { animation: fdNudge .5s ease-out; }
+  /* цифры живут в одном ритме с кругом: те же кривые и та же точка опоры */
+  .fd-circle, .fd-center { transform-origin: 50% 100%; }
+  .fd-circle-wrap.splash .fd-circle,
+  .fd-circle-wrap.splash .fd-center { animation: fdNudge .5s ease-out; }
   @keyframes fdNudge { 0%,100% { transform:scale(1); } 35% { transform:scale(1.035); } }
+  /* тап по кругу — упругий отскок, как у свинки */
+  .fd-circle { cursor:pointer; }
+  .fd-circle-wrap.bounce .fd-circle,
+  .fd-circle-wrap.bounce .fd-center { animation: pigBounce .7s cubic-bezier(.3,1.6,.4,1); }
+  /* от тычка жидкость плещется */
+  .fd-circle-wrap.bounce #fdLiquid .wave-move  { animation: waveSlide 3.4s linear infinite, fdSplash .85s ease-out; }
+  .fd-circle-wrap.bounce #fdLiquid .wave-move2 { animation: waveSlide 5.2s linear infinite reverse, fdSplash .85s ease-out .06s; }
   .fd-center {
     position:absolute; inset:0; display:flex; flex-direction:column;
     align-items:center; justify-content:center; pointer-events:none; text-align:center;
@@ -1857,10 +1882,12 @@
   .fd-formula { font-size:11px; color:var(--text2); margin-top:5px; opacity:.85; }
   .fd-circle-wrap.over .fd-left { color:#c33; }
   /* БЖУ */
-  .fd-macros { display:flex; gap:9px; width:100%; }
-  .fd-macro { flex:1; }
-  .fd-m-head { display:flex; justify-content:space-between; align-items:baseline; font-size:11.5px; color:var(--text2); font-weight:600; margin-bottom:4px; }
-  .fd-m-head b { font-size:12px; color:var(--text); font-variant-numeric:tabular-nums; }
+  /* рядом со сферой места мало — БЖУ идут строками, а не столбцами */
+  .fd-macros { display:flex; flex-direction:column; gap:9px; width:100%; }
+  .fd-macro { width:100%; }
+  .fd-m-head { display:flex; justify-content:space-between; align-items:baseline; gap:8px; font-size:11.5px; color:var(--text2); font-weight:600; margin-bottom:4px; }
+  .fd-m-head span { white-space:nowrap; }
+  .fd-m-head b { font-size:12px; color:var(--text); font-variant-numeric:tabular-nums; white-space:nowrap; }
   .fd-m-bar { height:6px; border-radius:3px; background:rgba(120,130,160,.16); overflow:hidden; }
   .fd-m-bar i { display:block; height:100%; border-radius:3px; transition:width .6s cubic-bezier(.22,1,.36,1); }
   .fd-m-bar i.m-p { background:linear-gradient(90deg,#5fe08a,#26a349); }
@@ -1878,6 +1905,263 @@
   .fd-ex-t { flex:1; font-size:12px; color:var(--text2); font-weight:600; }
   .fd-ex b { font-size:13.5px; font-weight:800; font-variant-numeric:tabular-nums; }
   /* приёмы пищи */
+  /* процент теперь живёт в сфере — в колонке он лишний */
+  #pct { display:none; }
+
+
+  /* ============ ЛИСТ СНИЗУ: одинаково для всех окон ============ */
+  #modal,
+  #addHabitModal,
+  #dayPicker,
+  #dishModal,
+  #foodAddModal,
+  #foodWizard,
+  #goalModal,
+  #habitCalModal,
+  #habitDayModal,
+  #habitEditModal,
+  #myFoodModal,
+  #portionModal,
+  #quickModal,
+  #repeatModal,
+  #rowMenu,
+  #settingsModal,
+  #whyModal,
+  #onb,
+  #evening {
+    align-items: flex-end !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    background: rgba(0,0,0,.28) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+  /* лист занимает всю ширину и прижат к низу */
+  #modal,
+  #addHabitModal,
+  #dayPicker,
+  #dishModal,
+  #foodAddModal,
+  #foodWizard,
+  #goalModal,
+  #habitCalModal,
+  #habitDayModal,
+  #habitEditModal,
+  #myFoodModal,
+  #portionModal,
+  #quickModal,
+  #repeatModal,
+  #rowMenu,
+  #settingsModal,
+  #whyModal,
+  #onb,
+  #evening { }
+
+  /* ============ СФЕРА: общий сосуд для всех разделов ============ */
+  .sph-wrap { position:relative; width:200px; height:200px; flex-shrink:0; cursor:pointer; touch-action: manipulation; }
+  .sph-svg { display:block; width:100%; height:100%; transform-origin:50% 100%; }
+  .sph-liquid { transition: transform 1s cubic-bezier(.34,.9,.35,1); }
+  .sph-center {
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; pointer-events:none; text-align:center;
+    transform-origin:50% 100%;
+  }
+  .sph-val { font-size:38px; font-weight:800; letter-spacing:-1.3px; line-height:1; color:var(--text); font-variant-numeric:tabular-nums; }
+  .sph-lab { font-size:11.5px; color:var(--text2); margin-top:3px; font-weight:600; }
+  .sph-sub { font-size:11px; color:var(--text2); margin-top:5px; opacity:.85; }
+  .sph-sub:empty { display:none; }
+  .sph-wrap.over .sph-val { color:#c33; }
+  .sph-wrap.hold .sph-svg { transform: scale(.96); transition: transform .18s; }
+  .sph-wrap.bounce .sph-svg, .sph-wrap.bounce .sph-center { animation: pigBounce .7s cubic-bezier(.3,1.6,.4,1); }
+  .sph-wrap.splash .sph-svg, .sph-wrap.splash .sph-center { animation: fdNudge .5s ease-out; }
+  .sph-wrap.bounce .sph-liquid .wave-move,
+  .sph-wrap.splash .sph-liquid .wave-move  { animation: waveSlide 3.4s linear infinite, fdSplash .85s ease-out; }
+  .sph-wrap.bounce .sph-liquid .wave-move2,
+  .sph-wrap.splash .sph-liquid .wave-move2 { animation: waveSlide 5.2s linear infinite reverse, fdSplash .85s ease-out .06s; }
+  /* ---- шапка раздела вместо таб-бара ---- */
+  .sec-bar {
+    position:sticky; top:8px; z-index:25;
+    display:flex; align-items:center; gap:10px; padding:8px 12px; margin-bottom:4px;
+    background: var(--glass);
+    -webkit-backdrop-filter: blur(28px) saturate(180%); backdrop-filter: blur(28px) saturate(180%);
+    border:1px solid var(--glass-border); border-radius:20px;
+    box-shadow: 0 6px 22px rgba(60,70,110,.10);
+  }
+  .sec-back {
+    flex-shrink:0; width:34px; height:34px; border:none; border-radius:11px; cursor:pointer;
+    background:rgba(255,255,255,.65); color:var(--text); display:flex; align-items:center; justify-content:center;
+    touch-action: manipulation;
+  }
+  .sec-back:active { transform:scale(.92); }
+  .sec-title { flex:1; min-width:0; font-size:15px; font-weight:700; color:var(--text); }
+  .sec-day { font-size:12px; font-weight:600; color:var(--text2); white-space:nowrap; }
+  .sec-day.past { color:#c2410c; }
+
+  /* ---- выбор дня ---- */
+  #dayPicker {
+    position:fixed; inset:0; z-index:135; display:none;
+    align-items:flex-start; justify-content:center; padding:12vh 16px 16px;
+    background:rgba(20,26,40,.45); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
+  }
+  #dayPicker.show { display:flex; }
+  .dp-head { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+  .dp-title { flex:1; text-align:center; font-size:14.5px; font-weight:700; text-transform:capitalize; }
+  .dp-nav {
+    width:32px; height:32px; border:none; border-radius:10px; cursor:pointer;
+    background:rgba(255,255,255,.6); color:var(--text); font-size:17px; line-height:1;
+    touch-action: manipulation;
+  }
+  .dp-nav:disabled { opacity:.3; cursor:default; }
+  .dp-dow, .dp-grid { display:grid; grid-template-columns:repeat(7, 1fr); gap:4px; }
+  .dp-dow span { text-align:center; font-size:10.5px; font-weight:700; color:var(--text2); padding-bottom:5px; }
+  .dp-day {
+    aspect-ratio:1; border:none; border-radius:11px; cursor:pointer; font-family:inherit;
+    background:rgba(255,255,255,.55); color:var(--text); font-size:13px; font-weight:600;
+    display:flex; align-items:center; justify-content:center; touch-action: manipulation;
+  }
+  .dp-day:disabled { opacity:.25; cursor:default; }
+  .dp-day.today { box-shadow: inset 0 0 0 2px rgba(38,163,73,.55); }
+  .dp-day.sel { background:#26a349; color:#fff; }
+  .dp-day.empty { background:none; cursor:default; }
+
+  /* ---- экран «Сегодня» ---- */
+  .today-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; }
+  .td-nav { display:flex; align-items:center; gap:4px; flex:1; min-width:0; }
+  .td-arrow {
+    flex-shrink:0; width:30px; height:30px; border:none; border-radius:10px; cursor:pointer;
+    background:rgba(255,255,255,.6); color:var(--text2); font-size:17px; line-height:1;
+    touch-action: manipulation;
+  }
+  .td-arrow:disabled { opacity:.28; cursor:default; }
+  .td-date {
+    flex:1; min-width:0; border:none; background:none; cursor:pointer; font-family:inherit;
+    font-size:16px; font-weight:800; color:var(--text); text-align:center; letter-spacing:-.2px;
+    text-transform:capitalize; padding:4px 2px; touch-action: manipulation;
+  }
+  .td-date:active { opacity:.6; }
+  .td-settings {
+    flex-shrink:0; width:38px; height:38px; border:none; border-radius:12px; cursor:pointer;
+    background:rgba(255,255,255,.6); color:var(--text2); display:flex; align-items:center; justify-content:center;
+    touch-action: manipulation;
+  }
+  .td-settings:active { transform:scale(.93); }
+  .td-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px 10px; }
+  .td-cell {
+    display:flex; flex-direction:column; align-items:center; cursor:pointer;
+    background:none; border:none; padding:0; font-family:inherit; touch-action: manipulation;
+  }
+  .td-cell:active { transform:scale(.97); }
+  .td-cell .sph-wrap { width:100%; max-width:140px; height:auto; aspect-ratio:1; }
+  .td-cell .sph-val { font-size:clamp(18px, 5.4vw, 24px); }
+  .td-cell .sph-lab { font-size:10.5px; }
+  .td-cell .sph-sub { display:none; }
+  .td-name { font-size:12.5px; font-weight:700; color:var(--text); margin-top:8px; }
+  .td-hint { font-size:11px; color:var(--text2); margin-top:2px; text-align:center; line-height:1.3; }
+  .td-line {
+    margin-top:16px; padding:11px 13px; border-radius:14px; font-size:12.5px; line-height:1.4;
+    background:rgba(255,255,255,.5); color:var(--text2); text-align:center;
+  }
+  /* ---- окно настроек ---- */
+  #settingsModal {
+    position:fixed; inset:0; z-index:130; display:none;
+    align-items:flex-start; justify-content:center; padding:10vh 16px 16px;
+    background:rgba(20,26,40,.45); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
+  }
+  #settingsModal.show { display:flex; }
+  /* шапка и «Закрыть» приколоты, прокручивается только середина */
+  .set-card { display:flex; flex-direction:column; max-height:82vh; padding:0 !important; overflow:hidden; }
+  .set-card > h3 {
+    margin:0; padding:18px 20px 14px; text-align:center; flex-shrink:0;
+    border-bottom:1px solid rgba(120,130,160,.14);
+  }
+  .set-body { flex:1; overflow-y:auto; padding:14px 16px; -webkit-overflow-scrolling:touch; }
+  .set-card .modal-btns {
+    flex-shrink:0; margin:0; padding:12px 16px;
+    border-top:1px solid rgba(120,130,160,.14); background:rgba(255,255,255,.35);
+  }
+  .set-card .modal-btns .m-cancel { width:100%; }
+  /* все блоки одного вида: одинаковые поля, скругления и заголовки */
+  .set-block {
+    background:rgba(255,255,255,.55); border:1px solid rgba(255,255,255,.7);
+    border-radius:16px; padding:14px 15px; margin-bottom:10px;
+  }
+  .set-block:last-child { margin-bottom:0; }
+  .set-block .section-title {
+    font-size:11px; font-weight:700; letter-spacing:.6px; text-transform:uppercase;
+    color:var(--text2); margin:0 0 9px;
+  }
+  .set-block .hint, .set-block .today-line {
+    font-size:12.5px; line-height:1.45; color:var(--text2); margin:0;
+  }
+  .set-block .hint + .add-btn { margin-top:11px; }
+  /* строка-кнопка в том же ритме, что и блоки */
+  .set-block.more-btn {
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    cursor:pointer; font-size:13.5px; font-weight:700; color:var(--text);
+    padding:15px !important; touch-action:manipulation;
+  }
+  .set-block.more-btn:active { transform:scale(.99); }
+  .set-block.more-btn .more-arrow { color:var(--text2); }
+  /* кнопки и поля — в зелёной гамме приложения и одной высоты */
+  .set-block .add-btn {
+    display:block; width:100%; margin:11px 0 0; padding:0 14px; height:44px;
+    border:none; border-radius:14px; cursor:pointer; box-shadow:none;
+    background:linear-gradient(135deg,#5fe08a,#26a349); color:#fff;
+    font-size:13.5px; font-weight:700; font-family:inherit;
+  }
+  .set-block .add-btn:active { transform:scale(.985); }
+  .set-block .extra-row { display:flex; gap:8px; align-items:stretch; margin:9px 0 0; }
+  .set-block .extra-row input {
+    flex:1; min-width:0; height:44px; border:1px solid rgba(120,130,160,.3);
+    background:#fff; border-radius:14px; padding:0 13px;
+    font-size:14px; font-family:inherit; color:var(--text); outline:none;
+  }
+  .set-block .extra-row input::placeholder { font-size:12.5px; text-transform:none; letter-spacing:0; }
+  .set-block .extra-row input:focus { border-color:rgba(38,163,73,.6); }
+  .set-block .extra-row button {
+    flex:0 0 70px; height:44px; border:none; border-radius:14px; cursor:pointer;
+    background:rgba(38,163,73,.14); color:#1d7a3c;
+    font-size:13.5px; font-weight:700; font-family:inherit;
+  }
+  .set-block .extra-row button:active { transform:scale(.96); }
+  .set-block .sync-code {
+    text-align:center; font-size:26px; font-weight:800; letter-spacing:4px;
+    padding:12px; border-radius:14px; background:rgba(38,163,73,.1); color:#1d7a3c;
+    cursor:pointer; margin:0 0 8px;
+  }
+  .set-warn {
+    padding:11px 12px; border-radius:12px;
+    background:rgba(242,113,42,.09); border:1px solid rgba(242,113,42,.22); color:#8a4a12 !important;
+  }
+  .set-why {
+    display:block; margin-top:7px; font-size:11px; opacity:.75; word-break:break-word;
+  }
+  .set-block .undo { margin-top:10px; text-align:center; }
+  .set-block .undo button {
+    border:none; background:none; color:var(--text2); font-size:12px;
+    text-decoration:underline dotted; cursor:pointer; font-family:inherit;
+  }
+
+  /* одинаковая колонка рядом со сферой во всех разделах */
+  .sph-h {
+    font-size:11px; font-weight:700; color:var(--text2);
+    text-transform:uppercase; letter-spacing:.6px; margin-bottom:5px;
+  }
+  .sph-big {
+    font-size:clamp(22px, 6.5vw, 30px); font-weight:800; letter-spacing:-.7px;
+    line-height:1.05; color:var(--text); font-variant-numeric:tabular-nums;
+  }
+  .sph-note { font-size:12.5px; color:var(--text2); margin-top:5px; line-height:1.35; }
+  .sph-dim { opacity:.8; }
+  .sph-note:empty { display:none; }
+  .sph-row { display:flex; align-items:center; gap:16px; width:100%; }
+  .sph-side { flex:1; min-width:0; display:flex; flex-direction:column; align-items:flex-start; }
+  @media (max-width:400px) {
+    .sph-wrap { width:150px; height:150px; }
+    .sph-val { font-size:30px; }
+    .sph-row { gap:12px; }
+  }
+
   /* новые окна питания */
   #repeatModal, #dishModal, #quickModal, #rowMenu {
     position:fixed; inset:0; z-index:130; display:none;
@@ -2299,6 +2583,13 @@
   .flame-add-btn:active { transform: scale(.9); }
   @media (prefers-reduced-motion: reduce) {
     .flame, .flame-aura { animation:none; }
+    #fdLiquid { transition: none; }
+    #fdLiquid .wave-move, #fdLiquid .wave-move2 { animation: none; }
+    .sph-liquid, .sph-liquid .wave-move, .sph-liquid .wave-move2 { animation: none; transition: none; }
+    .sph-wrap.bounce .sph-svg, .sph-wrap.bounce .sph-center,
+    .sph-wrap.splash .sph-svg, .sph-wrap.splash .sph-center { animation: none; }
+    .fd-circle-wrap.bounce .fd-circle, .fd-circle-wrap.bounce .fd-center,
+    .fd-circle-wrap.splash .fd-circle, .fd-circle-wrap.splash .fd-center { animation: none; }
   }
   @media (max-width:380px) {
     .flame-area { gap:10px; }
@@ -2355,105 +2646,51 @@
 </div>
 
 <div class="app">
-  <div class="tabbar">
-    <button class="tab active" id="tabSave" onclick="switchTab('save')">Копилка</button>
-    <button class="tab" id="tabSpend" onclick="switchTab('spend')">Расходы</button>
-    <button class="tab" id="tabHabits" onclick="switchTab('habits')">Привычки</button>
-    <button class="tab" id="tabFood" onclick="switchTab('food')">Питание</button>
+  <!-- шапка раздела: возврат на «Сегодня» и название -->
+  <div class="sec-bar" id="secBar" style="display:none">
+    <button class="sec-back" onclick="switchTab('today')" aria-label="Назад к сегодня">
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+        <path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <div class="sec-title" id="secTitle"></div>
+    <div class="sec-day" id="secDay"></div>
   </div>
 
-  <div class="view" id="viewSave">
+  <!-- ============ СЕГОДНЯ: четыре сферы одним взглядом ============ -->
+  <div class="view" id="viewToday">
+    <div class="card">
+      <div class="today-head">
+        <div class="td-nav">
+          <button class="td-arrow" onclick="tdShiftDay(-1)" aria-label="Предыдущий день">‹</button>
+          <button class="td-date" id="tdDate" onclick="openDayPicker()"></button>
+          <button class="td-arrow" id="tdNext" onclick="tdShiftDay(1)" aria-label="Следующий день">›</button>
+        </div>
+        <button class="td-settings" onclick="openSettings()" aria-label="Настройки">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z" fill="none" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M19.4 13a7.6 7.6 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.6 7.6 0 0 0-1.7-1L14.9 3h-3.8l-.4 2.6a7.6 7.6 0 0 0-1.7 1l-2.4-1-2 3.4L6.6 11a7.6 7.6 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7.6 7.6 0 0 0 1.7 1l.4 2.6h3.8l.4-2.6a7.6 7.6 0 0 0 1.7-1l2.4 1 2-3.4z"
+                  fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+      <div class="td-grid" id="tdGrid"></div>
+    </div>
+  </div>
+
+  <div class="view" id="viewSave" style="display:none">
   <!-- прогресс -->
   <div class="card hero">
     <div class="garland"></div>
-    <div class="pig-area">
-      <div class="pig-aura" id="pigAura"></div>
-      <svg class="pig" id="pigSvg" viewBox="0 0 260 212" width="215" height="176">
-        <defs>
-          <linearGradient id="goldG" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#ffe289"/><stop offset="1" stop-color="#efa724"/>
-          </linearGradient>
-          <clipPath id="bodyClip"><ellipse cx="125" cy="115" rx="92" ry="75"/></clipPath>
-        </defs>
-
-        <path id="tail" d="M36 110 q-18 -4 -14 -18 q4 -12 17 -8" fill="none" stroke="#f5a8bc" stroke-width="7" stroke-linecap="round"/>
-        <rect x="72" y="176" width="24" height="26" rx="11" fill="#f29db4"/>
-        <rect x="152" y="176" width="24" height="26" rx="11" fill="#f29db4"/>
-
-        <ellipse id="pigBody" cx="125" cy="115" rx="92" ry="75" fill="rgba(255,190,205,.34)" stroke="rgba(255,255,255,.9)" stroke-width="2.5"/>
-
-        <g clip-path="url(#bodyClip)">
-          <g id="liquid" style="transform: translateY(150px)">
-            <g class="wave-move2">
-              <path fill="#ffd35c" opacity=".55" d="M-260 50 Q-227.5 34 -195 50 T-130 50 T-65 50 T0 50 T65 50 T130 50 T195 50 T260 50 T325 50 T390 50 T455 50 T520 50 L520 240 L-260 240 Z"/>
-            </g>
-            <g class="wave-move">
-              <path fill="url(#goldG)" d="M-260 45 Q-227.5 30 -195 45 T-130 45 T-65 45 T0 45 T65 45 T130 45 T195 45 T260 45 T325 45 T390 45 T455 45 T520 45 L520 240 L-260 240 Z"/>
-            </g>
-            <!-- пузырьки в золоте -->
-            <circle class="bub b-1" cx="95"  cy="85" r="3"   fill="rgba(255,255,255,.55)"/>
-            <circle class="bub b-2" cx="135" cy="95" r="2.2" fill="rgba(255,255,255,.5)"/>
-            <circle class="bub b-3" cx="115" cy="80" r="2.6" fill="rgba(255,244,200,.6)"/>
-            <circle class="bub b-4" cx="150" cy="88" r="1.8" fill="rgba(255,255,255,.45)"/>
-          </g>
-        </g>
-
-        <ellipse id="shineEl" cx="92" cy="76" rx="32" ry="15" fill="rgba(255,255,255,.45)" transform="rotate(-24 92 76)"/>
-
-        <!-- аксессуары: головные под ухом -->
-        <path id="ear" d="M162 50 q12 -22 32 -14 q0 20 -16 27 Z" fill="#f29db4" stroke="rgba(255,255,255,.7)" stroke-width="1.5"/>
-        <g id="eyeOpen">
-          <circle cx="184" cy="90" r="6.5" fill="#2c2c3e"/>
-          <circle cx="186.5" cy="87.5" r="2.2" fill="#fff"/>
-        </g>
-        <path id="eyeHappy" d="M176 91 q8 -9 16 0" fill="none" stroke="#2c2c3e" stroke-width="3.5" stroke-linecap="round" style="display:none"/>
-        <g id="eyeSadG" style="display:none">
-          <circle cx="184" cy="93" r="5" fill="#2c2c3e"/>
-          <path d="M175 84 q9 -1 17 4" fill="none" stroke="#2c2c3e" stroke-width="3" stroke-linecap="round"/>
-        </g>
-        <path id="eyeSleep" d="M176 90 q8 7 16 0" fill="none" stroke="#2c2c3e" stroke-width="3.2" stroke-linecap="round" style="display:none"/>
-        <ellipse id="cheek" cx="198" cy="107" rx="9" ry="5.5" fill="rgba(255,110,145,.35)"/>
-        <ellipse cx="216" cy="116" rx="21" ry="17" fill="#f7b9c9" stroke="rgba(255,255,255,.85)" stroke-width="2"/>
-        <ellipse cx="209" cy="116" rx="3.2" ry="5" fill="#d97b95"/>
-        <ellipse cx="222" cy="116" rx="3.2" ry="5" fill="#d97b95"/>
-
-        <rect id="slot" x="103" y="33" width="44" height="8" rx="4" fill="#2c2c3e" opacity=".55"/>
-        <!-- головные уборы: на макушке, поверх прорези -->
-        <!-- аксессуары: поверх -->
-        <!-- новогодняя шапка (декабрь, бесплатно) -->
-        <g id="xmasHat" style="display:none">
-          <path d="M96 44 q22 -34 52 -22 q4 14 -2 22 q-24 -8 -50 0 Z" fill="#e2404f"/>
-          <ellipse cx="122" cy="44" rx="29" ry="7" fill="#fff"/>
-          <circle cx="150" cy="20" r="7" fill="#fff"/>
-        </g>
-        <!-- ночной режим: колпак и Z-z-z -->
-        <g id="sleepGroup" style="display:none">
-          <path d="M98 46 q20 -30 48 -23 q6 12 0 21 q-24 -8 -48 2 Z" fill="#5e6bd8"/>
-          <ellipse cx="121" cy="45" rx="26" ry="6.5" fill="#8f9af0"/>
-          <circle cx="147" cy="21" r="6" fill="#8f9af0"/>
-          <text class="zz z1" x="152" y="34" font-size="16" fill="#5e6bd8" font-weight="800">Z</text>
-          <text class="zz z2" x="164" y="22" font-size="12" fill="#7e88e8" font-weight="800">Z</text>
-          <text class="zz z3" x="174" y="13" font-size="9"  fill="#98a2f2" font-weight="800">Z</text>
-        </g>
-        <!-- пыль после долгого отсутствия -->
-        <g id="dust" style="display:none">
-          <ellipse cx="100" cy="68" rx="17" ry="6" fill="rgba(150,150,162,.45)"/>
-          <ellipse cx="152" cy="58" rx="12" ry="5" fill="rgba(150,150,162,.4)"/>
-          <ellipse cx="125" cy="92" rx="21" ry="7" fill="rgba(150,150,162,.32)"/>
-          <ellipse cx="80"  cy="110" rx="13" ry="5" fill="rgba(150,150,162,.35)"/>
-        </g>
-
-      </svg>
-
-      <div class="jar-info">
-        <div class="sum-row">
-          <div class="sum" id="saved">0</div>
-          <div class="pct" id="pct">0%</div>
-        </div>
-        <div class="goal" id="goalLabel">из 15 000 BYN ✎</div>
-        <div class="stars">⭐ <span id="starCount">0</span></div>
-        <div class="lvl" id="pigLvl">Ур. 1 · <b>Поросёнок</b></div>
-        <div class="xp-bar"><i id="xpBar"></i></div>
+    <div class="sph-row">
+      <div id="saveSphere"></div>
+      <div class="sph-side jar-info">
+        <div class="sph-h">Накоплено</div>
+        <div class="sph-big" id="saved">0</div>
+        <div class="sph-note" id="goalLabel">из 15 000 BYN ✎</div>
+        <div class="sph-note sph-dim"><span id="starCount">0</span> ★ · <span id="pigLvl"></span></div>
+        <div class="pct" id="pct" style="display:none">0%</div>
+        <div class="xp-bar" style="display:none"><i id="xpBar"></i></div>
       </div>
     </div>
     <div class="hero-stats">
@@ -2533,18 +2770,6 @@
     <div class="ach-grid" id="achGrid"></div>
   </div>
 
-  <!-- уведомления -->
-  <div class="card" id="notifCard" style="display:none">
-    <div class="section-title">🔔 Уведомления</div>
-    <div id="notifBody"></div>
-  </div>
-
-  <!-- синхронизация -->
-  <div class="card" id="syncCard">
-    <div class="section-title">Синхронизация <span id="syncDot"></span></div>
-    <div id="syncBody"></div>
-  </div>
-
   <!-- история -->
   <div class="card" id="histCard">
     <div class="hist-head" onclick="document.getElementById('histCard').classList.toggle('hist-open')">
@@ -2571,85 +2796,15 @@
     <!-- хомяк-транжира -->
     <div class="card hero" id="dbCard">
       <div class="garland"></div>
-      <div class="pig-area">
-        <svg id="hamSvg" class="fit" viewBox="58 56 116 84" width="200" height="145">
-          <g id="hamAll">
-            <g id="hamLean">
-              <g id="hamBodyGrp">
-                <!-- тень под телом -->
-                <ellipse cx="115" cy="136" rx="32" ry="5" fill="rgba(120,110,90,.14)"/>
-                <!-- хвостик -->
-                <circle cx="150" cy="112" r="5" fill="#dba871"/>
-                <!-- задние лапки по бокам, выглядывают из-за тела -->
-                <ellipse cx="86" cy="112" rx="9" ry="7" fill="#e6b988" transform="rotate(-25 86 112)"/>
-                <ellipse cx="144" cy="112" rx="9" ry="7" fill="#e6b988" transform="rotate(25 144 112)"/>
-                <!-- ушки за телом -->
-                <g id="hamEarL"><circle cx="95" cy="78" r="8.5" fill="#e6b988"/><circle cx="95" cy="78" r="4.6" fill="#f2c9cf"/></g>
-                <g id="hamEarR"><circle cx="135" cy="76" r="8.5" fill="#e6b988"/><circle cx="135" cy="76" r="4.6" fill="#f2c9cf"/></g>
-                <!-- тело -->
-                <ellipse cx="115" cy="101" rx="34" ry="29" fill="#f0d0a8"/>
-                <!-- светлое пузо -->
-                <ellipse id="hamBelly" cx="115" cy="111" rx="21" ry="15" fill="#fdf0dc"/>
-                <!-- блик -->
-                <ellipse cx="101" cy="88" rx="12" ry="5.5" fill="rgba(255,255,255,.5)" transform="rotate(-20 101 88)"/>
-                <g id="hamCheeks">
-                  <ellipse id="cheekL" cx="93"  cy="104" rx="9.5" ry="8.5" fill="#f7dcb8"/>
-                  <ellipse id="cheekR" cx="137" cy="104" rx="9.5" ry="8.5" fill="#f7dcb8"/>
-                </g>
-                <!-- румянец -->
-                <ellipse cx="93"  cy="108" rx="6" ry="4" fill="rgba(255,110,145,.3)"/>
-                <ellipse cx="137" cy="108" rx="6" ry="4" fill="rgba(255,110,145,.3)"/>
-                <g id="hamEyesW">
-                  <g id="hamEyes">
-                    <circle id="hpL" cx="105" cy="96" r="5" fill="#2c2c3e"/><circle id="hpR" cx="125" cy="96" r="5" fill="#2c2c3e"/>
-                    <circle id="hhL" cx="106.7" cy="94" r="1.8" fill="#fff"/><circle id="hhR" cx="126.7" cy="94" r="1.8" fill="#fff"/>
-                  </g>
-                </g>
-                <g id="hamHappyE" style="display:none">
-                  <path d="M100 97 q5 -6 10 0" stroke="#2c2c3e" stroke-width="2.8" fill="none" stroke-linecap="round"/>
-                  <path d="M120 97 q5 -6 10 0" stroke="#2c2c3e" stroke-width="2.8" fill="none" stroke-linecap="round"/>
-                </g>
-                <g id="hamSleepE" style="display:none">
-                  <path d="M100 96 q5 4.5 10 0" stroke="#2c2c3e" stroke-width="2.6" fill="none" stroke-linecap="round"/>
-                  <path d="M120 96 q5 4.5 10 0" stroke="#2c2c3e" stroke-width="2.6" fill="none" stroke-linecap="round"/>
-                </g>
-                <g id="hamTired" style="display:none">
-                  <path d="M101 97 q4 3 8 0" stroke="#2c2c3e" stroke-width="2.6" fill="none" stroke-linecap="round"/>
-                  <path d="M121 97 q4 3 8 0" stroke="#2c2c3e" stroke-width="2.6" fill="none" stroke-linecap="round"/>
-                </g>
-                <path id="hamSweat" style="display:none" d="M146 82 q6 8 0 12 q-6 -4 0 -12" fill="#8fc6ff"/>
-                <!-- нос и рот -->
-                <ellipse cx="115" cy="105" rx="4" ry="3" fill="#f7b9c9"/>
-                <path d="M115 108 q0 4 -4 5 M115 108 q0 4 4 5" stroke="#b98a5f" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-                <g id="hamWhisk"><path d="M77 103 L64 99 M77 107 L64 109 M153 103 L166 99 M153 107 L166 109" stroke="rgba(120,90,50,.42)" stroke-width="1.4" stroke-linecap="round"/></g>
-                <ellipse id="footL" cx="102" cy="130" rx="9" ry="5" fill="#dba871"/>
-                <ellipse id="footR" cx="128" cy="130" rx="9" ry="5" fill="#dba871"/>
-                <!-- семечка -->
-                <ellipse id="hamSeed" style="display:none" cx="115" cy="112" rx="4.2" ry="2.6" fill="#8a5a2b" transform="rotate(-28 115 112)"/>
-                <!-- передние лапки (умывание/семечка) -->
-                <g id="hamPaws" style="display:none">
-                  <ellipse cx="106" cy="113" rx="6.5" ry="5" fill="#e6b988"/>
-                  <ellipse cx="124" cy="113" rx="6.5" ry="5" fill="#e6b988"/>
-                </g>
-                <!-- ночной колпачок -->
-                <g id="hamSleepG" style="display:none">
-                  <path d="M95 74 q13 -21 35 -17 q4 9 0 15 q-17 -6 -35 2 Z" fill="#5e6bd8"/>
-                  <ellipse cx="112" cy="73" rx="18" ry="4.8" fill="#8f9af0"/>
-                  <circle cx="134" cy="58" r="4.8" fill="#8f9af0"/>
-                  <text class="zz z1" x="141" y="71" font-size="11" fill="#5e6bd8" font-weight="800">Z</text>
-                  <text class="zz z2" x="150" y="61" font-size="8" fill="#7e88e8" font-weight="800">Z</text>
-                </g>
-              </g>
-            </g>
-          </g>
-        </svg>
-        <div class="jar-info">
-          <div class="pct" id="spPct">За месяц</div>
-          <div class="sum db-sum" id="dbSum">—</div>
-          <div class="goal" id="dbNote"></div>
+      <div class="sph-row">
+        <div id="spendSphere"></div>
+        <div class="sph-side jar-info">
+          <div class="sph-h" id="spPct">За месяц</div>
+          <div class="sph-big" id="dbSum">—</div>
+          <div class="sph-note" id="dbNote"></div>
         </div>
       </div>
-      <div class="ham-say" id="hamLine"></div>
+      <div class="ham-say" id="spendNote"></div>
       <div class="hero-stats">
         <div class="stat"><div class="v" id="spToday">0</div><div class="l">сегодня</div></div>
         <div class="stat"><div class="v" id="spWeek">0</div><div class="l">за неделю</div></div>
@@ -2707,90 +2862,21 @@
   <!-- ---- привычки ---- -->
   <div class="view" id="viewHabits" style="display:none">
     <div class="card hero">
-      <div class="flame-area">
-        <div class="flame-wrap">
-        <div class="flame-aura" id="flameAura"></div>
-        <svg class="flame" id="flameSvg" viewBox="0 0 140 172" width="146" height="179"
+      <div class="sph-row flame-area">
+        <div id="habitSphere"
              onpointerdown="flamePressStart(event)" onpointermove="flamePressMove(event)"
-             onpointerup="flamePressEnd()" onpointerleave="flamePressEnd()" onpointercancel="flamePressEnd()">
-          <defs>
-            <mask id="flBodyMask">
-              <rect x="0" y="0" width="140" height="172" fill="#fff"/>
-              <path d="M53 20 C50 39 42 56 36 73 C31 87 28 98 28 115 C28 140 46 157 70 157 C94 157 112 140 112 115 C112 104 109 92 104 81 C101 70 101 56 104 42 C95 50 92 62 90 70 C84 53 81 39 81 22 C76 36 70 48 64 59 C62 45 56 34 53 20 Z" fill="#000"/>
-            </mask>
-          </defs>
-          <g mask="url(#flBodyMask)">
-            <g id="flArmL" class="flLimb"><ellipse class="flLimb" cx="30" cy="121" rx="12.5" ry="8.4" stroke="rgba(255,255,255,.75)" stroke-width="1.5" transform="rotate(-30 30 121)"/></g>
-            <g id="flArmR" class="flLimb"><ellipse class="flLimb" cx="110" cy="121" rx="12.5" ry="8.4" stroke="rgba(255,255,255,.75)" stroke-width="1.5" transform="rotate(30 110 121)"/></g>
-            <ellipse id="flLegL" class="flLimb" cx="55" cy="159" rx="11" ry="8.2" stroke="rgba(255,255,255,.75)" stroke-width="1.5"/>
-            <ellipse id="flLegR" class="flLimb" cx="85" cy="159" rx="11" ry="8.2" stroke="rgba(255,255,255,.75)" stroke-width="1.5"/>
-          </g>
-          <path id="flBody" stroke="rgba(255,255,255,.9)" stroke-width="2.5"
-            d="M53 20 C50 39 42 56 36 73 C31 87 28 98 28 115 C28 140 46 157 70 157 C94 157 112 140 112 115 C112 104 109 92 104 81 C101 70 101 56 104 42 C95 50 92 62 90 70 C84 53 81 39 81 22 C76 36 70 48 64 59 C62 45 56 34 53 20 Z"/>
-          <ellipse id="flShine" cx="49" cy="86" rx="17" ry="8" fill="rgba(255,255,255,.45)" transform="rotate(-28 49 86)"/>
-          <g id="flFace">
-            <g id="flEyesOpen">
-              <g id="flEyeGL"><circle cx="57" cy="116" r="7.5" fill="#2b1c10"/><circle cx="59.6" cy="113.4" r="2.6" fill="#fff"/></g>
-              <g id="flEyeGR"><circle cx="83" cy="116" r="7.5" fill="#2b1c10"/><circle cx="85.6" cy="113.4" r="2.6" fill="#fff"/></g>
-            </g>
-            <g id="flEyesSleep" style="display:none">
-              <path d="M49 116 q8 6 16 0" fill="none" stroke="#2b1c10" stroke-width="3" stroke-linecap="round"/>
-              <path d="M75 116 q8 6 16 0" fill="none" stroke="#2b1c10" stroke-width="3" stroke-linecap="round"/>
-            </g>
-            <g id="flZzz">
-              <text class="zz z1" x="106" y="52" font-size="16" fill="#e8791c" font-weight="800">Z</text>
-              <text class="zz z2" x="118" y="38" font-size="12" fill="#f2962e" font-weight="800">Z</text>
-              <text class="zz z3" x="128" y="26" font-size="9" fill="#ffb056" font-weight="800">Z</text>
-            </g>
-            <g id="flEyesHappy" style="display:none">
-              <path d="M48 111 q9 -10 18 0" fill="none" stroke="#2b1c10" stroke-width="3.4" stroke-linecap="round"/>
-              <path d="M74 111 q9 -10 18 0" fill="none" stroke="#2b1c10" stroke-width="3.4" stroke-linecap="round"/>
-            </g>
-            <g id="flEyesMeh" style="display:none">
-              <circle cx="57" cy="117" r="6.2" fill="#2b1c10"/>
-              <circle cx="83" cy="117" r="6.2" fill="#2b1c10"/>
-              <circle cx="59" cy="115" r="2" fill="#fff"/>
-              <circle cx="85" cy="115" r="2" fill="#fff"/>
-              <path d="M49 110 h15" fill="none" stroke="#2b1c10" stroke-width="3.4" stroke-linecap="round"/>
-              <path d="M75 110 h15" fill="none" stroke="#2b1c10" stroke-width="3.4" stroke-linecap="round"/>
-            </g>
-            <g id="flEyesGood" style="display:none">
-              <circle cx="57" cy="115" r="7.5" fill="#2b1c10"/>
-              <circle cx="83" cy="115" r="7.5" fill="#2b1c10"/>
-              <circle cx="59.8" cy="112.2" r="2.8" fill="#fff"/>
-              <circle cx="85.8" cy="112.2" r="2.8" fill="#fff"/>
-              <ellipse cx="42" cy="128" rx="6" ry="4" fill="rgba(255,120,90,.35)"/>
-              <ellipse cx="98" cy="128" rx="6" ry="4" fill="rgba(255,120,90,.35)"/>
-            </g>
-            <g id="flEyesSad" style="display:none">
-              <circle cx="57" cy="119" r="6.4" fill="#2b1c10"/>
-              <circle cx="83" cy="119" r="6.4" fill="#2b1c10"/>
-              <circle cx="59" cy="117" r="2" fill="#fff"/>
-              <circle cx="85" cy="117" r="2" fill="#fff"/>
-              <path d="M46 103 q12 -7 21 -2" fill="none" stroke="#2b1c10" stroke-width="2.8" stroke-linecap="round"/>
-              <path d="M94 103 q-12 -7 -21 -2" fill="none" stroke="#2b1c10" stroke-width="2.8" stroke-linecap="round"/>
-            </g>
-            <path id="flMouthHappy" style="display:none" d="M56 134 q14 15 28 0 q-14 5 -28 0 Z" fill="#2b1c10" stroke="#2b1c10" stroke-width="2.4" stroke-linejoin="round"/>
-            <path id="flMouthGood" style="display:none" d="M58 135 q12 11 24 0" fill="none" stroke="#2b1c10" stroke-width="3.2" stroke-linecap="round"/>
-            <path id="flMouthNeutral" d="M60 136 q10 4 20 0" fill="none" stroke="#2b1c10" stroke-width="2.8" stroke-linecap="round"/>
-            <path id="flMouthMeh" style="display:none" d="M60 138 q5 -3 10 0 q5 3 10 0" fill="none" stroke="#2b1c10" stroke-width="2.8" stroke-linecap="round"/>
-            <path id="flMouthSad" style="display:none" d="M58 141 q12 -9 24 0" fill="none" stroke="#2b1c10" stroke-width="2.8" stroke-linecap="round"/>
-          </g>
-        </svg>
-        </div><!-- /flame-wrap -->
-        <div class="flame-info">
+             onpointerup="flamePressEnd()" onpointerleave="flamePressEnd()" onpointercancel="flamePressEnd()"></div>
+        <div class="sph-side flame-info">
           <div class="fi-head">
-            <div class="fi-today" id="fiToday">Пока нет привычек</div>
+            <div class="sph-h" id="fiToday">Пока нет привычек</div>
             <button class="flame-add-btn" onclick="openAddHabitModal()" aria-label="Добавить привычку">+</button>
           </div>
-          <div class="fi-bar-row" id="fiBarRow" style="display:none">
-            <div class="fi-bar"><i id="fiBarFill" style="width:0%"></i></div>
-          </div>
+          <div class="sph-note sph-dim" id="fiStreak" style="display:none"></div>
           <div class="fi-rem-icons" id="fiRemaining"></div>
-          <div class="fi-streak" id="fiStreak" style="display:none"></div>
-          <div class="fi-record" id="fiRecord" style="display:none"></div>
-          <div class="fi-phrase" id="fiPhrase" style="display:none"></div>
           <div class="fi-neglect" id="fiNeglect" style="display:none"></div>
+          <div id="fiBarRow" style="display:none"><i id="fiBarFill"></i></div>
+          <div id="fiRecord" style="display:none"></div>
+          <div id="fiPhrase" style="display:none"></div>
         </div>
       </div>
       <div class="hcal-week-wrap">
@@ -2832,38 +2918,10 @@
       </div>
 
       <!-- круг-стакан -->
-      <div class="card hero fd-hero">
-        <div class="fd-circle-wrap">
-          <svg class="fd-circle" id="fdCircle" viewBox="0 0 200 200" width="200" height="200">
-            <defs>
-              <clipPath id="fdClip"><circle cx="100" cy="100" r="92"/></clipPath>
-              <linearGradient id="fdLiq" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" stop-color="#5fe08a"/><stop offset="1" stop-color="#26a349"/>
-              </linearGradient>
-              <linearGradient id="fdLiqOver" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" stop-color="#ff8080"/><stop offset="1" stop-color="#d63a3a"/>
-              </linearGradient>
-            </defs>
-            <circle cx="100" cy="100" r="92" fill="rgba(255,255,255,.5)" stroke="rgba(255,255,255,.9)" stroke-width="3"/>
-            <g clip-path="url(#fdClip)">
-              <g id="fdLiquid" style="transform:translateY(200px)">
-                <g class="wave-move2">
-                  <path fill="url(#fdLiq)" opacity=".55" d="M-200 30 Q-175 12 -150 30 T-100 30 T-50 30 T0 30 T50 30 T100 30 T150 30 T200 30 T250 30 T300 30 T350 30 T400 30 L400 260 L-200 260 Z"/>
-                </g>
-                <g class="wave-move">
-                  <path id="fdWave" fill="url(#fdLiq)" d="M-200 24 Q-175 6 -150 24 T-100 24 T-50 24 T0 24 T50 24 T100 24 T150 24 T200 24 T250 24 T300 24 T350 24 T400 24 L400 260 L-200 260 Z"/>
-                </g>
-              </g>
-            </g>
-            <ellipse cx="66" cy="52" rx="26" ry="12" fill="rgba(255,255,255,.4)" transform="rotate(-24 66 52)"/>
-          </svg>
-          <div class="fd-center">
-            <div class="fd-left" id="fdLeft">0</div>
-            <div class="fd-left-lab" id="fdLeftLab">ккал осталось</div>
-            <div class="fd-formula" id="fdFormula"></div>
-          </div>
-        </div>
-
+      <div class="card hero">
+        <div class="sph-row">
+          <div id="foodSphere"></div>
+          <div class="sph-side">
         <!-- БЖУ -->
         <div class="fd-macros">
           <div class="fd-macro">
@@ -2880,6 +2938,8 @@
           </div>
         </div>
 
+          </div>
+        </div>
         <!-- вода и сожжённое -->
         <div class="fd-extra">
           <div class="fd-ex" id="fdWaterBox" onclick="fdAddWater()">
@@ -2925,6 +2985,48 @@
       </div>
     </div>
   </div><!-- /viewFood -->
+</div>
+
+<!-- выбор дня -->
+<div id="dayPicker" onclick="if(event.target===this) closeDayPicker()">
+  <div class="modal-card">
+    <div class="dp-head">
+      <button class="dp-nav" onclick="dpShiftMonth(-1)" aria-label="Предыдущий месяц">‹</button>
+      <div class="dp-title" id="dpTitle"></div>
+      <button class="dp-nav" id="dpNext" onclick="dpShiftMonth(1)" aria-label="Следующий месяц">›</button>
+    </div>
+    <div class="dp-dow"><span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span></div>
+    <div class="dp-grid" id="dpGrid"></div>
+    <div class="modal-btns">
+      <button class="m-cancel" onclick="closeDayPicker()">Закрыть</button>
+      <button class="m-ok fd-ok" onclick="dpPick(todayStr())">Сегодня</button>
+    </div>
+  </div>
+</div>
+
+<!-- настройки -->
+<div id="settingsModal" onclick="if(event.target===this) closeSettings()">
+  <div class="modal-card set-card">
+    <h3>Настройки</h3>
+    <div class="set-body">
+      <div class="set-block" id="notifCard" style="display:none">
+        <div class="section-title">Уведомления</div>
+        <div id="notifBody"></div>
+      </div>
+
+      <div class="set-block" id="syncCard">
+        <div class="section-title">Синхронизация <span id="syncDot"></span></div>
+        <div id="syncBody"></div>
+      </div>
+
+      <div class="set-block more-btn" id="replayOnbBtn" onclick="replayOnbStory()">
+        <span>Посмотреть знакомство заново</span><span class="more-arrow">›</span>
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button class="m-cancel" onclick="closeSettings()">Закрыть</button>
+    </div>
+  </div>
 </div>
 
 <div id="habitCalModal" onclick="if(event.target===this) closeHabitCalModal()">
@@ -3407,6 +3509,19 @@ function load() {
   }
   if (typeof merged.flameAwarded !== 'object' || !merged.flameAwarded) merged.flameAwarded = {};
   if (!Array.isArray(merged.habits)) merged.habits = [];
+  // у закрытого конверта могла потеряться дата (старый или правленый бэкап) — восстанавливаем из метки времени
+  (merged.closed || []).forEach(c => {
+    if (!c.date) c.date = todayStr(new Date(c.ts || Date.now()));
+  });
+  // счётчики и отметки могли разъехаться в импортированном бэкапе — сводим
+  merged.habits.forEach(h => {
+    if (!h.counts || !(h.target > 1) || !Array.isArray(h.log)) return;
+    Object.keys(h.counts).forEach(d => {
+      const done = h.counts[d] >= h.target, i = h.log.indexOf(d);
+      if (done && i < 0) h.log.push(d);
+      if (!done && i >= 0) h.log.splice(i, 1);
+    });
+  });
   // миграция со старой модели частоты (timesPerWeek) на конкретные дни недели
   merged.habits.forEach(h => {
     if (!Array.isArray(h.days) || !h.days.length) {
@@ -3540,6 +3655,33 @@ const sndCoin = () => { tone(1320, .18, 0, 'triangle', .14); tone(1760, .22, .07
 const sndStar = () => { tone(880, .12, 0, 'sine', .12); tone(1174, .14, .09, 'sine', .12); tone(1568, .2, .18, 'sine', .12); };
 const sndAch  = () => { [523, 659, 784, 1046].forEach((f, i) => tone(f, .25, i * .11, 'triangle', .13)); };
 const sndBuy  = () => { tone(600, .09, 0, 'square', .06); tone(900, .12, .08, 'square', .06); };
+// тап по кругу калорий: короткое «плюм», как капля в воду
+const sndDrop = () => {
+  try {
+    const ctx = ac(), t = ctx.currentTime;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'sine';
+    // быстрый скачок вверх и мягкий уход вниз даёт узнаваемое «блюп»
+    o.frequency.setValueAtTime(300, t);
+    o.frequency.exponentialRampToValueAtTime(1150, t + .045);
+    o.frequency.exponentialRampToValueAtTime(420, t + .16);
+    g.gain.setValueAtTime(.0001, t);
+    g.gain.exponentialRampToValueAtTime(.11, t + .02);
+    g.gain.exponentialRampToValueAtTime(.0001, t + .22);
+    o.connect(g); g.connect(ctx.destination);
+    o.start(t); o.stop(t + .26);
+    // тихий отзвук — будто круги по воде
+    const o2 = ctx.createOscillator(), g2 = ctx.createGain();
+    o2.type = 'sine';
+    o2.frequency.setValueAtTime(760, t + .1);
+    o2.frequency.exponentialRampToValueAtTime(520, t + .3);
+    g2.gain.setValueAtTime(.0001, t + .1);
+    g2.gain.exponentialRampToValueAtTime(.035, t + .13);
+    g2.gain.exponentialRampToValueAtTime(.0001, t + .34);
+    o2.connect(g2); g2.connect(ctx.destination);
+    o2.start(t + .1); o2.stop(t + .38);
+  } catch(e) {}
+};
 const sndBoing = () => {                  // тап по свинке: упругий «бойнг»
   try {
     const ctx = ac(), t = ctx.currentTime;
@@ -3739,7 +3881,7 @@ function awardStars(q) {
   if (got > 0) {
     localStorage.setItem(KEY, JSON.stringify(state));
     setTimeout(() => { toast('⭐ +' + got + ' — задание выполнено!'); sndStar(); vib([15, 30, 15]); }, 900);
-    if (weeklyDone) setTimeout(pigFlip, 1500);   // сальто за недельное!
+    if (weeklyDone) setTimeout(() => sphSplash('save'), 1500);   // всплеск за недельное
   }
 }
 
@@ -3783,7 +3925,7 @@ function closeEnv(idx, el, quiet) {
     // состояние без 3D (фикс секундного «зеркала» в Safari)
     setTimeout(() => { el.classList.add('closed'); el.classList.remove('animate'); }, 720);
     // во время анимации сетку не пересобираем — только цифры и свинку
-    flyCoin(el, () => { pigHappy(); sndCoin(); vib(15); render({ grid: false }); });
+    flyCoin(el, () => { sndCoin(); vib(15); sphSplash('save'); render({ grid: false }); });
     setTimeout(() => {
       if (filter === 'all') { render({ grid: false }); updateReco(); }
       else render();                            // в фильтрах нужна пересборка
@@ -3928,14 +4070,12 @@ function sparkBurst(el) {
 }
 
 // ---------- свинка ----------
-function slotPos() {
-  const r = document.getElementById('pigSvg').getBoundingClientRect();
-  return { x: r.left + r.width * (125 / 260), y: r.top + r.height * (35 / 212) };
-}
 function flyCoin(fromEl, onArrive) {
   const f = fromEl.getBoundingClientRect();
   const x0 = f.left + f.width / 2, y0 = f.top + f.height / 2;
-  const s = slotPos();
+  const w = document.getElementById('saveWrap');
+  const r = w ? w.getBoundingClientRect() : { left: 0, top: 0, width: 0, height: 0 };
+  const s = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
   const coin = document.createElement('div');
   coin.className = 'fly-coin';
   document.body.appendChild(coin);
@@ -3950,18 +4090,10 @@ function flyCoin(fromEl, onArrive) {
 
 // ---------- глаза: единый центр (сон > радость > грусть > обычные) ----------
 let tempHappy = false, happyTimer;
-function refreshEyes() {
-  const sleep = document.body.classList.contains('sleep');
-  const sad = document.getElementById('pigSvg').classList.contains('sad');
-  document.getElementById('eyeSleep').style.display = sleep ? '' : 'none';
-  document.getElementById('eyeHappy').style.display = (!sleep && tempHappy) ? '' : 'none';
-  document.getElementById('eyeSadG').style.display = (!sleep && !tempHappy && sad) ? '' : 'none';
-  document.getElementById('eyeOpen').style.display = (!sleep && !tempHappy && !sad) ? '' : 'none';
-}
 function setTempHappy(ms) {
-  tempHappy = true; refreshEyes();
+  tempHappy = true;
   clearTimeout(happyTimer);
-  happyTimer = setTimeout(() => { tempHappy = false; refreshEyes(); }, ms);
+  happyTimer = setTimeout(() => { tempHappy = false; }, ms);
 }
 
 // вибрация: монета / ачивка / тревога
@@ -3983,90 +4115,18 @@ function sndTear() {
 }
 
 // круги по золоту
-function goldRipple() {
-  const liq = document.getElementById('liquid');
-  for (let k = 0; k < 2; k++) {
-    const e = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-    e.setAttribute('cx', 80 + Math.random() * 90);
-    e.setAttribute('cy', 46);
-    e.setAttribute('rx', 4); e.setAttribute('ry', 1.6);
-    e.setAttribute('fill', 'none');
-    e.setAttribute('stroke', 'rgba(255,246,210,.85)');
-    e.setAttribute('stroke-width', '2');
-    e.classList.add('gripple');
-    e.style.animationDelay = (k * .18) + 's';
-    liq.appendChild(e);
-    setTimeout(() => e.remove(), 1200 + k * 200);
-  }
-}
 
 // сальто за недельное задание
-function pigFlip() {
-  const pig = document.getElementById('pigSvg');
-  pig.classList.remove('flip', 'bounce');
-  void pig.offsetWidth;
-  pig.classList.add('flip');
-  setTimeout(() => {                       // брызги при приземлении
-    const r = pig.getBoundingClientRect();
-    const cx = r.left + r.width / 2, cy = r.top + r.height * .9;
-    for (let i = 0; i < 12; i++) {
-      const d = document.createElement('div');
-      d.className = 'gdrop';
-      const ang = Math.PI + (i / 12) * Math.PI;   // веером вверх/в стороны
-      const dist = 40 + Math.random() * 55;
-      d.style.setProperty('--x', cx + 'px');
-      d.style.setProperty('--y', cy + 'px');
-      d.style.setProperty('--dx', Math.cos(ang) * dist + 'px');
-      d.style.setProperty('--dy', Math.sin(ang) * dist * .6 + 'px');
-      document.body.appendChild(d);
-      setTimeout(() => d.remove(), 900);
-    }
-    sndStar(); vib([20, 30, 20]);
-  }, 760);
-  setTimeout(() => pig.classList.remove('flip'), 1100);
-}
 
 // ночной режим по часам устройства (23:00–07:00)
 function sleepCheck() {
   const h = new Date().getHours();
   const on = h >= 22 || h < 7;   // сон: 22:00–07:00
   document.body.classList.toggle('sleep', on);
-  document.getElementById('sleepGroup').style.display = on ? '' : 'none';
-  refreshEyes();
-  try { refreshHamEyes(); } catch(e) {}   // хомяк тоже спит
-  try { setFlameEyesMouth(flameMood()); } catch(e) {}   // огонёк тоже спит
 }
 setInterval(sleepCheck, 60000);
 
-function pigHappy() {
-  const pig = document.getElementById('pigSvg');
-  pig.classList.remove('bounce');
-  void pig.offsetWidth;
-  pig.classList.add('bounce');
-  setTimeout(() => pig.classList.remove('bounce'), 720);  // вернуться к «дыханию»
 
-  const s = slotPos();
-  for (let i = 0; i < 10; i++) {
-    const d = document.createElement('div');
-    d.className = 'gdrop';
-    const ang = -Math.PI / 2 + (Math.random() - .5) * 2.2;
-    const dist = 35 + Math.random() * 45;
-    d.style.setProperty('--x', s.x + 'px');
-    d.style.setProperty('--y', s.y + 'px');
-    d.style.setProperty('--dx', Math.cos(ang) * dist + 'px');
-    d.style.setProperty('--dy', Math.sin(ang) * dist + 'px');
-    document.body.appendChild(d);
-    setTimeout(() => d.remove(), 850);
-  }
-
-  goldRipple();                              // монета упала — круги по золоту
-  setTempHappy(1100);
-}
-
-function renderPig(pct) {
-  const t = pct <= 0 ? 152 : 145 - (pct / 100) * 150;
-  document.getElementById('liquid').style.transform = 'translateY(' + t + 'px)';
-}
 
 // ---------- аура и искорки уровня ----------
 const AURA = [null, null,
@@ -4076,43 +4136,9 @@ const AURA = [null, null,
   'rgba(255,205,110,.48)',   // ур.5 — золотая
   'rgba(255,198,85,.58)',    // ур.6 — золотая с лучами
 ];
-function positionAura(lvl, pigW, pigH) {
-  const aura = document.getElementById('pigAura');
-  const pig = document.getElementById('pigSvg');
-  const c = AURA[Math.min(lvl, 6)];
-  if (!c) { aura.style.opacity = 0; aura.classList.remove('rays'); return; }
-  const size = Math.round(pigW * 1.22);
-  aura.style.width = size + 'px';
-  aura.style.height = size + 'px';
-  aura.style.left = (pig.offsetLeft + (pigW - size) / 2) + 'px';
-  aura.style.top = (pig.offsetTop + (pigH - size) / 2 - 6) + 'px';
-  aura.style.background = 'radial-gradient(circle, ' + c + ' 0%, transparent 68%)';
-  aura.style.opacity = 1;
-  aura.classList.toggle('rays', lvl >= 6);
-}
 window.addEventListener('resize', () => renderLevel());
 
 let sparkTimer = null;
-function startLvlSparks(lvl) {
-  clearInterval(sparkTimer);
-  if (lvl < 2) return;
-  const period = [0, 0, 9000, 6500, 4500, 3200, 2200][Math.min(lvl, 6)];
-  sparkTimer = setInterval(() => {
-    if (document.hidden || document.body.classList.contains('sleep')) return;
-    const area = document.querySelector('.pig-area');
-    const pig = document.getElementById('pigSvg');
-    const ar = area.getBoundingClientRect(), pr = pig.getBoundingClientRect();
-    if (!pr.width) return;
-    const s = document.createElement('span');
-    s.className = 'lvl-spark';
-    s.textContent = '✦';
-    s.style.fontSize = (9 + Math.random() * 9) + 'px';
-    s.style.left = (pr.left - ar.left + Math.random() * pr.width) + 'px';
-    s.style.top = (pr.top - ar.top + Math.random() * pr.height * .85) + 'px';
-    area.appendChild(s);
-    setTimeout(() => s.remove(), 1000);
-  }, period);
-}
 
 // ---------- уровни свинки ----------
 const LEVELS = [
@@ -4136,14 +4162,7 @@ function renderLevel() {
   document.getElementById('xpBar').style.width = next
     ? Math.min(100, (xp - cur.xp) / (next.xp - cur.xp) * 100) + '%' : '100%';
 
-  const pig = document.getElementById('pigSvg');
-  const w = 206 + lvl * 4;                        // лёгкий рост: 210 → 230
-  const h = Math.round(w * 212 / 260);
-  pig.style.width = w + 'px';
-  pig.style.height = h + 'px';
 
-  positionAura(lvl, w, h);
-  startLvlSparks(lvl);
 
   if (lvl > (state.lastLevel || 1)) {             // левел-ап!
     state.lastLevel = lvl;
@@ -4151,7 +4170,7 @@ function renderLevel() {
     setTimeout(() => {
       toast('🎉 Свинка выросла: ' + cur.name + '!');
       sndAch(); vib([30, 40, 30, 40, 80]);
-      pigFireworks();
+      sphSplash('save');
     }, 1300);
   } else if (lvl < (state.lastLevel || 1)) {      // откат (undo)
     state.lastLevel = lvl;
@@ -4168,202 +4187,21 @@ function checkMilestones(beforePct, afterPct) {
         toast('🎉 Рубеж взят: ' + m + '% цели!');
         sndAch();
         vib([30, 40, 30, 40, 80]);
-        pigFireworks();
+        sphSplash('save');
       }, 1150);
     }
   }
 }
-function pigFireworks() {
-  const r = document.getElementById('pigSvg').getBoundingClientRect();
-  const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-  for (let i = 0; i < 22; i++) {
-    const d = document.createElement('div');
-    d.className = 'gdrop';
-    const ang = Math.random() * Math.PI * 2;
-    const dist = 60 + Math.random() * 90;
-    d.style.setProperty('--x', cx + 'px');
-    d.style.setProperty('--y', cy + 'px');
-    d.style.setProperty('--dx', Math.cos(ang) * dist + 'px');
-    d.style.setProperty('--dy', Math.sin(ang) * dist + 'px');
-    d.style.animationDuration = (0.7 + Math.random() * .5) + 's';
-    document.body.appendChild(d);
-    setTimeout(() => d.remove(), 1300);
-  }
-}
 
 // ---------- свинка-питомец: глаз следит, тап — хрюк ----------
-const pupils = document.querySelectorAll('#eyeOpen circle');
-let eyeRaf = null;
-document.addEventListener('pointermove', e => {
-  if (eyeRaf) return;
-  eyeRaf = requestAnimationFrame(() => {
-    eyeRaf = null;
-    if (document.body.classList.contains('sleep')) return;   // спит — не следит
-    const r = document.getElementById('pigSvg').getBoundingClientRect();
-    if (!r.width) return;
-    const ex = r.left + r.width * (184 / 260), ey = r.top + r.height * (90 / 212);
-    const dx = e.clientX - ex, dy = e.clientY - ey;
-    const d = Math.hypot(dx, dy) || 1;
-    const k = Math.min(1, d / 50) * 2.4;
-    pupils[0].setAttribute('cx', 184 + dx / d * k);
-    pupils[0].setAttribute('cy', 90 + dy / d * k);
-    pupils[1].setAttribute('cx', 186.5 + dx / d * k * .8);
-    pupils[1].setAttribute('cy', 87.5 + dy / d * k * .8);
-  });
-}, { passive: true });
-
-function sndOink() {
-  try {
-    const ctx = ac(), t = ctx.currentTime;
-    [[220, 90, 0, .2], [200, 80, .26, .26]].forEach(([f1, f2, dl, dur]) => {
-      const o = ctx.createOscillator(), g = ctx.createGain();
-      o.type = 'sawtooth';
-      o.frequency.setValueAtTime(f1, t + dl);
-      o.frequency.exponentialRampToValueAtTime(f2, t + dl + dur);
-      g.gain.setValueAtTime(.1, t + dl);
-      g.gain.exponentialRampToValueAtTime(.0001, t + dl + dur + .05);
-      o.connect(g); g.connect(ctx.destination);
-      o.start(t + dl); o.stop(t + dl + dur + .1);
-    });
-  } catch(e) {}
-}
-document.getElementById('pigSvg').addEventListener('click', () => {
-  sndBoing();
-  vib(20);
-  goldRipple();                              // волна по золоту от тапа
-  const pig = document.getElementById('pigSvg');
-  pig.classList.remove('bounce'); void pig.offsetWidth; pig.classList.add('bounce');
-  setTimeout(() => pig.classList.remove('bounce'), 720);
-  setTempHappy(800);
-});
-
-// ---------- приветствие / пыль и чих ----------
-function pigWelcome() {
-  setTimeout(() => {
-    const pig = document.getElementById('pigSvg');
-    pig.classList.add('hi');
-    pig.classList.remove('bounce'); void pig.offsetWidth; pig.classList.add('bounce');
-    setTimeout(() => { pig.classList.remove('bounce', 'hi'); }, 950);
-    setTempHappy(1200);
-    toast('🐷 ' + (state.pigName ? state.pigName + ' скучала! С возвращением' : 'С возвращением!'));
-  }, 700);
-}
-function dustSneeze() {
-  const dust = document.getElementById('dust');
-  dust.style.display = '';
-  setTimeout(() => {
-    const pig = document.getElementById('pigSvg');
-    pig.classList.add('sneeze');
-    setTimeout(() => pig.classList.remove('sneeze'), 700);
-    flick(0, .07);
-    dust.style.display = 'none';
-    // пылинки разлетаются
-    const r = pig.getBoundingClientRect();
-    for (let i = 0; i < 9; i++) {
-      const d = document.createElement('div');
-      d.className = 'dust-p';
-      const ang = Math.random() * Math.PI * 2;
-      const dist = 35 + Math.random() * 50;
-      d.style.setProperty('--x', (r.left + r.width * .45) + 'px');
-      d.style.setProperty('--y', (r.top + r.height * .4) + 'px');
-      d.style.setProperty('--dx', Math.cos(ang) * dist + 'px');
-      d.style.setProperty('--dy', Math.sin(ang) * dist + 'px');
-      document.body.appendChild(d);
-      setTimeout(() => d.remove(), 900);
-    }
-    toast('Апчхи! 🐷 Сто лет не виделись');
-    setTempHappy(1200);
-  }, 1400);
-}
 function greetCheck() {
   const t = todayStr();
   if (state.lastVisit && state.lastVisit !== t) {
     const gap = Math.round((parseD(t) - parseD(state.lastVisit)) / 864e5);
-    if (gap >= 3) dustSneeze();
-    else pigWelcome();
   }
   state.lastVisit = t;
   localStorage.setItem(KEY, JSON.stringify(state));
 }
-
-// ---------- гиро-параллакс: наклон телефона двигает фон (дёшево — один слой) ----------
-let gyroOn = false;
-function enableGyro() {
-  if (gyroOn) return;
-  gyroOn = true;
-  let lastT = 0;
-  window.addEventListener('deviceorientation', e => {
-    const now = Date.now();
-    if (now - lastT < 90) return;                 // ~11 обновлений/сек достаточно
-    lastT = now;
-    const gx = Math.max(-25, Math.min(25, e.gamma || 0));
-    const gy = Math.max(-25, Math.min(25, (e.beta || 45) - 45));
-    parX = gx * .9;
-    parY = gy * .7;
-    applyParallax();                              // .blobs с transition сгладит
-  }, { passive: true });
-}
-// iOS требует разрешение на датчики — спрашиваем при первом касании
-document.addEventListener('touchend', function gyroReq() {
-  document.removeEventListener('touchend', gyroReq);
-  try {
-    if (typeof DeviceOrientationEvent !== 'undefined' && DeviceOrientationEvent.requestPermission) {
-      DeviceOrientationEvent.requestPermission()
-        .then(s => { if (s === 'granted') enableGyro(); })
-        .catch(() => {});
-    } else if ('DeviceOrientationEvent' in window && 'ontouchstart' in window) {
-      enableGyro();   // Android — без разрешения
-    }
-  } catch(e) {}
-}, { once: true, passive: true });
-
-// ---------- зевота при бездействии ----------
-let lastActivity = Date.now();
-['pointerdown', 'scroll', 'keydown', 'touchstart'].forEach(ev =>
-  document.addEventListener(ev, () => lastActivity = Date.now(), { passive: true }));
-setInterval(() => {
-  if (Date.now() - lastActivity < 30000) return;
-  if (document.hidden || document.body.classList.contains('sleep')) return;
-  const pig = document.getElementById('pigSvg');
-  if (pig.classList.contains('yawn')) return;
-  pig.classList.add('yawn');
-  document.getElementById('eyeSleep').style.display = '';
-  document.getElementById('eyeOpen').style.display = 'none';
-  setTimeout(() => { pig.classList.remove('yawn'); refreshEyes(); }, 1850);
-}, 30000);
-
-// ---------- пар изо рта зимой ----------
-setInterval(() => {
-  if (!window.winterMode || document.hidden) return;
-  const area = document.querySelector('.pig-area');
-  const pig = document.getElementById('pigSvg');
-  const pr = pig.getBoundingClientRect(), ar = area.getBoundingClientRect();
-  if (!pr.width) return;
-  const b = document.createElement('div');
-  b.className = 'breath';
-  b.style.left = (pr.left - ar.left + pr.width * (228 / 260)) + 'px';
-  b.style.top = (pr.top - ar.top + pr.height * (118 / 212)) + 'px';
-  area.appendChild(b);
-  setTimeout(() => b.remove(), 2200);
-}, 5500);
-
-// ---------- глаз следит за прокруткой (только с мышью: на телефоне
-// перерисовка свинки на каждом кадре скролла даёт лаги) ----------
-let lastScrollY = window.scrollY, scrollEyeTimer = null;
-if (window.matchMedia && matchMedia('(hover: hover) and (pointer: fine)').matches)
-window.addEventListener('scroll', () => {
-  if (document.body.classList.contains('sleep')) return;
-  const dy = window.scrollY - lastScrollY;
-  lastScrollY = window.scrollY;
-  const py = Math.max(-2.4, Math.min(2.4, dy * .2));
-  pupils[0].setAttribute('cy', 90 + py);
-  pupils[1].setAttribute('cy', 87.5 + py * .8);
-  clearTimeout(scrollEyeTimer);
-  scrollEyeTimer = setTimeout(() => {
-    pupils[0].setAttribute('cy', 90);
-    pupils[1].setAttribute('cy', 87.5);
-  }, 350);
-}, { passive: true });
 
 // ---------- магнит: рекомендованный конверт тянется к курсору ----------
 // только там, где есть мышь: на телефоне это мешает скроллу и дёргает layout
@@ -4462,7 +4300,6 @@ function xmasMode() {
   const on = m === 11 || m === 0 || m === 1;   // вся зима: декабрь–февраль
   window.winterMode = on;                       // пар изо рта
   document.body.classList.toggle('xmas', on);
-  document.getElementById('xmasHat').style.display = on ? '' : 'none';
   if (on && !window._snowTimer) {
     window._snowTimer = setInterval(() => {
       const f = document.createElement('div');
@@ -5469,6 +5306,7 @@ function habitPressEnd() {
   setTimeout(hideWhyPop, 900);   // заметка ещё мгновение видна после отпускания
 }
 function habitTileClick(id) {
+  if (isPastDay()) { toast('Прошлый день — только просмотр'); return; }
   if (habitLongPressFired) { habitLongPressFired = false; return; }
   const h = state.habits.find(x => x.id === id);
   if (h && isCounterHabit(h)) incrementHabitCounter(id);
@@ -5637,53 +5475,19 @@ function flameGoToHabit(id) {
   setTimeout(() => tile.classList.remove('q-hint'), 2500);
 }
 // салют огонька за идеальный день
-function flameCelebrate() {
-  const wrap = document.querySelector('.flame-wrap');
-  const svg = document.getElementById('flameSvg');
-  if (svg) {
-    svg.classList.remove('tap'); void svg.offsetWidth; svg.classList.add('tap');
-    setTimeout(() => svg.classList.remove('tap'), 560);
-  }
-  if (wrap) {
-    const r = svg.getBoundingClientRect(), wr = wrap.getBoundingClientRect();
-    for (let i = 0; i < 10; i++) {
-      const s = document.createElement('span');
-      s.className = 'lvl-spark';
-      s.textContent = '✦';
-      s.style.fontSize = (10 + Math.random() * 10) + 'px';
-      s.style.left = (r.left - wr.left + Math.random() * r.width) + 'px';
-      s.style.top = (r.top - wr.top + Math.random() * r.height * .9) + 'px';
-      wrap.appendChild(s);
-      setTimeout(() => s.remove(), 1000);
-    }
-  }
-  const cell = document.querySelector('#hcalWeekGrid .wd-cell.today .wd-ring');
-  if (cell) {
-    cell.classList.add('celebrate');
-    try { sparkBurst(cell); } catch(e) {}
-    setTimeout(() => cell.classList.remove('celebrate'), 720);
-  }
-  try { sndStar(); } catch(e) {}
-  vib([20, 30, 20]);
-}
 function renderFlame() {
-  const svg = document.getElementById('flameSvg');
-  const aura = document.getElementById('flameAura');
   const fiToday = document.getElementById('fiToday');
   const fiStreak = document.getElementById('fiStreak');
   const fiRecord = document.getElementById('fiRecord');
   const fiPhrase = document.getElementById('fiPhrase');
   const fiNeglect = document.getElementById('fiNeglect');
   const fiRemaining = document.getElementById('fiRemaining');
-  if (!svg) return;
+  if (!document.getElementById('habitWrap')) return;
   if (!state.habits.length) {
-    FLAME_MOODS.forEach(m => svg.classList.remove('mood-' + m));
-    svg.classList.add('mood-neutral');
-    aura.style.width = '110px'; aura.style.height = '110px'; aura.style.opacity = '.35';
+    sphSet('habit', { theme: 'fire', frac: 0, val: '0', num: 0, lab: 'привычек', sub: '' });
     fiToday.textContent = 'Пока нет привычек — добавь первую ниже';
     [fiStreak, fiRecord, fiPhrase, fiNeglect, document.getElementById('fiBarRow')].forEach(el => el.style.display = 'none');
     fiRemaining.innerHTML = '';   // иначе от прошлого рендера остаются висеть иконки
-    setFlameEyesMouth('neutral');
     return;
   }
   const t = todayStr();
@@ -5701,7 +5505,7 @@ function renderFlame() {
     const lvl = flameLevel();
     if (lvl > (state.flameLvl || 1)) { state.flameLvl = lvl; setTimeout(() => toast('🔥 Огонёк подрос!'), 600); }
     save();
-    flameCelebrate();
+    sphSplash('habit');
   } else if (!dayPerfect && state.flameAwarded[t]) {
     delete state.flameAwarded[t];
     state.flameXP = Math.max(0, (state.flameXP || 0) - 1);
@@ -5711,19 +5515,13 @@ function renderFlame() {
 
   const streak = combinedStreakCurrent();
   const record = combinedStreakRecord();
-  const mood = flameMood();
-  const lvl = flameLevel();
-  FLAME_MOODS.forEach(m => svg.classList.remove('mood-' + m));
-  svg.classList.add('mood-' + mood);
-  setFlameEyesMouth(mood);
-
-  // рост с уровнем: 146px на ур.1 → 186px на ур.6
-  const w = 146 + (lvl - 1) * 8;
-  svg.setAttribute('width', w);
-  svg.setAttribute('height', Math.round(w * 172 / 140));
+  sphSet('habit', {
+    theme: 'fire', frac: doneToday / total,
+    val: doneToday + '/' + total, lab: 'сегодня',
+    sub: streak > 0 ? '🔥 ' + streak + ' ' + ruDays(streak) + ' подряд' : 'начни стрик сегодня'
+  });
 
   fiToday.innerHTML = 'Сегодня <b>' + doneToday + '/' + total + '</b>';
-  document.getElementById('fiBarRow').style.display = '';
   document.getElementById('fiBarFill').style.width = Math.round(doneToday / total * 100) + '%';
 
   // хвост прогрессбара: мини-иконки невыполненных (тап — перейти к плитке привычки)
@@ -5754,13 +5552,6 @@ function renderFlame() {
     fiNeglect.onclick = () => flameGoToHabit(worst.id);
   } else fiNeglect.style.display = 'none';
 
-  // аура: тёплое свечение, растёт со стриком и уровнем
-  const size = Math.round(96 + Math.min(streak, 30) * 2.4 + (lvl - 1) * 7);
-  aura.style.width = size + 'px';
-  aura.style.height = size + 'px';
-  // яркость ауры тоже по настроению (5 ступеней)
-  const auraBase = { sad: .4, meh: .55, neutral: .72, good: .85, happy: .95 }[mood] || .72;
-  aura.style.opacity = String(Math.min(auraBase + streak * .01 + (lvl - 1) * .02, 1));
 }
 function ruDays(n) {
   const n10 = n % 10, n100 = n % 100;
@@ -5768,23 +5559,6 @@ function ruDays(n) {
   if (n10 === 1) return 'день';
   if (n10 >= 2 && n10 <= 4) return 'дня';
   return 'дней';
-}
-function setFlameEyesMouth(mood) {
-  const eOpen = document.getElementById('flEyesOpen');
-  if (!eOpen) return;
-  const sleep = document.body.classList.contains('sleep');
-  const eyeFor = { sad: 'flEyesSad', meh: 'flEyesMeh', neutral: 'flEyesOpen', good: 'flEyesGood', happy: 'flEyesHappy' };
-  const mouthFor = { sad: 'flMouthSad', meh: 'flMouthMeh', neutral: 'flMouthNeutral', good: 'flMouthGood', happy: 'flMouthHappy' };
-  const eSleep = document.getElementById('flEyesSleep');
-  if (eSleep) eSleep.style.display = sleep ? '' : 'none';
-  Object.values(eyeFor).forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.style.display = (!sleep && eyeFor[mood] === id) ? '' : 'none';
-  });
-  Object.values(mouthFor).forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.style.display = ((sleep && id === 'flMouthNeutral') || (!sleep && mouthFor[mood] === id)) ? '' : 'none';
-  });
 }
 // ---------- полоска текущей недели (превью; полный месяц — в модалке) ----------
 // доля выполненных привычек за конкретный день (0..1), null — нет запланированных
@@ -5882,11 +5656,11 @@ function flamePressStart(ev) {
   flameLongPressFired = false;
   const e = ev || window.event;
   flameStartXY = e && e.clientX !== undefined ? { x: e.clientX, y: e.clientY } : null;
-  const svg = document.getElementById('flameSvg');
-  if (svg) svg.classList.add('hold');
+  const wrap = document.getElementById('habitWrap');
+  if (wrap) wrap.classList.add('hold');
   flamePressTimer = setTimeout(() => {
     flameLongPressFired = true;
-    if (svg) svg.classList.remove('hold');
+    if (wrap) wrap.classList.remove('hold');
     vib(20); openHabitCalModal();
   }, LONG_PRESS_MS);
 }
@@ -5899,54 +5673,9 @@ function flamePressMove(ev) {
 function flamePressEnd() {
   clearTimeout(flamePressTimer);
   flameStartXY = null;
-  const svg = document.getElementById('flameSvg');
-  if (svg) svg.classList.remove('hold');
+  const wrap = document.getElementById('habitWrap');
+  if (wrap) wrap.classList.remove('hold');
 }
-function flameTap() {
-  if (flameLongPressFired) { flameLongPressFired = false; return; }
-  const svg = document.getElementById('flameSvg');
-  svg.classList.remove('tap'); void svg.offsetWidth; svg.classList.add('tap');
-  setTimeout(() => svg.classList.remove('tap'), 560);
-  sndFlameCrackle();
-  vib(15);
-}
-function sndFlameCrackle() {
-  try {
-    const ctx = ac(), t = ctx.currentTime, dur = .22;
-    const buf = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate);
-    const d = buf.getChannelData(0);
-    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 1.6);
-    const src = ctx.createBufferSource(); src.buffer = buf;
-    const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1800; f.Q.value = .8;
-    const g = ctx.createGain(); g.gain.value = .12;
-    src.connect(f); f.connect(g); g.connect(ctx.destination);
-    src.start(t);
-    tone(520, .14, .02, 'sine', .05);
-  } catch(e) {}
-}
-document.getElementById('flameSvg').addEventListener('click', flameTap);
-// глаза огонька следят за пальцем/мышкой (только пока открыта вкладка «Привычки»)
-let flameEyeRaf = null;
-document.addEventListener('pointermove', e => {
-  if (flameEyeRaf) return;
-  flameEyeRaf = requestAnimationFrame(() => {
-    flameEyeRaf = null;
-    const svg = document.getElementById('flameSvg');
-    const view = document.getElementById('viewHabits');
-    if (!svg || !view || view.style.display === 'none') return;
-    const r = svg.getBoundingClientRect();
-    if (!r.width) return;
-    const ex = r.left + r.width * .5, ey = r.top + r.height * .68;
-    const dx = e.clientX - ex, dy = e.clientY - ey;
-    const d = Math.hypot(dx, dy) || 1;
-    const k = Math.min(1, d / 55) * 2.8;
-    const gL = document.getElementById('flEyeGL'), gR = document.getElementById('flEyeGR');
-    const tx = (dx / d * k).toFixed(2), ty = (dy / d * k).toFixed(2);
-    if (gL) gL.setAttribute('transform', 'translate(' + tx + ',' + ty + ')');
-    if (gR) gR.setAttribute('transform', 'translate(' + tx + ',' + ty + ')');
-  });
-}, { passive: true });
-
 function renderHabits() {
   renderHabitCal();
   renderHabitWeekStrip();
@@ -6074,7 +5803,11 @@ function render(opts) {
   opts = opts || {};
   const sum = total();
   const pct = Math.min(100, sum / GOAL * 100);
-  renderPig(pct);
+  sphSet('save', {
+    theme: 'gold', frac: sum / GOAL,
+    val: Math.round(pct) + '%', num: Math.round(pct), lab: 'до цели',
+    sub: sum >= GOAL ? 'цель достигнута' : fmt(Math.round(GOAL - sum)) + ' BYN осталось'
+  });
 
   document.getElementById('pct').textContent = pct.toFixed(pct < 10 ? 1 : 0) + '%';
   countTo(document.getElementById('saved'), sum);
@@ -6112,11 +5845,6 @@ function render(opts) {
     : 'Сегодня ещё нет закрытых конвертов';
 
   const s = streak();
-  // настроение: пропустил день — грустит; неделя подряд — сияет
-  const pigEl = document.getElementById('pigSvg');
-  pigEl.classList.toggle('sad', s === 0 && state.closed.length > 0);
-  pigEl.classList.toggle('joy', s >= 7);
-  refreshEyes();
   document.getElementById('streakNow').textContent = s + ' ' + plural(s, 'день', 'дня', 'дней') + ' подряд';
   document.getElementById('streakBest').textContent = 'рекорд: ' + bestStreak();
   document.getElementById('flame').textContent = s === 0 ? '🕯️' : s < 7 ? '🔥' : s < 30 ? '🔥🔥' : '🔥🔥🔥';
@@ -6570,6 +6298,262 @@ const FOOD_FLAT = (() => {
   return out;
 })();
 
+// ============ СФЕРА: один сосуд на все разделы ============
+// Волна нарисована на y=45 и поднимается на 15. Круг — от 8 до 192,
+// поэтому «пусто» = гребень ровно у дна, «полно» = впадина ровно у верха.
+const SPH_WAVE_Y = 45, SPH_WAVE_AMP = 15;
+const SPH_EMPTY = 192 + SPH_WAVE_AMP, SPH_FULL = 8 - SPH_WAVE_AMP;
+function sphShift(frac) {
+  const f = Math.max(0, Math.min(1, frac || 0));
+  return Math.round((SPH_EMPTY - f * (SPH_EMPTY - SPH_FULL) - SPH_WAVE_Y) * 10) / 10;
+}
+const SPH_THEMES = {
+  gold:  { a: '#ffe289', b: '#efa724' },
+  coral: { a: '#ffb08c', b: '#e2653c' },
+  fire:  { a: '#ffc46b', b: '#f2712a' },
+  green: { a: '#5fe08a', b: '#26a349' }
+};
+const SPH_OVER = ['#ff8080', '#d63a3a'];
+function sphereMarkup(id, theme) {
+  const t = SPH_THEMES[theme] || SPH_THEMES.green;
+  const wave = y =>
+    'M-260 ' + y + ' Q-227.5 ' + (y - 16) + ' -195 ' + y +
+    ' T-130 ' + y + ' T-65 ' + y + ' T0 ' + y + ' T65 ' + y + ' T130 ' + y +
+    ' T195 ' + y + ' T260 ' + y + ' T325 ' + y + ' T390 ' + y + ' T455 ' + y +
+    ' T520 ' + y + ' L520 240 L-260 240 Z';
+  return '' +
+  '<div class="sph-wrap" id="' + id + 'Wrap" onclick="sphPoke(\'' + id + '\')">' +
+    '<svg class="sph-svg" id="' + id + 'Svg" viewBox="0 0 200 200" width="200" height="200" aria-hidden="true">' +
+      '<defs>' +
+        '<clipPath id="' + id + 'Clip"><circle cx="100" cy="100" r="92"/></clipPath>' +
+        '<linearGradient id="' + id + 'G" x1="0" y1="0" x2="0" y2="1">' +
+          '<stop offset="0" stop-color="' + t.a + '"/><stop offset="1" stop-color="' + t.b + '"/>' +
+        '</linearGradient>' +
+        '<linearGradient id="' + id + 'GOver" x1="0" y1="0" x2="0" y2="1">' +
+          '<stop offset="0" stop-color="' + SPH_OVER[0] + '"/><stop offset="1" stop-color="' + SPH_OVER[1] + '"/>' +
+        '</linearGradient>' +
+      '</defs>' +
+      '<circle cx="100" cy="100" r="92" fill="rgba(255,255,255,.5)" stroke="rgba(255,255,255,.9)" stroke-width="3"/>' +
+      '<g clip-path="url(#' + id + 'Clip)">' +
+        '<g class="sph-liquid" id="' + id + 'Liquid" style="transform:translateY(' + sphShift(0) + 'px)">' +
+          '<g class="wave-move2"><path id="' + id + 'WaveBack" fill="' + t.a + '" opacity=".55" d="' + wave(50) + '"/></g>' +
+          '<g class="wave-move"><path id="' + id + 'Wave" fill="url(#' + id + 'G)" d="' + wave(45) + '"/></g>' +
+          '<circle class="bub b-1" cx="72"  cy="88" r="3"   fill="rgba(255,255,255,.55)"/>' +
+          '<circle class="bub b-2" cx="112" cy="98" r="2.2" fill="rgba(255,255,255,.5)"/>' +
+          '<circle class="bub b-3" cx="92"  cy="83" r="2.6" fill="rgba(255,255,255,.6)"/>' +
+          '<circle class="bub b-4" cx="127" cy="91" r="1.8" fill="rgba(255,255,255,.45)"/>' +
+        '</g>' +
+      '</g>' +
+      '<ellipse cx="66" cy="52" rx="26" ry="12" fill="rgba(255,255,255,.4)" transform="rotate(-24 66 52)"/>' +
+    '</svg>' +
+    '<div class="sph-center">' +
+      '<div class="sph-val" id="' + id + 'Val">0</div>' +
+      '<div class="sph-lab" id="' + id + 'Lab"></div>' +
+      '<div class="sph-sub" id="' + id + 'Sub"></div>' +
+    '</div>' +
+  '</div>';
+}
+// ---------- экран «Сегодня» ----------
+// доли и подписи всех четырёх разделов в одном месте
+function todayCells() {
+  const sum = total(), goalPct = GOAL ? sum / GOAL : 0;
+  const L = state.limit, mSum = monthSpent();
+  const t = curDay();
+  const hTotal = state.habits.length;
+  const hDone = state.habits.filter(h => h.log.includes(t)).length;
+  const n = state.nutri;
+  const eaten = n ? fdTotals(t).k : 0;
+  const norm = n ? n.kcal + fdBurned(t) : 0;
+  return [
+    { id: 'tdSave', tab: 'save', theme: 'gold', name: 'Копилка',
+      frac: goalPct, val: Math.round(Math.min(100, goalPct * 100)) + '%', lab: 'до цели',
+      hint: fmt(Math.round(Math.max(0, GOAL - sum))) + ' BYN осталось' },
+    { id: 'tdSpend', tab: 'spend', theme: 'coral', name: 'Расходы',
+      frac: L > 0 ? mSum / L : 0, over: L > 0 && mSum > L,
+      val: L > 0 ? Math.round(mSum / L * 100) + '%' : fmt(Math.round(mSum)),
+      lab: L > 0 ? 'лимита' : 'BYN',
+      hint: L > 0 ? (mSum > L ? 'перебор ' + fmt(Math.round(mSum - L)) : 'в запасе ' + fmt(Math.round(L - mSum))) : 'лимит не задан' },
+    { id: 'tdHabit', tab: 'habits', theme: 'fire', name: 'Привычки',
+      frac: hTotal ? hDone / hTotal : 0,
+      val: hTotal ? hDone + '/' + hTotal : '—', lab: 'сегодня',
+      hint: hTotal ? (hDone === hTotal ? 'день закрыт' : 'осталось ' + (hTotal - hDone)) : 'привычек нет' },
+    { id: 'tdFood', tab: 'food', theme: 'green', name: 'Питание',
+      frac: norm ? eaten / norm : 0, over: norm > 0 && eaten > norm,
+      val: norm ? Math.round(eaten / norm * 100) + '%' : '—', lab: 'нормы',
+      hint: norm ? (eaten > norm ? 'перебор ' + fmt(eaten - norm) : fmt(norm - eaten) + ' ккал осталось') : 'анкета не заполнена' }
+  ];
+}
+let todayMounted = false;
+function renderToday() {
+  const grid = document.getElementById('tdGrid');
+  if (!grid) return;
+  const cells = todayCells();
+  if (!todayMounted) {
+    grid.innerHTML = cells.map(c =>
+      '<button type="button" class="td-cell" onclick="switchTab(\'' + c.tab + '\')">' +
+        sphereMarkup(c.id, c.theme) +
+        '<div class="td-name">' + c.name + '</div>' +
+        '<div class="td-hint" id="' + c.id + 'Hint"></div>' +
+      '</button>').join('');
+    // внутри плитки тап должен вести в раздел, а не пружинить сферу
+    cells.forEach(c => {
+      const w = document.getElementById(c.id + 'Wrap');
+      if (w) w.removeAttribute('onclick');
+    });
+    todayMounted = true;
+  }
+  cells.forEach(c => {
+    sphSet(c.id, { theme: c.theme, frac: c.frac, over: !!c.over, val: c.val, lab: c.lab, sub: '' });
+    const h = document.getElementById(c.id + 'Hint');
+    if (h) h.textContent = c.hint;
+  });
+  document.getElementById('tdDate').textContent = dayLabel(curDay());
+  document.getElementById('tdNext').disabled = curDay() >= todayStr();
+}
+
+// ---------- календарь выбора дня ----------
+let dpMonth = null;   // первое число показываемого месяца
+function openDayPicker() {
+  const d = parseD(curDay());
+  dpMonth = new Date(d.getFullYear(), d.getMonth(), 1);
+  renderDayPicker();
+  document.getElementById('dayPicker').classList.add('show');
+}
+function closeDayPicker() { document.getElementById('dayPicker').classList.remove('show'); }
+function dpShiftMonth(delta) {
+  dpMonth = new Date(dpMonth.getFullYear(), dpMonth.getMonth() + delta, 1);
+  renderDayPicker();
+}
+function renderDayPicker() {
+  const t = todayStr(), sel = curDay();
+  document.getElementById('dpTitle').textContent =
+    dpMonth.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
+  const now = new Date();
+  document.getElementById('dpNext').disabled =
+    dpMonth.getFullYear() > now.getFullYear() ||
+    (dpMonth.getFullYear() === now.getFullYear() && dpMonth.getMonth() >= now.getMonth());
+  const first = new Date(dpMonth), dow = (first.getDay() + 6) % 7;   // неделя с понедельника
+  const days = new Date(dpMonth.getFullYear(), dpMonth.getMonth() + 1, 0).getDate();
+  let html = '';
+  for (let i = 0; i < dow; i++) html += '<div class="dp-day empty"></div>';
+  for (let i = 1; i <= days; i++) {
+    const ds = todayStr(new Date(dpMonth.getFullYear(), dpMonth.getMonth(), i));
+    const future = ds > t;
+    html += '<button type="button" class="dp-day' + (ds === t ? ' today' : '') + (ds === sel ? ' sel' : '') + '"' +
+      (future ? ' disabled' : ' onclick="dpPick(\'' + ds + '\')"') + '>' + i + '</button>';
+  }
+  document.getElementById('dpGrid').innerHTML = html;
+}
+// свайп по экрану «Сегодня»: влево — следующий день, вправо — предыдущий
+let tdSwipeX = null, tdSwipeY = null;
+(function bindTodaySwipe() {
+  const view = document.getElementById('viewToday');
+  if (!view) return;
+  view.addEventListener('pointerdown', e => { tdSwipeX = e.clientX; tdSwipeY = e.clientY; }, { passive: true });
+  view.addEventListener('pointerup', e => {
+    if (tdSwipeX === null) return;
+    const dx = e.clientX - tdSwipeX, dy = e.clientY - tdSwipeY;
+    tdSwipeX = null;
+    // горизонталь должна явно перевешивать вертикаль, иначе это был скролл
+    if (Math.abs(dx) < 55 || Math.abs(dx) < Math.abs(dy) * 1.7) return;
+    tdShiftDay(dx < 0 ? 1 : -1);
+    vib(8);
+  }, { passive: true });
+})();
+
+function dpPick(d) {
+  setViewDate(d);
+  closeDayPicker();
+}
+
+// ---------- настройки ----------
+function openSettings() {
+  document.getElementById('settingsModal').classList.add('show');
+  try { renderSync(); } catch (e) {}
+  try { renderNotifCard(); } catch (e) {}
+}
+function closeSettings() { document.getElementById('settingsModal').classList.remove('show'); }
+
+function mountSpheres() {
+  const put = (host, id, theme) => {
+    const el = document.getElementById(host);
+    if (el && !el.querySelector('.sph-wrap')) el.innerHTML = sphereMarkup(id, theme);
+  };
+  put('saveSphere', 'save', 'gold');
+  put('spendSphere', 'spend', 'coral');
+  put('habitSphere', 'habit', 'fire');
+  put('foodSphere', 'food', 'green');
+}
+const sphShown = {}, sphNumTimer = {}, sphPokeTimer = {};
+// opts: { frac, val, num, lab, sub, over, theme }
+function sphSet(id, opts) {
+  const wrap = document.getElementById(id + 'Wrap');
+  if (!wrap) return;
+  const o = opts || {};
+  wrap.classList.toggle('over', !!o.over);
+  const liq = document.getElementById(id + 'Liquid');
+  if (liq) liq.style.transform = 'translateY(' + sphShift(o.frac) + 'px)';
+  const t = SPH_THEMES[o.theme || 'green'] || SPH_THEMES.green;
+  const w = document.getElementById(id + 'Wave'), wb = document.getElementById(id + 'WaveBack');
+  if (w) w.setAttribute('fill', o.over ? 'url(#' + id + 'GOver)' : 'url(#' + id + 'G)');
+  if (wb) wb.setAttribute('fill', o.over ? SPH_OVER[0] : t.a);
+  if (o.lab !== undefined) document.getElementById(id + 'Lab').textContent = o.lab;
+  if (o.sub !== undefined) document.getElementById(id + 'Sub').textContent = o.sub;
+  if (o.val !== undefined) sphSetVal(id, o.val, o.num);
+}
+// число перебегает к новому значению, а не подменяется
+function sphSetVal(id, text, num) {
+  const el = document.getElementById(id + 'Val');
+  if (!el) return;
+  const to = typeof num === 'number' ? num : null;
+  const from = sphShown[id];
+  if (to === null || from === undefined || Math.abs(to - from) < 2 || prefersReducedMotion()) {
+    clearInterval(sphNumTimer[id]);
+    el.textContent = text;
+    if (to !== null) sphShown[id] = to;
+    return;
+  }
+  const prefix = String(text).charAt(0) === '+' ? '+' : '';
+  const t0 = Date.now(), dur = 700;
+  clearInterval(sphNumTimer[id]);
+  sphNumTimer[id] = setInterval(() => {
+    const p = Math.min(1, (Date.now() - t0) / dur);
+    const e = 1 - Math.pow(1 - p, 3);
+    el.textContent = prefix + fmt(Math.round(from + (to - from) * e));
+    if (p >= 1) { clearInterval(sphNumTimer[id]); sphShown[id] = to; el.textContent = text; }
+  }, 16);
+}
+// обнулить мгновенно — чтобы при входе на вкладку сфера налилась на глазах
+function sphReset(id) {
+  const liq = document.getElementById(id + 'Liquid');
+  if (!liq) return;
+  liq.style.transition = 'none';
+  liq.style.transform = 'translateY(' + sphShift(0) + 'px)';
+  void liq.getBoundingClientRect();
+  liq.style.transition = '';
+  delete sphShown[id];
+}
+function sphPoke(id) {
+  const wrap = document.getElementById(id + 'Wrap');
+  if (!wrap) return;
+  vib(14);
+  try { sndDrop(); } catch (e) {}
+  if (prefersReducedMotion()) return;
+  wrap.classList.remove('bounce', 'splash');
+  void wrap.offsetWidth;
+  wrap.classList.add('bounce');
+  clearTimeout(sphPokeTimer[id]);
+  sphPokeTimer[id] = setTimeout(() => wrap.classList.remove('bounce'), 900);
+}
+function sphSplash(id) {
+  const wrap = document.getElementById(id + 'Wrap');
+  if (!wrap || prefersReducedMotion()) return;
+  wrap.classList.remove('splash');
+  void wrap.offsetWidth;
+  wrap.classList.add('splash');
+  setTimeout(() => wrap.classList.remove('splash'), 900);
+}
+
 // ============ ПИТАНИЕ: штучные меры ============
 // склонения мерок: [1, 2-4, 5+]
 const UNIT_FORMS = {
@@ -6729,11 +6713,13 @@ function fdBurned(d) {
   if (!h || !h.log.includes(d)) return 0;
   return Math.round(4.5 * (n.weight || 70));
 }
-// вода берётся из привычки «Пить воду» — данные общие
-function fdWaterHabit() { return state.habits.find(h => isWaterHabit(h)); }
+// вода берётся из привычки «Пить воду» — данные общие.
+// счётчик не обязателен: с целью «1 раз в день» это просто отметка
+function fdWaterHabit() { return state.habits.find(h => /вод|пить|попить/i.test(h.name)); }
 function fdWater(d) {
   const h = fdWaterHabit();
   if (!h) return null;
+  if (!isCounterHabit(h)) return { cur: h.log.includes(d) ? 1 : 0, target: 1, simple: true };
   const cur = (h.counts && h.counts[d]) || 0;
   return { cur, target: h.target || 8 };
 }
@@ -6741,57 +6727,14 @@ function fdAddWater() {
   const h = fdWaterHabit();
   if (!h) { toast('Добавь привычку «Пить воду» на вкладке Привычки'); return; }
   if (fdDay() !== todayStr()) { toast('Воду можно отмечать только за сегодня'); return; }
+  if (!isCounterHabit(h)) { toggleHabitToday(h.id); renderFood(); return; }
   incrementHabitCounter(h.id);
   renderFood();
 }
-// ---------- анимация круга ----------
-let fdLevel = 0;          // текущая доля заполнения, 0..1
-let fdLeftShown = null;   // число, которое сейчас на экране
-let fdNumTimer = null;
-// поднимаем уровень; при первом показе стартуем с пустого, чтобы было видно наполнение
-function fdSetLevel(frac, instant) {
-  const liq = document.getElementById('fdLiquid');
-  if (!liq) return;
-  if (instant) {
-    liq.style.transition = 'none';
-    liq.style.transform = 'translateY(' + (200 - frac * 200) + 'px)';
-    void liq.getBoundingClientRect();
-    liq.style.transition = '';
-  } else {
-    liq.style.transform = 'translateY(' + (200 - frac * 200) + 'px)';
-  }
-  fdLevel = frac;
-}
-// число «осталось» перебегает к новому значению, а не подменяется
-function fdSetLeft(text, value) {
-  const el = document.getElementById('fdLeft');
-  if (!el) return;
-  const prefix = text.charAt(0) === '+' ? '+' : '';
-  if (fdLeftShown === null || Math.abs(value - fdLeftShown) < 2 || prefersReducedMotion()) {
-    if (fdNumTimer) { clearInterval(fdNumTimer); fdNumTimer = null; }
-    el.textContent = text; fdLeftShown = value; return;
-  }
-  const from = fdLeftShown, to = value, t0 = Date.now(), dur = 700;
-  if (fdNumTimer) clearInterval(fdNumTimer);
-  fdNumTimer = setInterval(() => {
-    const p = Math.min(1, (Date.now() - t0) / dur);
-    const e = 1 - Math.pow(1 - p, 3);
-    const v = Math.round(from + (to - from) * e);
-    el.textContent = prefix + fmt(v);
-    if (p >= 1) { clearInterval(fdNumTimer); fdNumTimer = null; fdLeftShown = to; el.textContent = text; }
-  }, 16);
-}
+// уровень считает общий компонент сферы
+function fdLevelShift(frac) { return sphShift(frac); }
 function prefersReducedMotion() {
   try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; }
-}
-// короткий всплеск волны — вызывается, когда еда добавлена
-function fdSplash() {
-  const wrap = document.querySelector('.fd-circle-wrap');
-  if (!wrap || prefersReducedMotion()) return;
-  wrap.classList.remove('splash');
-  void wrap.offsetWidth;
-  wrap.classList.add('splash');
-  setTimeout(() => wrap.classList.remove('splash'), 900);
 }
 
 // ---------- рендер вкладки ----------
@@ -6818,17 +6761,15 @@ function renderFood() {
   const left = norm + burned - t.k;
   const over = left < 0;
 
-  // круг
-  const wrap = document.querySelector('.fd-circle-wrap');
-  wrap.classList.toggle('over', over);
-  const frac = Math.max(0, Math.min(1, t.k / Math.max(1, norm + burned)));
-  fdSetLevel(frac);
-  document.querySelectorAll('#fdLiquid path').forEach(p =>
-    p.setAttribute('fill', over ? 'url(#fdLiqOver)' : 'url(#fdLiq)'));
-  fdSetLeft(over ? '+' + fmt(Math.abs(left)) : fmt(left), over ? Math.abs(left) : left);
-  document.getElementById('fdLeftLab').textContent = over ? 'ккал перебор' : 'ккал осталось';
-  document.getElementById('fdFormula').textContent =
-    fmt(t.k) + ' съедено' + (burned ? ' · ' + fmt(burned) + ' сожжено' : '') + ' · норма ' + fmt(norm);
+  // сфера питания — тот же компонент, что и в остальных разделах
+  sphSet('food', {
+    theme: 'green', over,
+    frac: t.k / Math.max(1, norm + burned),
+    val: over ? '+' + fmt(Math.abs(left)) : fmt(left),
+    num: over ? Math.abs(left) : left,
+    lab: over ? 'ккал перебор' : 'ккал осталось',
+    sub: fmt(t.k) + ' съедено · норма ' + fmt(norm) + (burned ? ' + ' + fmt(burned) : '')
+  });
 
   // БЖУ
   [['P', 'p'], ['F', 'f'], ['C', 'c']].forEach(([id, key]) => {
@@ -6892,16 +6833,17 @@ function renderFoodMeals(d) {
 }
 
 // ---------- долгое нажатие на строке продукта ----------
-let fdRowTimer = null, fdRowXY = null, fdRowEl = null, fdRowFired = false;
+// fdRowFired хранит, на какой строке сработало удержание — гасим тап только у неё
+let fdRowTimer = null, fdRowXY = null, fdRowEl = null, fdRowFired = null;
 function fdRowPressStart(mk, i, ev) {
   fdRowPressEnd();
-  fdRowFired = false;
+  fdRowFired = null;
   const e = ev || window.event;
   fdRowXY = e && e.clientX !== undefined ? { x: e.clientX, y: e.clientY } : null;
   fdRowEl = document.querySelector('#fdMeals .fd-row[data-mk="' + mk + '"][data-i="' + i + '"]');
   if (fdRowEl) fdRowEl.classList.add('pressed');
   fdRowTimer = setTimeout(() => {
-    fdRowFired = true;
+    fdRowFired = mk + ':' + i;
     if (fdRowEl) fdRowEl.classList.remove('pressed');
     vib(20);
     openRowMenu(mk, i);
@@ -6919,12 +6861,14 @@ function fdRowPressEnd() {
   if (fdRowEl) fdRowEl.classList.remove('pressed');
   fdRowEl = null;
 }
-// обычный тап — правка порции, но не сразу после долгого нажатия
+// обычный тап — правка порции, но не сразу после долгого нажатия по ЭТОЙ же строке
 function fdRowTap(mk, i) {
-  if (fdRowFired) { fdRowFired = false; return; }
+  if (fdRowFired === mk + ':' + i) { fdRowFired = null; return; }
+  fdRowFired = null;
   editPortion(mk, i);
 }
 function delFood(mk, i) {
+  if (fdDay() !== todayStr()) { toast('Прошлый день — только просмотр'); return; }
   const day = fdDayData(fdDay());
   day[mk].splice(i, 1);
   save(); renderFood();
@@ -6936,6 +6880,7 @@ function escFood(s) {
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
 }
 function openFoodAdd(mk, forDish) {
+  if (!forDish && fdDay() !== todayStr()) { toast('Прошлый день — только просмотр'); return; }
   faMeal = mk;
   faEditing = null;
   faCatOpen = {};
@@ -7110,6 +7055,7 @@ function updatePortionPreview() {
     (ptMode === 'pc' ? '  ·  ' + Math.round(g) + ' г' : '');
 }
 function savePortion() {
+  if (fdDay() !== todayStr()) { toast('Прошлый день — только просмотр'); return; }
   const g = Math.round(ptCurrentGrams());
   if (!g || g <= 0) { toast(ptMode === 'pc' ? 'Укажи количество' : 'Укажи вес порции'); return; }
   const q = ptMode === 'pc' && ptPiece
@@ -7141,13 +7087,15 @@ function savePortion() {
   save();
   closePortion(); closeFoodAdd();
   renderFood();
-  fdSplash();
+  sphSplash('food');
   if (!faEditing) vib(12);
   faEditing = null;
 }
 function editPortion(mk, i) {
   const it = fdDayData(fdDay())[mk][i];
   if (!it) return;
+  // у записи «просто калории» веса нет — правим сами калории, а не граммы
+  if (it.qk) { openQuick({ mk, i }); return; }
   ptItem = { n: it.n, k: it.k, p: it.p, f: it.f, c: it.c };
   faEditing = { mk, i };
   openPortion(it.g);
@@ -7213,7 +7161,7 @@ function applyRepeat(idx) {
   save();
   closeRepeat();
   renderFood();
-  fdSplash(); vib(12);
+  sphSplash('food'); vib(12);
   toast('Добавлено: ' + added + ' ' + plural(added, 'позиция', 'позиции', 'позиций'), () => {
     const d = fdDayData(fdDay());
     d[rpMeal].splice(d[rpMeal].length - added, added);
@@ -7272,6 +7220,7 @@ function dishAddProduct() {
 function saveDish() {
   const name = (document.getElementById('dishName').value || '').trim();
   if (!name) { toast('Как назовём блюдо?'); return; }
+  dishDraft.items = dishDraft.items.filter(x => x.g > 0);   // нулевые порции смысла не несут
   if (!dishDraft.items.length) { toast('Добавь хотя бы один продукт'); return; }
   state.nutri.dishes = state.nutri.dishes || [];
   const i = state.nutri.dishes.findIndex(d => d.id === dishDraft.id);
@@ -7293,7 +7242,7 @@ function addDish(id) {
   save();
   closeFoodAdd();
   renderFood();
-  fdSplash(); vib(12);
+  sphSplash('food'); vib(12);
   toast('«' + dish.n + '» добавлено', () => {
     const d = fdDayData(fdDay());
     d[mk].splice(d[mk].length - added, added);
@@ -7313,13 +7262,26 @@ function delDish(id, ev) {
 }
 
 // ============ ПРОСТО КАЛОРИИ ============
-function openQuick() {
-  ['qkName', 'qkK', 'qkP', 'qkF', 'qkC'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('qkMacros').style.display = 'none';
-  document.getElementById('qkMoreBtn').style.display = '';
+let qkEditing = null;   // { mk, i } — правим уже записанное
+function openQuick(edit) {
+  qkEditing = edit || null;
+  const it = qkEditing ? fdDayData(fdDay())[qkEditing.mk][qkEditing.i] : null;
+  const v = (id, val) => document.getElementById(id).value = val;
+  v('qkName', it ? it.n : '');
+  v('qkK', it ? it.k : '');
+  v('qkP', it && it.p ? it.p : '');
+  v('qkF', it && it.f ? it.f : '');
+  v('qkC', it && it.c ? it.c : '');
+  const hasMacros = !!(it && (it.p || it.f || it.c));
+  document.getElementById('qkMacros').style.display = hasMacros ? '' : 'none';
+  document.getElementById('qkMoreBtn').style.display = hasMacros ? 'none' : '';
+  document.querySelector('#quickModal .m-ok').textContent = qkEditing ? 'Сохранить' : 'Добавить';
   document.getElementById('quickModal').classList.add('show');
 }
-function closeQuick() { document.getElementById('quickModal').classList.remove('show'); }
+function closeQuick() {
+  document.getElementById('quickModal').classList.remove('show');
+  qkEditing = null;
+}
 function qkToggleMacros() {
   document.getElementById('qkMacros').style.display = '';
   document.getElementById('qkMoreBtn').style.display = 'none';
@@ -7331,12 +7293,20 @@ function saveQuick() {
   const name = (document.getElementById('qkName').value || '').trim() || 'Еда без взвешивания';
   // g=100 держим специально: итоги считаются как k*g/100, значит ровно k ккал
   const it = { n: name, g: 100, k, p: num('qkP'), f: num('qkF'), c: num('qkC'), qk: true };
+  if (qkEditing) {
+    const { mk, i } = qkEditing;
+    fdDayData(fdDay())[mk][i] = it;
+    save();
+    closeQuick();
+    renderFood();
+    return;
+  }
   const mk = faMeal;
   fdDayData(fdDay())[mk].push(it);
   save();
   closeQuick(); closeFoodAdd();
   renderFood();
-  fdSplash(); vib(12);
+  sphSplash('food'); vib(12);
   toast(fmt(k) + ' ккал записано', () => {
     fdDayData(fdDay())[mk].pop(); save(); renderFood();
   });
@@ -7345,6 +7315,7 @@ function saveQuick() {
 // ============ МЕНЮ СТРОКИ ПРОДУКТА ============
 let rmRef = null;
 function openRowMenu(mk, i) {
+  if (fdDay() !== todayStr()) { toast('Прошлый день — только просмотр'); return; }
   const it = fdDayData(fdDay())[mk][i];
   if (!it) return;
   rmRef = { mk, i };
@@ -7388,7 +7359,7 @@ function rowMenuDup() {
   save();
   closeRowMenu();
   renderFood();
-  fdSplash(); vib(10);
+  sphSplash('food'); vib(10);
   toast('Дублировано', () => { fdDayData(fdDay())[mk].pop(); save(); renderFood(); });
 }
 function rowMenuEdit() {
@@ -7442,9 +7413,11 @@ function fdSuggestions() {
   }
   return { key, remK, rem, list: out };
 }
+let fdShownTips = [];   // то, что реально нарисовано — по нему и добавляем
 function renderFoodTips() {
   const card = document.getElementById('fdTipCard');
   const s = fdSuggestions();
+  fdShownTips = s ? s.list : [];
   if (!s || !s.list.length) { card.style.display = 'none'; return; }
   card.style.display = '';
   document.getElementById('fdTipSub').textContent =
@@ -7462,8 +7435,7 @@ function fdTipPortion(c) {
   return pc ? qtyLabel(c.g / pc[1], pc[0]) + ' · ' + Math.round(c.g) + ' г' : Math.round(c.g) + ' г';
 }
 function applyTip(i) {
-  const s = fdSuggestions();
-  const c = s && s.list[i];
+  const c = fdShownTips[i];
   if (!c) return;
   faMeal = 's';                  // подсказки идут в перекус
   faEditing = null;
@@ -7511,7 +7483,10 @@ function renderFoodWeight() {
   const box = document.getElementById('fdWeightBox');
   const days = Object.keys(n.weights).sort();
   if (!days.length) {
-    box.innerHTML = '<div class="fd-empty">Ещё не записывал — нажми «Записать»</div>';
+    // цель из анкеты показываем даже без замеров, иначе про неё нигде не видно
+    box.innerHTML = '<div class="fd-empty">Ещё не записывал — нажми «Записать»</div>' +
+      (n.targetW ? '<div class="fd-w-goal">Цель ' + n.targetW + ' кг' +
+        (n.weight ? ' · сейчас ' + n.weight + ' кг' : '') + '</div>' : '');
     return;
   }
   const last = n.weights[days[days.length - 1]];
@@ -7571,10 +7546,19 @@ function fdShiftDay(delta) {
   d.setDate(d.getDate() + delta);
   const s = todayStr(d);
   if (s > todayStr()) return;
-  fdDate = s === todayStr() ? null : s;
+  setViewDate(s);            // день общий для всего приложения
   renderFood();
+  switchTabHeader();
 }
-function fdGoToday() { fdDate = null; renderFood(); }
+function fdGoToday() { setViewDate(null); renderFood(); switchTabHeader(); }
+// обновить подпись дня в шапке раздела, не переключая вкладку
+function switchTabHeader() {
+  const dayEl = document.getElementById('secDay');
+  if (!dayEl) return;
+  const past = isPastDay();
+  dayEl.textContent = past ? dayLabel(curDay()) + ' · только просмотр' : '';
+  dayEl.classList.toggle('past', past);
+}
 
 // ---------- анкета ----------
 let fwStep = 1, fwData = {};
@@ -7694,6 +7678,8 @@ function fwStepNext() {
     if (fwData.goal !== 'keep') {
       const tw = parseFloat(String(document.getElementById('fwTargetW').value).replace(',', '.'));
       const td = document.getElementById('fwTargetD').value;
+      if (td && td <= todayStr()) { toast('Срок должен быть в будущем'); return; }
+      if (tw && (tw < 30 || tw > 300)) { toast('Проверь целевой вес'); return; }
       if (tw) fwData.targetW = tw;
       if (td) fwData.targetD = td;
     } else { delete fwData.targetW; delete fwData.targetD; }
@@ -7725,7 +7711,41 @@ function saveFoodWizard() {
   toast('Норма: ' + fmt(k) + ' ккал в день');
 }
 
-const TAB_VIEWS = { save: 'viewSave', spend: 'viewSpend', habits: 'viewHabits', food: 'viewFood' };
+const TAB_VIEWS = { today: 'viewToday', save: 'viewSave', spend: 'viewSpend', habits: 'viewHabits', food: 'viewFood' };
+const TAB_TITLES = { save: 'Копилка', spend: 'Расходы', habits: 'Привычки', food: 'Питание' };
+
+// ---------- выбранный день ----------
+// null = сегодня. Через минуту простоя возвращаемся на сегодня сами.
+let viewDate = null, viewDateAt = 0;
+const VIEW_DATE_TTL = 60000;
+function curDay() {
+  if (viewDate && Date.now() - viewDateAt > VIEW_DATE_TTL) viewDate = null;
+  return viewDate || todayStr();
+}
+function isPastDay() { return curDay() !== todayStr(); }
+function setViewDate(d) {
+  viewDate = (d && d !== todayStr()) ? d : null;
+  viewDateAt = Date.now();
+  fdDate = viewDate;                    // питание листается тем же днём
+  renderToday();
+}
+function tdShiftDay(delta) {
+  const d = parseD(curDay());
+  d.setDate(d.getDate() + delta);
+  const n = todayStr(d);
+  if (n > todayStr()) return;           // в будущее не пускаем
+  setViewDate(n);
+}
+function dayLabel(d) {
+  const t = todayStr();
+  if (d === t) return 'Сегодня';
+  if (d === todayStr(new Date(Date.now() - 864e5))) return 'Вчера';
+  const dd = parseD(d);
+  const sameYear = dd.getFullYear() === new Date().getFullYear();
+  return dd.toLocaleDateString('ru-RU', sameYear
+    ? { day: 'numeric', month: 'long', weekday: 'short' }
+    : { day: 'numeric', month: 'long', year: 'numeric' });
+}
 function switchTab(t) {
   tourGen++; tourHide();   // ручное переключение вкладки — отменяем и прячем любой текущий тур
   const show = document.getElementById(TAB_VIEWS[t]);
@@ -7733,23 +7753,27 @@ function switchTab(t) {
     if (k !== t) document.getElementById(TAB_VIEWS[k]).style.display = 'none';
   });
   show.style.display = '';
-  document.getElementById('tabSave').classList.toggle('active', t === 'save');
-  document.getElementById('tabSpend').classList.toggle('active', t === 'spend');
-  document.getElementById('tabHabits').classList.toggle('active', t === 'habits');
-  document.getElementById('tabFood').classList.toggle('active', t === 'food');
-  if (t === 'spend' && spendDirty) renderSpend();   // пересобираем только при изменениях
-  if (t === 'habits') { renderHabits(); setTimeout(checkHabitNeglect, 400); }
-  // круг наливается на глазах: обнуляем уровень и число, потом рисуем настоящие
-  if (t === 'food') {
-    fdSetLevel(0, true);
-    fdLeftShown = null;
-    renderFood();
+  // шапка раздела: только внутри разделов, на «Сегодня» её нет
+  const bar = document.getElementById('secBar');
+  bar.style.display = t === 'today' ? 'none' : '';
+  if (t !== 'today') {
+    document.getElementById('secTitle').textContent = TAB_TITLES[t] || '';
+    const dayEl = document.getElementById('secDay');
+    const past = isPastDay() && (t === 'habits' || t === 'food');
+    dayEl.textContent = past ? dayLabel(curDay()) + ' · только просмотр' : '';
+    dayEl.classList.toggle('past', past);
   }
+  if (t === 'today') { fdDate = viewDate; renderToday(); }
+  // сфера раздела наливается на глазах при каждом входе — одинаково во всех разделах
+  if (t === 'save')   { sphReset('save');  render({ grid: false }); }
+  if (t === 'spend')  { sphReset('spend'); renderSpend(); }
+  if (t === 'habits') { sphReset('habit'); renderHabits(); setTimeout(checkHabitNeglect, 400); }
+  if (t === 'food')   { sphReset('food');  renderFood(); }
   // первое посещение расходов — знакомство с хомяком
   if (t === 'spend' && state.onboarded && !state.hamboarded && !onbPreview && !hamPreview) {
     state.hamboarded = true;
     localStorage.setItem(KEY, JSON.stringify(state));
-    setTimeout(() => runHamStory(false), 400);
+    setTimeout(runHamBlockTour, 400);
   }
   // мягкое проявление — только на больших экранах (на телефоне мгновенно)
   if (matchMedia('(min-width: 701px)').matches) {
@@ -7905,7 +7929,7 @@ function addExpense() {
   inp.value = ''; document.getElementById('expNote').value = '';
   tone(500, .1, 0, 'triangle', .1); tone(380, .12, .07, 'triangle', .08);
 
-  flyBills(inp, v, () => renderSpend());   // стайка купюр летит в сводку
+  renderSpend(); sphSplash('spend');
 
   const after = monthSpent(), L = state.limit;
   // реплика свинки — чуть позже основного тоста
@@ -7924,67 +7948,6 @@ function addExpense() {
   else toast('−' + fmt2(v) + ' BYN · ' + catById(selCat).name);
 }
 
-function flyBills(fromEl, amount, onDone) {
-  const ham = document.getElementById('hamSvg');
-  // если хомяк за экраном — сперва плавно подъезжаем к нему
-  const hr = ham.getBoundingClientRect();
-  if (hr.top < 0 || hr.bottom > innerHeight) {
-    ham.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    setTimeout(() => launchBills(fromEl, amount, onDone), 450);
-  } else {
-    launchBills(fromEl, amount, onDone);
-  }
-}
-function launchBills(fromEl, amount, onDone) {
-  const f = fromEl.getBoundingClientRect();
-  const t = document.getElementById('hamSvg').getBoundingClientRect();   // летят хомяку в рот
-  const x0 = f.left + f.width / 2, y0 = f.top + f.height / 2;
-  const x1 = t.left + t.width * .49, y1 = t.top + t.height * .56;
-
-  // чем больше сумма — тем больше купюр (3–8)
-  const n = amount < 10 ? 3 : amount < 50 ? 4 : amount < 150 ? 5 : amount < 300 ? 6 : amount < 600 ? 7 : 8;
-  let finished = 0;
-
-  for (let i = 0; i < n; i++) {
-    const bill = document.createElement('div');
-    bill.className = 'fly-bill';
-    // немного разные оттенки и размеры — живая стайка
-    const hue = -8 + Math.random() * 16;
-    bill.style.filter = 'hue-rotate(' + hue + 'deg)';
-    const sc = .85 + Math.random() * .35;
-    document.body.appendChild(bill);
-
-    // веер: разброс в стороны, но летим прямо к карточке «Потрачено»
-    const jx = (Math.random() - .5) * 70;
-    const jy = (Math.random() - .5) * 24;
-    const midX = (x0 + x1) / 2 + (Math.random() - .5) * 150;   // изгиб вбок, не вверх
-    const midY = y0 + (y1 - y0) * .55 + (Math.random() - .5) * 36;
-    const dir = i % 2 ? 1 : -1;
-    const rot1 = dir * (100 + Math.random() * 80);
-    const rot2 = dir * (220 + Math.random() * 120);
-
-    const anim = bill.animate([
-      { transform: `translate(${x0 + jx}px, ${y0 + jy}px) rotate(0deg) scale(${sc})`, opacity: 0, offset: 0 },
-      { transform: `translate(${x0 + jx * 1.8}px, ${y0 + jy + (y1 - y0) * .12}px) rotate(${dir * 40}deg) scale(${sc * 1.1})`, opacity: 1, offset: .18 },
-      { transform: `translate(${midX}px, ${midY}px) rotate(${rot1}deg) scale(${sc * 1.1})`, opacity: 1, offset: .58 },
-      { transform: `translate(${x1}px, ${y1}px) rotate(${rot2}deg) scale(.3)`, opacity: .9, offset: 1 }
-    ], {
-      duration: 1250 + Math.random() * 450,
-      delay: i * 130,
-      easing: 'cubic-bezier(.35,.15,.45,1)',
-      fill: 'backwards'
-    });
-
-    anim.onfinish = () => {
-      bill.remove();
-      hamEat(finished);                    // хомяк жуёт купюру
-      if (++finished === n) {
-        hamHappy(900);
-        if (onDone) onDone();
-      }
-    };
-  }
-}
 
 function delExpense(ts) {
   const i = state.expenses.findIndex(e => e.ts === ts);
@@ -8126,7 +8089,7 @@ function renderSpend() {
       '<span>К концу месяца: <b>~' + fmt(Math.round(forecast)) + '</b>' + tail + '</span>';
   } else fEl.style.display = 'none';
 
-  renderHamster(monthExps);
+  renderSpendSphere(L, sumMonth);
   renderCmp(monthExps);
   renderCats();
   curMonthExps = monthExps;
@@ -8339,238 +8302,37 @@ function startChartAnim(monthExps) {
 
 // ---------- хомяк-транжира ----------
 // толстеет от переборов дневного бюджета за последние 3 дня
-function renderHamster(monthExps) {
-  const svg = document.getElementById('hamSvg');
-  const line = document.getElementById('hamLine');
-  const body = document.getElementById('hamBodyGrp');
-  const cheeks = document.getElementById('hamCheeks');
-  const L = state.limit;
-
+// сфера расходов: наливается к месячному лимиту, при переборе краснеет
+function renderSpendSphere(L, sumMonth) {
+  const note = document.getElementById('spendNote');
   if (!(L > 0)) {
-    svg.classList.add('fit');
-    svg.classList.remove('alarm');
-    body.style.transform = '';
-    cheeks.style.removeProperty('--cheek');
-    document.getElementById('hamSweat').style.display = 'none';
-    hamFat = 0; hamPrevFat = 0;
-    refreshHamEyes();
-    line.textContent = '«Задай лимит — буду следить за формой. И за твоей тоже»';
+    sphSet('spend', { theme: 'coral', frac: 0, val: fmt(Math.round(sumMonth)),
+      num: Math.round(sumMonth), lab: 'BYN за месяц', sub: '' });
+    if (note) note.textContent = 'Задай лимит — и сфера покажет, сколько месяца уже израсходовано';
     return;
   }
-
-  const now = new Date();
-  const daysInM = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-  const allowance = L / daysInM;
-  const byDay = {};
-  for (const e of state.expenses) byDay[e.date] = (byDay[e.date] || 0) + e.amount;
-
-  let fat = 0;                                   // переборы за 3 дня: сегодня, вчера, позавчера
-  for (let off = 0; off < 3; off++) {
-    const d = new Date(now); d.setDate(now.getDate() - off);
-    if ((byDay[todayStr(d)] || 0) > allowance + .001) fat++;
-  }
-
-  // праздник похудения: был шариком — снова в форме
-  if (hamPrevFat >= 3 && fat === 0) {
-    setTimeout(() => {
-      svg.classList.add('shakeoff');
-      setTimeout(() => svg.classList.remove('shakeoff'), 950);
-      sndStar(); vib([15, 30, 15]);
-      toast('🐹 Снова огурчик! Спасибо, что притормозил');
-      const r = svg.getBoundingClientRect(), ar = svg.parentElement.getBoundingClientRect();
-      for (let i = 0; i < 6; i++) {
-        const s = document.createElement('span');
-        s.className = 'lvl-spark';
-        s.textContent = '✦';
-        s.style.fontSize = (9 + Math.random() * 8) + 'px';
-        s.style.left = (r.left - ar.left + Math.random() * r.width) + 'px';
-        s.style.top = (r.top - ar.top + Math.random() * r.height * .8) + 'px';
-        svg.parentElement.style.position = 'relative';
-        svg.parentElement.appendChild(s);
-        setTimeout(() => s.remove(), 1000);
-      }
-    }, 800);
-  }
-  hamPrevFat = fat;
-  hamFat = fat;
-
-  svg.classList.toggle('fit', fat === 0);
-  svg.classList.toggle('alarm', fat < 3 && monthSpent() >= L * .8);  // чует беду
-  body.style.transform = 'scale(' + (1 + fat * .13) + ',' + (1 + fat * .10) + ')';
-  cheeks.style.setProperty('--cheek', 1 + fat * .12);   // щёки набивает умеренно, до 1.36
-  document.getElementById('hamSweat').style.display = fat >= 2 ? '' : 'none';
-  refreshHamEyes();
-
-  // фраза дня выбирается детерминированно, чтобы не мигала при каждом рендере
-  const HAM_SAY = [
-    ['«Я в форме, бюджет тоже»', '«Красота: и я цел, и деньги целы»', '«Так держать, я даже не запыхался»', '«Идеально. Можно я посплю?»'],
-    ['«Кажется, я поправился на один перебор»', '«Штаны жмут. Совпадение? Не думаю»', '«Один заход мимо кассы — уже чувствую»', '«Ой. Один перебор за три дня»'],
-    ['«Два перебора. Я округляюсь»', '«Ещё немного и я не пролезу в норку»', '«Тормози, а то катиться начну»', '«Двойной перебор — двойной я»'],
-    ['«Три подряд?! Я не колобок вообще-то»', '«Всё, не могу бежать. Только лежать»', '«Кошелёк худеет, я нет. Несправедливо»', '«Я — последствия твоих решений»']
-  ][fat];
-  let hs = 0; const hseed = todayStr() + fat;
-  for (let i = 0; i < hseed.length; i++) hs = (hs * 31 + hseed.charCodeAt(i)) % 9973;
-  line.textContent = HAM_SAY[hs % HAM_SAY.length];
+  const pct = sumMonth / L * 100, over = sumMonth > L;
+  sphSet('spend', {
+    theme: 'coral', frac: sumMonth / L, over,
+    val: Math.round(pct) + '%', num: Math.round(pct),
+    lab: over ? 'лимита — перебор' : 'лимита',
+    sub: over ? '+' + fmt(Math.round(sumMonth - L)) + ' BYN сверх'
+              : fmt(Math.round(L - sumMonth)) + ' BYN в запасе'
+  });
+  if (note) note.textContent = over
+    ? 'Лимит месяца превышен на ' + fmt(Math.round(sumMonth - L)) + ' BYN'
+    : pct > 90 ? 'Сфера почти полна — до конца месяца осталось немного'
+    : pct > 60 ? 'Больше половины месяца израсходовано'
+    : 'Запас есть: сфера заполнена меньше чем наполовину';
 }
 
 // глаза хомяка: сон > радость > усталость > обычные
 let hamFat = 0, hamPrevFat = -1, hamTempHappy = false, hamHappyT = null;
-function refreshHamEyes() {
-  const sleep = document.body.classList.contains('sleep');
-  document.getElementById('hamSleepE').style.display = sleep ? '' : 'none';
-  document.getElementById('hamHappyE').style.display = (!sleep && hamTempHappy) ? '' : 'none';
-  document.getElementById('hamTired').style.display = (!sleep && !hamTempHappy && hamFat >= 3) ? '' : 'none';
-  document.getElementById('hamEyesW').style.display = (!sleep && !hamTempHappy && hamFat < 3) ? '' : 'none';
-  document.getElementById('hamSleepG').style.display = sleep ? '' : 'none';
-}
-function hamHappy(ms) {
-  hamTempHappy = true; refreshHamEyes();
-  clearTimeout(hamHappyT);
-  hamHappyT = setTimeout(() => { hamTempHappy = false; refreshHamEyes(); }, ms);
-}
 
 // зрачки следят за пальцем
 const hamPup = ['hpL', 'hpR', 'hhL', 'hhR'].map(id => document.getElementById(id));
 const hamPupBase = [[105, 96], [125, 96], [106.7, 94], [126.7, 94]];
 let hamEyeRaf = null;
-document.addEventListener('pointermove', e => {
-  if (hamEyeRaf) return;
-  hamEyeRaf = requestAnimationFrame(() => {
-    hamEyeRaf = null;
-    if (document.body.classList.contains('sleep')) return;
-    const svg = document.getElementById('hamSvg');
-    const r = svg.getBoundingClientRect();
-    if (!r.width || document.getElementById('viewSpend').style.display === 'none') return;
-    const ex = r.left + r.width * .49, ey = r.top + r.height * .43;
-    const dx = e.clientX - ex, dy = e.clientY - ey;
-    const d = Math.hypot(dx, dy) || 1;
-    const k = Math.min(1, d / 50) * 1.7;
-    hamPup.forEach((p, i) => {
-      p.setAttribute('cx', hamPupBase[i][0] + dx / d * k * (i < 2 ? 1 : .8));
-      p.setAttribute('cy', hamPupBase[i][1] + dy / d * k * (i < 2 ? 1 : .8));
-    });
-  });
-}, { passive: true });
-
-// идл: умывается (~20 c) и грызёт семечку (~45 c)
-setInterval(() => {
-  if (document.hidden || document.body.classList.contains('sleep')) return;
-  if (document.getElementById('viewSpend').style.display === 'none') return;
-  const svg = document.getElementById('hamSvg');
-  if (svg.classList.contains('seeding')) return;
-  svg.classList.add('washing');
-  setTimeout(() => svg.classList.remove('washing'), 1750);
-}, 21000);
-
-setInterval(() => {
-  if (document.hidden || document.body.classList.contains('sleep')) return;
-  if (document.getElementById('viewSpend').style.display === 'none') return;
-  const svg = document.getElementById('hamSvg');
-  if (svg.classList.contains('washing')) return;
-  svg.classList.add('seeding');
-  flick(0, .04); flick(.35, .04); flick(.7, .04);       // хруст
-  const r = svg.getBoundingClientRect();
-  for (let i = 0; i < 3; i++) {                         // шелуха отлетает
-    setTimeout(() => {
-      const s = document.createElement('div');
-      s.className = 'shell';
-      s.style.setProperty('--x', (r.left + r.width * .5) + 'px');
-      s.style.setProperty('--y', (r.top + r.height * .62) + 'px');
-      s.style.setProperty('--dx', (Math.random() * 30 - 15) + 'px');
-      s.style.setProperty('--dy', (20 + Math.random() * 20) + 'px');
-      document.body.appendChild(s);
-      setTimeout(() => s.remove(), 900);
-    }, 300 + i * 320);
-  }
-  setTimeout(() => svg.classList.remove('seeding'), 1550);
-}, 47000);
-
-// урчание при почёсывании (долгий тап)
-let purrOsc = null, purrGain = null;
-function startPurr() {
-  try {
-    const ctx = ac(), t = ctx.currentTime;
-    purrOsc = ctx.createOscillator();
-    const lfo = ctx.createOscillator(), lfoG = ctx.createGain();
-    purrGain = ctx.createGain();
-    purrOsc.type = 'sawtooth'; purrOsc.frequency.value = 85;
-    lfo.frequency.value = 20; lfoG.gain.value = .03;
-    purrGain.gain.value = .045;
-    lfo.connect(lfoG); lfoG.connect(purrGain.gain);
-    purrOsc.connect(purrGain); purrGain.connect(ctx.destination);
-    purrOsc.start(t); lfo.start(t);
-    purrOsc._lfo = lfo;
-  } catch(e) {}
-}
-function stopPurr() {
-  try {
-    if (!purrOsc) return;
-    purrGain.gain.exponentialRampToValueAtTime(.0001, ac().currentTime + .15);
-    const o = purrOsc, l = purrOsc._lfo;
-    setTimeout(() => { try { o.stop(); l.stop(); } catch(e) {} }, 200);
-    purrOsc = null;
-  } catch(e) {}
-}
-
-// хомяк «съедает» купюру: чавк + щека прячет
-function hamEat(i) {
-  const hs = document.getElementById('hamSvg');
-  hs.classList.remove('chomp'); void hs.getBBox; hs.classList.add('chomp');
-  setTimeout(() => hs.classList.remove('chomp'), 300);
-  const side = i % 2 ? 'stashR' : 'stashL';
-  hs.classList.remove('stashL', 'stashR'); void hs.getBBox;
-  hs.classList.add(side);
-  setTimeout(() => hs.classList.remove(side), 860);
-  flick(0, .06); flick(.09, .04);          // хруст-чавканье
-}
-
-function sndSqueak() {
-  try {
-    const ctx = ac(), t = ctx.currentTime;
-    [[1250, 1900, 0, .09], [1400, 2100, .12, .08]].forEach(([f1, f2, dl, dur]) => {
-      const o = ctx.createOscillator(), g = ctx.createGain();
-      o.type = 'sine';
-      o.frequency.setValueAtTime(f1, t + dl);
-      o.frequency.exponentialRampToValueAtTime(f2, t + dl + dur);
-      g.gain.setValueAtTime(.08, t + dl);
-      g.gain.exponentialRampToValueAtTime(.0001, t + dl + dur + .04);
-      o.connect(g); g.connect(ctx.destination);
-      o.start(t + dl); o.stop(t + dl + dur + .08);
-    });
-  } catch(e) {}
-}
-// тап — писк и желейное пузо; долгий тап — почесать пузико (урчит)
-let hamHoldT = null, hamWasHeld = false;
-const hamEl = document.getElementById('hamSvg');
-hamEl.addEventListener('pointerdown', () => {
-  hamWasHeld = false;
-  hamHoldT = setTimeout(() => {
-    hamWasHeld = true;
-    startPurr();
-    hamEl.classList.add('purr');
-    hamHappy(60000);
-    vib([10, 60, 10, 60, 10]);
-  }, 450);
-});
-['pointerup', 'pointerleave', 'pointercancel'].forEach(ev =>
-  hamEl.addEventListener(ev, () => {
-    clearTimeout(hamHoldT);
-    if (hamWasHeld) {
-      stopPurr();
-      hamEl.classList.remove('purr');
-      hamHappy(1200);
-    }
-  }));
-hamEl.addEventListener('click', () => {
-  if (hamWasHeld) return;                        // это было почёсывание
-  sndSqueak(); vib(12);
-  hamEl.classList.remove('jelly'); void hamEl.getBBox; hamEl.classList.add('jelly');
-  setTimeout(() => hamEl.classList.remove('jelly'), 800);
-  const cheeks = document.getElementById('hamCheeks');
-  cheeks.classList.remove('cheekPop'); void cheeks.getBBox; cheeks.classList.add('cheekPop');
-  setTimeout(() => cheeks.classList.remove('cheekPop'), 550);
-});
-
 // сравнение с прошлым месяцем
 function renderCmp(monthExps) {
   const now = new Date();
@@ -8890,8 +8652,9 @@ function renderNotifCard() {
   if (!osReady()) {
     if (window.onesignalError) {
       card.style.display = '';
-      body.innerHTML = '<div class="hint">⚠️ Уведомления пока недоступны.<br>Причина: ' + window.onesignalError +
-        '<br><br>Попробуй отключить блокировщик рекламы/трекеров для этого сайта и обнови страницу.</div>';
+      body.innerHTML = '<div class="hint set-warn">Пока недоступны. Попробуй отключить блокировщик ' +
+        'рекламы и трекеров для этого сайта, затем обнови страницу.' +
+        '<span class="set-why">' + window.onesignalError + '</span></div>';
     } else {
       card.style.display = 'none';   // ещё грузится — подождём
     }
@@ -8962,7 +8725,7 @@ function renderSync() {
       '<button class="add-btn" onclick="connectSync(genCode())" style="margin-bottom:10px">Создать код синхронизации</button>' +
       '<div class="extra-row" style="margin-bottom:0">' +
         '<input id="syncInput" maxlength="6" placeholder="Или введи код с другого устройства" style="text-transform:uppercase">' +
-        '<button onclick="var v=document.getElementById(\'syncInput\').value; if(v.trim().length===6) connectSync(v); else toast(\'Код — 6 символов\')">OK</button>' +
+        '<button onclick="var el=document.getElementById(\'syncInput\'); var v=el?el.value:\'\'; if(v.trim().length===6) connectSync(v.trim()); else toast(\'Код — 6 символов\')">OK</button>' +
       '</div>';
   } else {
     body.innerHTML =
@@ -9136,7 +8899,7 @@ async function tourFinish(myGen) {
   requestAnimationFrame(frame);
 }
 async function runPigBlockTour() {
-  if (!document.getElementById('tabSave').classList.contains('active')) switchTab('save');
+  if (document.getElementById('viewSave').style.display === 'none') switchTab('save');
   const myGen = ++tourGen;
   const moreWrap = document.getElementById('moreWrap');
   if (moreWrap.style.display === 'none') toggleMore();
@@ -9155,7 +8918,7 @@ async function runPigBlockTour() {
   await tourFinish(myGen);
 }
 async function runHamBlockTour() {
-  if (!document.getElementById('tabSpend').classList.contains('active')) switchTab('spend');
+  if (document.getElementById('viewSpend').style.display === 'none') switchTab('spend');
   const myGen = ++tourGen;
   await new Promise(r => setTimeout(r, 200));   // дать вкладке отрендериться
   const steps = [
@@ -9238,259 +9001,112 @@ function dragCoinTo(targetEl) {
     });
   });
 }
-function stageHearts() {
-  const stage = $s('onbStage');
-  for (let i = 0; i < 5; i++) setTimeout(() => {
-    const h = document.createElement('span');
-    h.className = 'story-heart'; h.textContent = '❤️';
-    h.style.left = (28 + Math.random() * 55) + '%';
-    h.style.top = (32 + Math.random() * 28) + '%';
-    stage.appendChild(h);
-    setTimeout(() => h.remove(), 1300);
-  }, i * 180);
+
+// ================== ЗНАКОМСТВО: «От пустоты к равновесию» ==================
+// Четыре сферы: сначала пустые, потом одна переливается через край,
+// и в финале приходят к спокойному равновесию.
+const ONB_SPH = [
+  { id: 'obA', x: 46,  dark: '#efa724', light: '#ffe289', name: 'Копилка' },
+  { id: 'obB', x: 141, dark: '#e2653c', light: '#ffb08c', name: 'Расходы' },
+  { id: 'obC', x: 236, dark: '#f2712a', light: '#ffc46b', name: 'Привычки' },
+  { id: 'obD', x: 331, dark: '#26a349', light: '#5fe08a', name: 'Питание' }
+];
+function onbSpheresSvg() {
+  return '<svg id="obStage" viewBox="0 0 377 150" width="330" height="131">' +
+    '<defs>' +
+      ONB_SPH.map(o =>
+        '<clipPath id="' + o.id + 'C"><circle cx="' + o.x + '" cy="62" r="36"/></clipPath>' +
+        '<linearGradient id="' + o.id + 'G" x1="0" y1="0" x2="0" y2="1">' +
+          '<stop offset="0" stop-color="' + o.light + '"/><stop offset="1" stop-color="' + o.dark + '"/>' +
+        '</linearGradient>').join('') +
+    '</defs>' +
+    ONB_SPH.map(o =>
+      '<g>' +
+        '<circle cx="' + o.x + '" cy="62" r="36" fill="rgba(255,255,255,.55)" stroke="rgba(255,255,255,.95)" stroke-width="2.5"/>' +
+        '<g clip-path="url(#' + o.id + 'C)">' +
+          '<g id="' + o.id + '" style="transform:translateY(104px); transition:transform 1s cubic-bezier(.34,.9,.35,1)">' +
+            '<g class="wave-move">' +
+              '<path id="' + o.id + 'P" fill="url(#' + o.id + 'G)" d="M' + (o.x - 130) + ' 30 q16 -9 32 0 t32 0 t32 0 t32 0 t32 0 t32 0 t32 0 t32 0 v100 h-260 z"/>' +
+            '</g>' +
+          '</g>' +
+        '</g>' +
+        '<ellipse cx="' + (o.x - 13) + '" cy="45" rx="11" ry="5" fill="rgba(255,255,255,.5)" transform="rotate(-24 ' + (o.x - 13) + ' 45)"/>' +
+        '<text x="' + o.x + '" y="116" text-anchor="middle" font-size="11" font-weight="700" fill="#6b6862">' + o.name + '</text>' +
+      '</g>').join('') +
+  '</svg>';
 }
-
-const OP_PIG = '<svg id="opPig" viewBox="0 0 260 212" width="205" height="167">' +
- '<defs><linearGradient id="goldG2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe289"/><stop offset="1" stop-color="#efa724"/></linearGradient></defs>' +
- '<path d="M36 110 q-18 -4 -14 -18 q4 -12 17 -8" fill="none" stroke="#f5a8bc" stroke-width="7" stroke-linecap="round"/>' +
- '<rect x="72" y="176" width="24" height="26" rx="11" fill="#f29db4"/>' +
- '<rect x="152" y="176" width="24" height="26" rx="11" fill="#f29db4"/>' +
- '<ellipse cx="125" cy="115" rx="92" ry="75" fill="rgba(255,190,205,.34)" stroke="rgba(255,255,255,.9)" stroke-width="2.5"/>' +
- '<ellipse id="opGold" cx="125" cy="168" rx="58" ry="16" fill="url(#goldG2)" style="display:none"/>' +
- '<ellipse cx="92" cy="76" rx="32" ry="15" fill="rgba(255,255,255,.45)" transform="rotate(-24 92 76)"/>' +
- '<path d="M162 50 q12 -22 32 -14 q0 20 -16 27 Z" fill="#f29db4" stroke="rgba(255,255,255,.7)" stroke-width="1.5"/>' +
- '<g id="opEyeO" style="display:none"><circle cx="184" cy="90" r="6.5" fill="#2c2c3e"/><circle cx="186.5" cy="87.5" r="2.2" fill="#fff"/></g>' +
- '<path id="opEyeS" d="M176 90 q8 7 16 0" fill="none" stroke="#2c2c3e" stroke-width="3.2" stroke-linecap="round"/>' +
- '<path id="opEyeH" d="M176 91 q8 -9 16 0" fill="none" stroke="#2c2c3e" stroke-width="3.5" stroke-linecap="round" style="display:none"/>' +
- '<ellipse cx="198" cy="107" rx="9" ry="5.5" fill="rgba(255,110,145,.35)"/>' +
- '<ellipse cx="216" cy="116" rx="21" ry="17" fill="#f7b9c9" stroke="rgba(255,255,255,.85)" stroke-width="2"/>' +
- '<ellipse cx="209" cy="116" rx="3.2" ry="5" fill="#d97b95"/><ellipse cx="222" cy="116" rx="3.2" ry="5" fill="#d97b95"/>' +
- '<rect id="opSlot" x="103" y="33" width="44" height="8" rx="4" fill="#2c2c3e" opacity=".55"/>' +
- '<g id="opZz"><text x="150" y="34" font-size="16" fill="#5e6bd8" font-weight="800">Z</text><text x="164" y="22" font-size="11" fill="#7e88e8" font-weight="800">Z</text></g>' +
- '</svg>';
-
-const OH_HAM = '<svg id="ohHam" viewBox="58 50 116 90" width="190" height="147">' +
- '<ellipse cx="115" cy="136" rx="32" ry="5" fill="rgba(120,110,90,.14)"/>' +
- '<circle cx="150" cy="112" r="5" fill="#dba871"/>' +
- '<ellipse cx="86" cy="112" rx="9" ry="7" fill="#e6b988" transform="rotate(-25 86 112)"/>' +
- '<ellipse cx="144" cy="112" rx="9" ry="7" fill="#e6b988" transform="rotate(25 144 112)"/>' +
- '<circle cx="95" cy="78" r="8.5" fill="#e6b988"/><circle cx="95" cy="78" r="4.6" fill="#f2c9cf"/>' +
- '<circle cx="135" cy="76" r="8.5" fill="#e6b988"/><circle cx="135" cy="76" r="4.6" fill="#f2c9cf"/>' +
- '<ellipse cx="115" cy="101" rx="34" ry="29" fill="#f0d0a8"/>' +
- '<ellipse cx="115" cy="111" rx="21" ry="15" fill="#fdf0dc"/>' +
- '<ellipse cx="101" cy="88" rx="12" ry="5.5" fill="rgba(255,255,255,.5)" transform="rotate(-20 101 88)"/>' +
- '<g id="ohCheeks"><ellipse cx="86" cy="103" rx="11" ry="10" fill="#f7dcb8"/><ellipse cx="144" cy="103" rx="11" ry="10" fill="#f7dcb8"/></g>' +
- '<ellipse cx="93" cy="108" rx="6" ry="4" fill="rgba(255,110,145,.3)"/><ellipse cx="137" cy="108" rx="6" ry="4" fill="rgba(255,110,145,.3)"/>' +
- '<g id="ohEyes"><circle cx="105" cy="96" r="5" fill="#2c2c3e"/><circle cx="125" cy="96" r="5" fill="#2c2c3e"/><circle cx="106.7" cy="94" r="1.8" fill="#fff"/><circle cx="126.7" cy="94" r="1.8" fill="#fff"/></g>' +
- '<g id="ohHappy" style="display:none"><path d="M100 97 q5 -6 10 0" stroke="#2c2c3e" stroke-width="2.8" fill="none" stroke-linecap="round"/><path d="M120 97 q5 -6 10 0" stroke="#2c2c3e" stroke-width="2.8" fill="none" stroke-linecap="round"/></g>' +
- '<ellipse cx="115" cy="105" rx="4" ry="3" fill="#f7b9c9"/>' +
- '<path d="M115 108 q0 4 -4 5 M115 108 q0 4 4 5" stroke="#b98a5f" stroke-width="1.5" fill="none" stroke-linecap="round"/>' +
- '<path d="M77 103 L64 99 M77 107 L64 109 M153 103 L166 99 M153 107 L166 109" stroke="rgba(120,90,50,.42)" stroke-width="1.4" stroke-linecap="round"/>' +
- '<ellipse cx="102" cy="130" rx="9" ry="5" fill="#dba871"/><ellipse cx="128" cy="130" rx="9" ry="5" fill="#dba871"/>' +
- '</svg>';
-
-let currentStory = null;   // 'pig' | 'ham' — какая сказка сейчас идёт (для корректного скипа/тура)
-async function runPigStory(preview) {
-  currentStory = 'pig';
+function obFill(id, frac) {
+  const el = document.getElementById(id);
+  if (el) el.style.transform = 'translateY(' + Math.round(104 - frac * 128) + 'px)';
+}
+function obOver(id, on) {
+  const p = document.getElementById(id + 'P');
+  if (p) p.setAttribute('fill', on ? '#d63a3a' : 'url(#' + id + 'G)');
+}
+function obWait(ms) { return new Promise(r => setTimeout(r, ms)); }
+function obDrop(id, frac) {
+  obFill(id, frac);
+  try { sndDrop(); } catch (e) {}
+  vib(10);
+  return obWait(750);
+}
+// пересмотр знакомства из «Ещё» — как предпросмотр, состояние не трогаем
+function replayOnbStory() {
+  if (document.getElementById('onb').classList.contains('show')) return;
+  switchTab('save');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  setTimeout(() => runOnbStory(true), 250);
+}
+async function runOnbStory(preview) {
+  currentStory = 'spheres';
   storyShow(); ui('');
-  $s('onb').classList.add('night');            // ночь: свинка спит
-  $s('onbStage').innerHTML = OP_PIG;
-  const pig = $s('opPig');
+  document.getElementById('onbStage').innerHTML = onbSpheresSvg();
+  ONB_SPH.forEach(o => obFill(o.id, 0));
 
-  await say('Хрр-хрр... хрр-фью-ю-ю...');
-  await say('Кажется, кто-то спит без задних копыт. Потапай по ней — буди!');
-  await tapsOn(pig, 3, () => {
-    pig.classList.remove('op-shake'); void pig.getBBox; pig.classList.add('op-shake');
-    flick(0, .05); vib(10);
-  });
-  $s('onb').classList.remove('night');         // рассвело!
-  $s('opZz').style.display = 'none';
-  $s('opEyeS').style.display = 'none';
-  $s('opEyeO').style.display = '';
-  pig.classList.add('op-hop'); sndBoing();
-  await say('Ой!.. Привет! Я — твоя копилка. Внутри меня пусто и ужасно одиноко...');
-  await say('Видишь прорезь на спинке? Внизу экрана монетка — перетащи её в меня!');
-  await dragCoinTo(pig);
-  sndCoin(); vib(15);
-  $s('opGold').style.display = '';
-  $s('opEyeO').style.display = 'none'; $s('opEyeH').style.display = '';
-  pig.classList.remove('op-hop'); void pig.getBBox; pig.classList.add('op-hop');
-  await say('Дзы-ы-ынь! ✨ Какое чувство! Каждый закрытый конверт — вот такая монетка внутри меня.');
-  $s('opEyeH').style.display = 'none'; $s('opEyeO').style.display = '';
-  await say('А ещё я обожаю, когда мне чешут пузико... Зажми меня пальцем и подержи!');
-  await longPressOn(pig, 900);
-  stageHearts(); sndStar(); vib([15, 40, 15]);
-  $s('opEyeO').style.display = 'none'; $s('opEyeH').style.display = '';
-  await say('Ур-р-р-р... 💕 Всё. Теперь мы друзья навеки.');
-  $s('opEyeH').style.display = 'none'; $s('opEyeO').style.display = '';
-  await say('Как ты меня назовёшь?');
-  const raw = await new Promise(r => {
-    ui('<input id="opName" maxlength="14" placeholder="Например, Боня"><button class="m-ok">Вот так!</button>');
-    $s('onbUI').querySelector('button').onclick = () => {
-      r(($s('opName').value || '').trim()); ui('');
-    };
-  });
-  const nm = raw || 'Свинка';
-  const low = nm.toLowerCase();
-  const funny = ['хрю', 'свин', 'бекон', 'пятач', 'сало', 'шпик', 'кабан'];
-  if (!raw) await say('Без имени?.. Ну и ла-адно, буду просто Свинка. 😤 ...Шучу, я не обидчивая!');
-  else if (funny.some(f => low.includes(f))) await say(nm + '?! 😂 Хрю-хрю-хрю! Одобряю всеми четырьмя копытами!');
-  else await say(nm + '? ' + ['Хрю! Обожаю это имя!', 'Звучит богато. Мне подходит!', 'Идеально. Я — ' + nm + '!'][Math.floor(Math.random() * 3)]);
-  await say('И последнее: на что копим, сколько и к какому сроку?');
-  const goal = await new Promise(r => {
-    ui('<input id="opGName" maxlength="20" placeholder="Название (Новый год)">' +
-       '<input id="opGAmt" type="number" inputmode="decimal" placeholder="Сумма, BYN">' +
-       '<div class="preset-row">' +
-         [['w','Неделя'],['m','Месяц'],['h','Полгода'],['y','Год'],['ny','До НГ']].map(p =>
-           '<button class="pchip' + (p[0] === 'ny' ? ' sel' : '') + '" data-op="' + p[0] + '">' + p[1] + '</button>').join('') +
-       '</div><button class="m-ok">Начать копить! 🚀</button>');
-    let pv = 'ny';
-    $s('onbUI').querySelectorAll('.pchip').forEach(c => c.onclick = () => {
-      pv = c.dataset.op;
-      $s('onbUI').querySelectorAll('.pchip').forEach(x => x.classList.toggle('sel', x === c));
-    });
-    $s('onbUI').querySelector('.m-ok').onclick = () => {
-      const a = Math.round(parseFloat(($s('opGAmt').value || '').replace(',', '.')) || 0);
-      if (a <= 0) { toast('Введи сумму цели'); return; }
-      r({ name: ($s('opGName').value || '').trim() || 'Моя цель', amount: a, preset: pv });
-      ui('');
-    };
-  });
-  if (preview) {
-    fadeStoryOut(() => setTimeout(runPigBlockTour, 700));
-    toast('Это был предпросмотр 😉 Данные не тронуты');
-    return;
-  }
-  gPreset = goal.preset;
-  state.pigName = nm;
-  state.goal = { name: goal.name, amount: goal.amount, deadline: goalDeadlineFromPreset(), startDate: todayStr(), carried: 0 };
-  state.onboarded = true;
-  applyGoal(); save();
-  dispSum = null; render();
+  await say('Привет. Вот твой день — четыре стороны, и все пока пустые.');
+  await say('Деньги, траты, привычки, еда. Каждая сторона — сосуд, который за день наполняется.');
 
-  fadeStoryOut(() => {                       // финальный кадр: настоящая свинка машет
-    const p = $s('pigSvg');
-    p.classList.add('hi');
-    p.classList.remove('bounce'); void p.offsetWidth; p.classList.add('bounce');
-    setTimeout(() => p.classList.remove('bounce', 'hi'), 950);
-    setTempHappy(1500);
-    coinRain(16); sndAch();
-    toast('🐷 ' + nm + ' готова! Цель: ' + goal.name + ' — ' + fmt(goal.amount) + ' BYN');
-    setTimeout(runPigBlockTour, 1700);        // облёт блоков: уведомления + синхронизация
-  });
-}
+  await say('Отложил в копилку — прибыло здесь.');
+  await obDrop('obA', .55);
 
-// плавное растворение сказки
-function fadeStoryOut(after) {
-  const onb = $s('onb');
-  onb.style.opacity = 0;
-  setTimeout(() => {
-    onb.classList.remove('show', 'night');
-    onb.style.opacity = '';
-    after && after();
-  }, 820);
-}
+  await say('Отметил привычку — прибыло здесь.');
+  await obDrop('obC', .7);
 
-// зрачок сказочной свинки следит за пальцем
-let opEyeRaf = null;
-document.addEventListener('pointermove', e => {
-  if (opEyeRaf) return;
-  opEyeRaf = requestAnimationFrame(() => {
-    opEyeRaf = null;
-    const p = document.getElementById('opPig');
-    if (!p) return;
-    const eyeG = document.getElementById('opEyeO');
-    if (!eyeG || eyeG.style.display === 'none') return;
-    const r = p.getBoundingClientRect();
-    if (!r.width) return;
-    const ex = r.left + r.width * (184 / 260), ey = r.top + r.height * (90 / 212);
-    const dx = e.clientX - ex, dy = e.clientY - ey;
-    const d = Math.hypot(dx, dy) || 1;
-    const k = Math.min(1, d / 50) * 2.2;
-    const cs = eyeG.querySelectorAll('circle');
-    cs[0].setAttribute('cx', 184 + dx / d * k);
-    cs[0].setAttribute('cy', 90 + dy / d * k);
-    cs[1].setAttribute('cx', 186.5 + dx / d * k * .8);
-    cs[1].setAttribute('cy', 87.5 + dy / d * k * .8);
-  });
-}, { passive: true });
+  await say('Поел — и здесь.');
+  await obDrop('obD', .5);
 
-async function runHamStory(preview) {
-  currentStory = 'ham';
-  storyShow(); ui('');
-  $s('onbStage').innerHTML = OH_HAM;
-  const ham = $s('ohHam');
-  ham.addEventListener('click', () => { sndSqueak(); vib(10); });
+  await say('А расходы наполняются сами, без твоего участия. Вот тут и надо смотреть внимательно.');
+  await obDrop('obB', .8);
+  obFill('obB', 1); obOver('obB', true);
+  vib([20, 50, 20]);
+  await say('Перелилось. Сфера краснеет — значит месячный лимит уже позади.');
 
-  await say('О. Новенький. Я — хомяк. Я ЕМ твои траты.');
-  await say('Ну а что такого? Кто-то же должен вести учёт. Скорми мне тестовую трату!');
+  await say('Но смысл не в том, чтобы налить всё до краёв. Смысл — в равновесии.');
+  obOver('obB', false);
+  obFill('obA', .62); obFill('obB', .58); obFill('obC', .66); obFill('obD', .6);
+  try { sndStar(); } catch (e) {}
+  await obWait(1000);
+  await say('Вот так выглядит спокойный день: нигде не пусто и нигде не через край.');
+  await say('Загляни в любую сферу — внутри подробности. Начнём?');
+
   await new Promise(r => {
-    ui('<div class="onb-bill">−10</div>');
-    $s('onbUI').querySelector('.onb-bill').onclick = e => {
-      const b = e.target.getBoundingClientRect();
-      const h = ham.getBoundingClientRect();
-      e.target.style.visibility = 'hidden';
-      const fly = document.createElement('div');
-      fly.className = 'fly-bill';
-      document.body.appendChild(fly);
-      const done = () => {
-        fly.remove(); flick(0, .06); vib(10);
-        const g = $s('ohCheeks');
-        if (g.animate) g.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.35)' }, { transform: 'scale(1)' }], { duration: 500 });
-        r();
-      };
-      if (fly.animate) {
-        fly.animate([
-          { transform: 'translate(' + (b.left + b.width / 2) + 'px,' + (b.top + b.height / 2) + 'px) rotate(0)' },
-          { transform: 'translate(' + (h.left + h.width * .49) + 'px,' + (h.top + h.height * .58) + 'px) rotate(-200deg) scale(.35)' }
-        ], { duration: 700, easing: 'ease-in-out' }).onfinish = done;
-      } else done();
-    };
+    ui('<button class="onb-go">Начать</button>');
+    document.getElementById('onbUI').querySelector('.onb-go').onclick = () => { ui(''); r(); };
   });
-  ui('');
-  $s('ohEyes').style.display = 'none'; $s('ohHappy').style.display = '';
-  await say('Ням! 😋 Каждую записанную трату я прячу за щёку — так ты видишь, куда утекают деньги.');
-  $s('ohHappy').style.display = 'none'; $s('ohEyes').style.display = '';
-  await say('Кстати. На что у тебя чаще всего улетают деньги?');
-  const cat = await choice([
-    { v: 'cafe', l: 'Кафе' }, { v: 'food', l: 'Еда' },
-    { v: 'transport', l: 'Транспорт' }, { v: 'fun', l: 'Развлечения' }
-  ]);
-  try { selCat = cat; renderCats(); } catch(e) {}
-  await say('Записал. За «' + catById(cat).name + '» буду следить особенно пристально 👀');
-  await say('И главное — поставь лимит на месяц. Перейдёшь его, и я растолстею. Буквально.');
-  const lim = await new Promise(r => {
-    ui('<input id="ohLim" type="number" inputmode="decimal" placeholder="Например, 2000">' +
-       '<button class="m-ok">Поставить лимит</button>' +
-       '<button class="story-skip" style="margin-top:6px">решу позже</button>');
-    $s('onbUI').querySelector('.m-ok').onclick = () => {
-      const v = Math.round(parseFloat(($s('ohLim').value || '').replace(',', '.')) || 0);
-      if (v <= 0) { toast('Введи число'); return; }
-      ui(''); r(v);
-    };
-    $s('onbUI').querySelector('.story-skip').onclick = () => { ui(''); r(0); };
-  });
-  if (lim > 0 && !preview) state.limit = lim;
-  if (lim > 0 && lim < 300)
-    await say(fmt(lim) + '?! Ты серьёзно? Я столько СЕМЕЧЕК за день съедаю... Ну, дисциплина так дисциплина. 🐹');
-  else if (lim > 5000)
-    await say('Ого, ' + fmt(lim) + ' BYN! Живём на широкую лапу. Прослежу, чтобы не шире. 😎');
-  else if (lim > 0)
-    await say('Принято: ' + fmt(lim) + ' BYN в месяц. Слежу за формой. За твоей и своей. 🐹');
-  else
-    await say('Ла-адно. Но учти: я всё равно всё вижу...');
 
-  if (!preview) { state.hamboarded = true; save(); renderSpend(); }
-  fadeStoryOut(() => setTimeout(runHamBlockTour, 500));  // облёт блоков: диаграмма, бюджет, история
+  if (!preview) {
+    state.onboarded = true;
+    state.hamboarded = true;         // отдельной сказки расходов больше нет
+    localStorage.setItem(KEY, JSON.stringify(state));
+  }
+  fadeStoryOut(() => setTimeout(runPigBlockTour, 500));
 }
 
-// пропуск — с подтверждением (свинка расстроится!)
-let skipArmed = false, skipTimer = null;
 document.getElementById('onbSkip').onclick = () => {
   const b = document.getElementById('onbSkip');
   if (!skipArmed) {
     skipArmed = true;
-    b.textContent = 'Точно? Свинка расстроится 🥺 (нажми ещё раз)';
+    b.textContent = 'Точно пропустить? (нажми ещё раз)';
     clearTimeout(skipTimer);
     skipTimer = setTimeout(() => {
       skipArmed = false;
@@ -9503,15 +9119,11 @@ document.getElementById('onbSkip').onclick = () => {
   b.textContent = 'пропустить знакомство';
   // пропуск закрывает только ту сказку, что сейчас идёт — вторая (если ещё не была
   // показана) сработает сама в свой момент: копилка — сразу, расходы — при первом заходе на вкладку
-  if (currentStory === 'ham') state.hamboarded = true;
-  else state.onboarded = true;
+  state.onboarded = true; state.hamboarded = true;
   localStorage.setItem(KEY, JSON.stringify(state));
   fadeStoryOut(() => {
     // даже при пропуске сказки показываем короткий облёт блоков именно этого раздела
-    setTimeout(() => {
-      if (currentStory === 'ham') runHamBlockTour();
-      else runPigBlockTour();
-    }, 500);
+    setTimeout(runPigBlockTour, 500);
   });
 };
 
@@ -9667,15 +9279,16 @@ ensureGoal();
 applyGoal();
 xmasMode();
 sleepCheck();
+mountSpheres();   // сферы разделов должны существовать до первого рендера
 render();
+switchTab('today');
 // сказки: свинка — при первом запуске, предпросмотры — через ?onb и ?ham
-if (onbPreview) runPigStory(true);
-else if (hamPreview) runHamStory(true);
+if (onbPreview) runOnbStory(true);
 else if (!state.onboarded) {
   if (state.closed.length || state.expenses.length) {
     state.onboarded = true;
     localStorage.setItem(KEY, JSON.stringify(state));
-  } else runPigStory(false);
+  } else runOnbStory(false);
 }
 if (!state.hamboarded && state.expenses.length) {
   state.hamboarded = true;
