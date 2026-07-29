@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2=".7" y2="1">
+      <stop offset="0" stop-color="#fdf3e4"/>
+      <stop offset=".45" stop-color="#eef2fa"/>
+      <stop offset="1" stop-color="#e3f1e8"/>
+    </linearGradient>
+    <linearGradient id="lq" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8fecad"/>
+      <stop offset="1" stop-color="#1fa848"/>
+    </linearGradient>
+    <radialGradient id="sh" cx=".5" cy=".5" r=".5">
+      <stop offset=".6" stop-color="rgba(40,60,90,.2)"/>
+      <stop offset="1" stop-color="rgba(40,60,90,0)"/>
+    </radialGradient>
+    <!-- стекло чуть холоднее фона, иначе белый блик на нём не читается -->
+    <linearGradient id="glass" x1=".25" y1="0" x2=".75" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#dfe6f0"/>
+    </linearGradient>
+    <clipPath id="ball"><circle cx="512" cy="512" r="276"/></clipPath>
+  </defs>
+
+  <rect width="1024" height="1024" rx="236" fill="url(#bg)"/>
+
+  <!-- тень под сферой -->
+  <ellipse cx="512" cy="840" rx="246" ry="61" fill="url(#sh)"/>
+
+  <!-- стекло -->
+  <circle cx="512" cy="512" r="276" fill="url(#glass)"/>
+
+  <!-- жидкость: задняя волна светлее, передняя с градиентом -->
+  <g clip-path="url(#ball)">
+    <path fill="#8fecad" opacity=".7"
+          d="M6 592 q84 -70 169 0 t169 0 t169 0 t169 0 t169 0 v320 h-845 z"/>
+    <path fill="url(#lq)"
+          d="M174 575 q84 -70 169 0 t169 0 t169 0 t169 0 v337 h-676 z"/>
+    <circle cx="409" cy="665" r="27" fill="rgba(255,255,255,.5)"/>
+    <circle cx="594" cy="727" r="19" fill="rgba(255,255,255,.45)"/>
+  </g>
+
+  <!-- кант и блик -->
+  <circle cx="512" cy="512" r="276" fill="none" stroke="rgba(255,255,255,.95)" stroke-width="22"/>
+  <ellipse cx="404" cy="360" rx="96" ry="41" fill="#ffffff" opacity=".95"
+           transform="rotate(-26 404 360)"/>
+  <circle cx="624" cy="392" r="24" fill="#ffffff" opacity=".8"/>
+</svg>

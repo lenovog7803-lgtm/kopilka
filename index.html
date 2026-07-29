@@ -8,7 +8,12 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Копилка">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-startup-image" href="splash-1170x2532.png"
+      media="(device-width:390px) and (device-height:844px) and (-webkit-device-pixel-ratio:3)">
+<link rel="apple-touch-startup-image" href="splash-1284x2778.png"
+      media="(device-width:428px) and (device-height:926px) and (-webkit-device-pixel-ratio:3)">
 
 <title>Копилка · 15 000 к НГ</title>
 <style>
@@ -49,6 +54,22 @@
     --orange: #ff9500;
     --yellow: #ffcc00;
     --radius: 16px;
+
+    /* три уровня глубины: карточка лежит, панель парит, окно висит */
+    --shadow-1: 0 1px 2px rgba(60,70,110,.05), 0 4px 12px rgba(60,70,110,.06);
+    --shadow-2: 0 2px 6px rgba(60,70,110,.08), 0 10px 28px rgba(60,70,110,.12);
+    --shadow-3: 0 8px 20px rgba(30,35,50,.14), 0 24px 60px rgba(30,35,50,.26);
+
+    /* отступы: только шаг 4 */
+    --s1: 4px;  --s2: 8px;  --s3: 12px; --s4: 16px; --s5: 20px; --s6: 24px;
+
+    /* шесть размеров текста на всё приложение */
+    --t-title: 26px;   /* заголовок экрана */
+    --t-big:   22px;   /* крупное значение */
+    --t-body:  17px;   /* основной текст и поля */
+    --t-item:  15px;   /* строки списков и кнопки */
+    --t-sub:   13px;   /* подписи */
+    --t-cap:   11px;   /* мелкие пометки и заголовки секций */
   }
 
   html, body { height:100%; }
@@ -82,7 +103,7 @@
   body.xmas .b2 { background:#ffc9c9; }
 
   .app { width:100%; max-width:460px; display:flex; flex-direction:column; gap:16px; }
-  .view { display:flex; flex-direction:column; gap:16px; }
+  .view { display:flex; flex-direction:column; gap:var(--s3); }
 
   /* ---- вкладки ---- */
   .tabbar {
@@ -398,13 +419,13 @@
     backdrop-filter: blur(24px) saturate(180%);
     border: .5px solid rgba(255,255,255,.85);
     border-radius: var(--radius);
-    box-shadow: 0 6px 20px rgba(60,70,110,.10), inset 0 .5px 0 rgba(255,255,255,1);
-    padding: 16px;
+    box-shadow: var(--shadow-1), inset 0 .5px 0 rgba(255,255,255,1);
+    padding: var(--s4);
   }
 
   .section-title {
-    font-size:13px; font-weight:600; color:var(--text2);
-    text-transform:none; letter-spacing:-.1px; margin-bottom:12px;
+    font-size:var(--t-sub); font-weight:600; color:var(--text2);
+    text-transform:none; letter-spacing:-.1px; margin-bottom:var(--s3);
   }
 
   /* ---- гирлянда (декабрь) ---- */
@@ -1456,7 +1477,7 @@
     border: none;
     border-radius: 20px;
     padding: 20px 16px;
-    box-shadow: 0 20px 50px rgba(30,35,50,.28);
+    box-shadow: var(--shadow-3);
     animation: cardPop .34s var(--spring);
   }
   @keyframes cardPop { from { opacity:0; transform: scale(.94); } to { opacity:1; transform: scale(1); } }
@@ -1465,8 +1486,8 @@
     .modal-card {
       max-width: 520px;
       border-radius: 22px 22px 0 0;
-      padding: 20px 16px calc(16px + env(safe-area-inset-bottom, 0px));
-      box-shadow: 0 -6px 24px rgba(60,65,85,.18);
+      padding: var(--s5) var(--s4) calc(var(--s4) + env(safe-area-inset-bottom, 0px) + var(--kb, 0px));
+      box-shadow: var(--shadow-3);
       animation: sheetUp .44s var(--spring);
     }
     .modal-card::before {
@@ -1475,7 +1496,7 @@
     }
   }
   @keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-  .modal-card h3 { font-size:17px; font-weight:650; margin-bottom:16px; text-align:center; letter-spacing:-.4px; }
+  .modal-card h3 { font-size:var(--t-body); font-weight:650; margin-bottom:var(--s4); text-align:center; letter-spacing:-.4px; }
   .modal-card input {
     width:100%; border:none;
     background: var(--surface); border-radius:12px; padding:14px 16px;
@@ -1959,6 +1980,20 @@
   @keyframes popIn  { from { opacity:0; transform: translateX(-9%); } to { opacity:1; transform:none; } }
 
   /* подсказка о свайпе назад — тонкая полоска у левого края раздела */
+  /* подсказка жеста «потянуть вниз» */
+  .pull-hint {
+    position:fixed; left:50%; top:10px; transform:translateX(-50%); z-index:30;
+    opacity:0; pointer-events:none; transition:opacity .2s, transform .25s var(--spring);
+    width:30px; height:30px; border-radius:50%;
+    background:rgba(255,255,255,.85); box-shadow:var(--shadow-2);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .pull-hint span {
+    width:13px; height:13px; border:2px solid var(--accent); border-top-color:transparent;
+    border-radius:50%; transition:transform .25s;
+  }
+  .pull-hint.ready span { transform:rotate(180deg); border-top-color:var(--accent); border-right-color:transparent; }
+
   .edge-hint {
     position:fixed; left:0; top:0; bottom:0; width:18px; z-index:20; pointer-events:none;
     opacity:0; transition:opacity .2s;
@@ -2039,9 +2074,9 @@
     align-items:center; justify-content:center; pointer-events:none; text-align:center;
     transform-origin:50% 100%;
   }
-  .sph-val { font-size:38px; font-weight:800; letter-spacing:-1.3px; line-height:1; color:var(--text); font-variant-numeric:tabular-nums; }
-  .sph-lab { font-size:11.5px; color:var(--text2); margin-top:3px; font-weight:600; }
-  .sph-sub { font-size:11px; color:var(--text2); margin-top:5px; opacity:.85; }
+  .sph-val { font-size:34px; font-weight:700; letter-spacing:-1.2px; line-height:1; color:var(--text); font-variant-numeric:tabular-nums; }
+  .sph-lab { font-size:var(--t-cap); color:var(--text2); margin-top:var(--s1); font-weight:600; }
+  .sph-sub { font-size:var(--t-cap); color:var(--text2); margin-top:var(--s1); opacity:.85; }
   .sph-sub:empty { display:none; }
   .sph-wrap.over .sph-val { color:#c33; }
   .sph-wrap.hold .sph-svg { transform: scale(.96); transition: transform .18s; }
@@ -2056,10 +2091,18 @@
   .sec-bar {
     position:sticky; top:8px; z-index:25;
     display:flex; align-items:center; gap:10px; padding:8px 12px; margin-bottom:8px;
-    background: rgba(255,255,255,.66);
-    -webkit-backdrop-filter: blur(26px) saturate(190%); backdrop-filter: blur(26px) saturate(190%);
-    border:.5px solid rgba(255,255,255,.9); border-radius:20px;
-    box-shadow: 0 8px 24px rgba(60,70,110,.13), inset 0 .5px 0 rgba(255,255,255,1);
+    background: rgba(255,255,255,.42);
+    -webkit-backdrop-filter: blur(18px) saturate(170%); backdrop-filter: blur(18px) saturate(170%);
+    border:.5px solid rgba(255,255,255,.5); border-radius:20px;
+    box-shadow: none;
+    transition: background .25s, box-shadow .25s, border-color .25s, backdrop-filter .25s;
+  }
+  /* прокрутили — панель наливается плотностью и отделяется от содержимого */
+  .sec-bar.scrolled {
+    background: rgba(255,255,255,.78);
+    -webkit-backdrop-filter: blur(28px) saturate(190%); backdrop-filter: blur(28px) saturate(190%);
+    border-color: rgba(255,255,255,.95);
+    box-shadow: var(--shadow-2), inset 0 .5px 0 rgba(255,255,255,1);
   }
   .sec-back {
     flex-shrink:0; height:34px; padding:0 12px 0 10px; border:none; border-radius:11px; cursor:pointer;
@@ -2069,8 +2112,8 @@
   }
   .sec-back:active { opacity:.55; }
   .sec-back:active { transform:scale(.92); }
-  .sec-title { flex:1; min-width:0; font-size:15px; font-weight:700; color:var(--text); }
-  .sec-day { font-size:12px; font-weight:600; color:var(--text2); white-space:nowrap; }
+  .sec-title { flex:1; min-width:0; font-size:var(--t-body); font-weight:650; color:var(--text); }
+  .sec-day { font-size:var(--t-sub); font-weight:500; color:var(--text2); white-space:nowrap; }
   .sec-day.past { color:#c2410c; }
 
   /* ---- выбор дня ---- */
@@ -2111,7 +2154,7 @@
   .dp-dow span { font-size:11px; }
 
   /* ---- экран «Сегодня» ---- */
-  .today-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; }
+  .today-head { display:flex; align-items:center; justify-content:space-between; gap:var(--s2); margin-bottom:var(--s4); }
   .td-nav { display:flex; align-items:center; gap:4px; flex:1; min-width:0; }
   .td-arrow {
     flex-shrink:0; width:30px; height:30px; border:none; border-radius:10px; cursor:pointer;
@@ -2131,7 +2174,7 @@
     touch-action: manipulation;
   }
   .td-settings:active { transform:scale(.93); }
-  .td-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px 10px; }
+  .td-grid { display:grid; grid-template-columns:1fr 1fr; gap:var(--s4) var(--s3); }
   .td-cell {
     display:flex; flex-direction:column; align-items:center; cursor:pointer;
     background:none; border:none; padding:0; font-family:inherit; touch-action: manipulation;
@@ -2141,8 +2184,8 @@
   .td-cell .sph-val { font-size:clamp(18px, 5.4vw, 24px); }
   .td-cell .sph-lab { font-size:10.5px; }
   .td-cell .sph-sub { display:none; }
-  .td-name { font-size:12.5px; font-weight:700; color:var(--text); margin-top:8px; }
-  .td-hint { font-size:11px; color:var(--text2); margin-top:2px; text-align:center; line-height:1.3; }
+  .td-name { font-size:var(--t-item); font-weight:600; color:var(--text); margin-top:var(--s2); }
+  .td-hint { font-size:var(--t-cap); color:var(--text2); margin-top:var(--s1); text-align:center; line-height:1.3; }
   .td-line {
     margin-top:16px; padding:11px 13px; border-radius:14px; font-size:12.5px; line-height:1.4;
     background:rgba(255,255,255,.5); color:var(--text2); text-align:center;
@@ -2230,17 +2273,17 @@
 
   /* одинаковая колонка рядом со сферой во всех разделах */
   .sph-h {
-    font-size:11px; font-weight:700; color:var(--text2);
-    text-transform:uppercase; letter-spacing:.6px; margin-bottom:5px;
+    font-size:var(--t-cap); font-weight:600; color:var(--text2);
+    text-transform:none; letter-spacing:-.1px; margin-bottom:var(--s1);
   }
   .sph-big {
-    font-size:clamp(22px, 6.5vw, 30px); font-weight:800; letter-spacing:-.7px;
-    line-height:1.05; color:var(--text); font-variant-numeric:tabular-nums;
+    font-size:var(--t-big); font-weight:700; letter-spacing:-.7px;
+    line-height:1.1; color:var(--text); font-variant-numeric:tabular-nums;
   }
-  .sph-note { font-size:12.5px; color:var(--text2); margin-top:5px; line-height:1.35; }
+  .sph-note { font-size:var(--t-sub); color:var(--text2); margin-top:var(--s1); line-height:1.35; }
   .sph-dim { opacity:.8; }
   .sph-note:empty { display:none; }
-  .sph-row { display:flex; align-items:center; gap:16px; width:100%; }
+  .sph-row { display:flex; align-items:center; gap:var(--s4); width:100%; }
   .sph-side { flex:1; min-width:0; display:flex; flex-direction:column; align-items:flex-start; }
   @media (max-width:400px) {
     .sph-wrap { width:150px; height:150px; }
@@ -6442,6 +6485,74 @@ function sphereMarkup(id, theme) {
     '</div>' +
   '</div>';
 }
+// ---------- панель уплотняется при прокрутке ----------
+(function bindBarDensity() {
+  const bar = document.getElementById('secBar');
+  if (!bar) return;
+  let raf = null;
+  const upd = () => {
+    raf = null;
+    bar.classList.toggle('scrolled', window.scrollY > 6);
+  };
+  window.addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(upd); }, { passive: true });
+  upd();
+})();
+
+// ---------- потянуть вниз на главном — вернуться на сегодня ----------
+const PULL_TRIGGER = 78;
+let pullY = null, pullDist = 0;
+const pullEl = document.createElement('div');
+pullEl.className = 'pull-hint';
+pullEl.innerHTML = '<span></span>';
+document.body.appendChild(pullEl);
+document.addEventListener('pointerdown', e => {
+  if (document.getElementById('viewToday').style.display === 'none') return;
+  if (window.scrollY > 0) return;              // тянем только с самого верха
+  if (document.querySelector('.show')) return; // окно открыто — не мешаем
+  if (curDay() === todayStr()) return;         // уже на сегодня — тянуть незачем
+  pullY = e.clientY; pullDist = 0;
+}, { passive: true });
+document.addEventListener('pointermove', e => {
+  if (pullY === null) return;
+  pullDist = Math.max(0, e.clientY - pullY);
+  if (pullDist < 6) return;
+  const k = Math.min(1, pullDist / PULL_TRIGGER);
+  pullEl.style.opacity = String(k);
+  pullEl.style.transform = 'translateX(-50%) translateY(' + Math.min(pullDist * .45, 42) + 'px)';
+  pullEl.classList.toggle('ready', pullDist >= PULL_TRIGGER);
+}, { passive: true });
+document.addEventListener('pointerup', () => {
+  if (pullY === null) return;
+  const go = pullDist >= PULL_TRIGGER;
+  pullY = null; pullDist = 0;
+  pullEl.style.opacity = '0';
+  pullEl.style.transform = 'translateX(-50%)';
+  pullEl.classList.remove('ready');
+  if (go) { vib(10); setViewDate(null); }
+}, { passive: true });
+
+// ---------- клавиатура не должна закрывать поле ----------
+(function bindKeyboard() {
+  const vv = window.visualViewport;
+  // на телефоне лист приподнимается ровно на высоту клавиатуры
+  if (vv) {
+    const apply = () => {
+      const hidden = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      document.documentElement.style.setProperty('--kb', hidden + 'px');
+    };
+    vv.addEventListener('resize', apply);
+    vv.addEventListener('scroll', apply);
+    apply();
+  }
+  // и само поле подтягивается в видимую часть
+  document.addEventListener('focusin', e => {
+    if (!/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+    setTimeout(() => {
+      try { e.target.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (err) {}
+    }, 280);
+  });
+})();
+
 // ---------- смахивание листа вниз ----------
 // Работает только там, где окно показано листом (узкий экран).
 // Тянем — окно идёт за пальцем, отпускаем далеко или быстро — закрывается.
