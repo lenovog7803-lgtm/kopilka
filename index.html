@@ -665,9 +665,10 @@
   }
   .chip.active { background: rgba(255,255,255,.75); color:var(--accent); box-shadow: 0 4px 12px rgba(60,70,110,.10); }
 
-  /* ---- конверты ---- */
+  /* ---- конверты: мини-сферы того же языка, что и большие шары ---- */
+  .env-sphere-scope { }
   .env-grid {
-    display:grid; grid-template-columns: repeat(4, 1fr); gap:10px;
+    display:grid; grid-template-columns: repeat(6, 1fr); gap:var(--s2);
     max-height: 440px; overflow-y:auto; padding:6px 3px 10px;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
@@ -769,16 +770,30 @@
   .today-line b { color:var(--text); font-variant-numeric: tabular-nums; }
 
   /* ---- стрик ---- */
-  .streak-row { display:flex; align-items:center; gap:16px; }
-  .flame { font-size:44px; filter: drop-shadow(0 4px 10px rgba(255,120,0,.3)); }
-  .streak-info { flex:1; }
-  .streak-info .big { font-size:24px; font-weight:800; }
-  .streak-info .small { font-size:13px; color:var(--text2); margin-top:2px; }
-  .freeze-badge {
-    font-size:12px; font-weight:700; color:#3a7bd5;
-    background:rgba(120,180,255,.22); border:1px solid rgba(120,180,255,.4);
-    padding:6px 12px; border-radius:14px; text-align:center; line-height:1.3;
+  .streak-row { display:flex; align-items:center; gap:var(--s3); }
+  /* огонёк сам по себе: без подложки, живёт своим светом */
+  .streak-ico {
+    flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    filter: drop-shadow(0 3px 8px rgba(240,90,25,.32));
   }
+  .streak-ico svg { display:block; }
+  .streak-ico .flm-in { transform-origin: 50% 78%; animation: flmBreathe 2.4s ease-in-out infinite alternate; }
+  @keyframes flmBreathe { from { transform: scaleY(.9); } to { transform: scaleY(1.06); } }
+  /* серии нет — огонёк гаснет до серого */
+  .streak-ico.cold { filter:none; opacity:.5; }
+  .streak-ico.cold .flm-out { fill:#c7c9d1; }
+  .streak-ico.cold .flm-in { fill:#e3e5ea; animation:none; }
+  @media (prefers-reduced-motion: reduce) { .streak-ico .flm-in { animation:none; } }
+  .streak-info { flex:1; min-width:0; }
+  .streak-info .big { font-size:var(--t-body); font-weight:600; letter-spacing:-.3px; }
+  .streak-info .small { font-size:var(--t-sub); color:var(--text2); margin-top:1px; }
+  /* значок статуса: одна строка, без рамки и заливки-подушки */
+  .freeze-badge {
+    flex-shrink:0; font-size:var(--t-sub); font-weight:500; color:var(--text2);
+    background:rgba(120,130,160,.14); border:none;
+    padding:4px 10px; border-radius:999px; white-space:nowrap; line-height:1.3;
+  }
+  .freeze-badge.used { color:var(--text3); }
 
   /* ---- задания ---- */
   .q-grid { display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; }
@@ -1027,6 +1042,66 @@
 
   /* ---- разрыв конверта ---- */
   .env.tear .env-inner { animation: envShake .3s ease; }
+
+  /* ---------- конверт как мини-сфера ---------- */
+  .env { aspect-ratio: 1 !important; }
+  /* от прежнего конверта остался только контейнер: разворотов больше нет */
+  .env .env-inner, .env.closed .env-inner, .env.animate .env-inner {
+    transform: none !important;
+    transform-style: flat !important;
+    transition: none !important;
+    border-radius: 50%;
+    overflow: hidden;
+    /* плоско и тихо: ни градиента, ни канта, ни тени — как кружок дня в календаре */
+    background: rgba(120,130,160,.12);
+    border: none;
+    box-shadow: none;
+  }
+  .env.closed:not(.animate) .env-inner { visibility: visible; }
+  /* налив: поверхность чуть выгнута, как у большой сферы */
+  .env-fill {
+    position:absolute; left:-12%; right:-12%; bottom:0; height:0;
+    background: #e8a41c;
+    border-radius: 46% 46% 0 0 / 16% 16% 0 0;
+    transition: height .6s var(--spring);
+  }
+  .env.closed .env-fill, .env.animate .env-fill { height: 112%; }
+  /* блик сверху слева — та же геометрия, что у сфер */
+  .env-gloss { display:none; }
+  .env .amt {
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-size:13px; font-weight:400; letter-spacing:-.2px;
+    font-variant-numeric: tabular-nums; color: var(--text);
+    transition: color .35s;
+  }
+  .env.closed .amt, .env.animate .amt { color:#fff; font-weight:500; }
+  /* рекомендованный — кант акцентом, без свечения */
+  .env.reco .env-inner { box-shadow: inset 0 0 0 1.5px var(--accent) !important; }
+  .env:not(.closed):active .env-inner { transform: scale(.93) !important; transition: transform .12s !important; }
+  /* приём вклада: кружок отпружинивает, жидкость наливается с плеском */
+  .env.animate { animation: envSpring .62s var(--bounce); }
+  @keyframes envSpring {
+    0%   { transform: scale(1); }
+    20%  { transform: scale(.9); }
+    52%  { transform: scale(1.11); }
+    76%  { transform: scale(.975); }
+    100% { transform: scale(1); }
+  }
+  /* поверхность переливается через край и оседает — та же волна, что у больших сфер */
+  .env.animate .env-fill { animation: envPour .78s cubic-bezier(.32,.72,0,1) forwards; }
+  @keyframes envPour {
+    0%   { height:0;    border-radius: 46% 46% 0 0 / 16% 16% 0 0; }
+    50%  { height:126%; border-radius: 40% 52% 0 0 / 24% 10% 0 0; }
+    72%  { height:102%; border-radius: 52% 40% 0 0 / 10% 24% 0 0; }
+    88%  { height:118%; border-radius: 44% 48% 0 0 / 19% 13% 0 0; }
+    100% { height:112%; border-radius: 46% 46% 0 0 / 16% 16% 0 0; }
+  }
+  /* стекло: по кружку проходит блик, как по влажной поверхности */
+  /* пружина и налив остаются, блеск — нет */
+  @media (prefers-reduced-motion: reduce) {
+    .env-fill { transition:none; }
+    .env.animate, .env.animate .env-fill, .env.animate .env-inner::after { animation:none; }
+  }
   @keyframes envShake { 25% { transform: rotate(-3deg); } 55% { transform: rotate(3deg); } 80% { transform: rotate(-1.5deg); } }
   .tear-strip {
     position:absolute; left:-2%; top:-4%; width:104%; height:38%; z-index:4;
@@ -1135,13 +1210,13 @@
   }
   .add-btn:active, .extra-row button:active, .chip:active, .tab:active,
   /* всё нажимаемое проседает и возвращается пружиной */
-  .cat, .q-tile, .limit-box, .hist-head, .h-del, .td-cell, .sec-back, .td-settings,
+  .cat, .q-tile, .limit-box, .hist-head, .h-del, .td-cell, .nav-btn,
   .fd-meal-add, .fd-meal-rep, .fd-tip, .fd-ex, .rm-act, .dp-day, .pchip, .fa-item,
   .fa-my, .rp-opt, .more-btn, .set-block.more-btn, .add-btn, .modal-btns button {
     transition: transform .34s var(--bounce), opacity .2s;
   }
   .cat:active, .q-tile:active, .limit-box:active, .hist-head:active, .h-del:active,
-  .td-cell:active, .sec-back:active, .td-settings:active,
+  .td-cell:active, .nav-btn:active,
   .fd-meal-add:active, .fd-meal-rep:active, .fd-tip:active, .fd-ex:active, .rm-act:active,
   .dp-day:not(:disabled):active, .pchip:active, .fa-item:active, .fa-my:active,
   .rp-opt:active, .more-btn:active, .set-block.more-btn:active, .add-btn:active {
@@ -1154,7 +1229,7 @@
   .ach-grid { content-visibility: auto; contain-intrinsic-size: auto 300px; }
   @media (max-width: 700px) {
     /* карточки без blur-подложки: выглядит почти так же, работает в разы легче */
-    .card, .sec-bar {
+    .card {
       -webkit-backdrop-filter: none;
       backdrop-filter: none;
       background: rgba(252,253,255,.82);
@@ -1490,10 +1565,6 @@
       box-shadow: var(--shadow-3);
       animation: sheetUp .44s var(--spring);
     }
-    .modal-card::before {
-      content:''; display:block; width:36px; height:5px; border-radius:3px;
-      background: rgba(60,60,67,.18); margin:-8px auto 14px;
-    }
   }
   @keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
   .modal-card h3 { font-size:var(--t-body); font-weight:650; margin-bottom:var(--s4); text-align:center; letter-spacing:-.4px; }
@@ -1603,63 +1674,43 @@
   #evening {
     position:fixed; inset:0; z-index:104; display:none;
     align-items:flex-start; justify-content:center; padding-top:10vh;
-    background: rgba(20,22,40,.5);
-    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+    background: rgba(30,32,50,.35);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
   }
   #evening.show { display:flex; }
   .ev-card {
-    position:relative; overflow:hidden;
+    position:relative;
     width:min(350px, 90vw); text-align:center;
-    background: linear-gradient(168deg, #2c3252 0%, #453b62 55%, #5b4668 100%);
-    border:1px solid rgba(255,255,255,.18);
-    border-radius:30px; padding:26px 22px 20px; margin:16px;
-    box-shadow: 0 30px 70px rgba(10,12,30,.55), inset 0 1px 0 rgba(255,255,255,.15);
-    animation: finaleIn .55s cubic-bezier(.22,1.4,.36,1);
+    background: rgba(248,249,252,.92);
+    -webkit-backdrop-filter: blur(34px) saturate(190%); backdrop-filter: blur(34px) saturate(190%);
+    border:.5px solid rgba(255,255,255,.9);
+    border-radius:20px; padding:var(--s6) var(--s4) var(--s4); margin:var(--s4);
+    box-shadow: var(--shadow-3);
+    animation: cardPop .34s var(--spring);
   }
-  .ev-card::before {                       /* звёздное небо */
-    content:''; position:absolute; inset:0; pointer-events:none;
-    background:
-      radial-gradient(1.5px 1.5px at 12% 18%, rgba(255,255,255,.9), transparent 100%),
-      radial-gradient(1px 1px at 28% 8%,  rgba(255,255,255,.7), transparent 100%),
-      radial-gradient(2px 2px at 44% 22%, rgba(255,255,255,.55), transparent 100%),
-      radial-gradient(1px 1px at 62% 12%, rgba(255,255,255,.8), transparent 100%),
-      radial-gradient(1.5px 1.5px at 78% 24%, rgba(255,255,255,.6), transparent 100%),
-      radial-gradient(1px 1px at 90% 10%, rgba(255,255,255,.75), transparent 100%),
-      radial-gradient(1px 1px at 8%  40%, rgba(255,255,255,.4), transparent 100%),
-      radial-gradient(1.5px 1.5px at 92% 44%, rgba(255,255,255,.35), transparent 100%);
-    animation: starsTw 4s ease-in-out infinite alternate;
+  .ev-moon { display:flex; justify-content:center; opacity:.75; }
+  .ev-title { color:var(--text); font-size:var(--t-title); font-weight:700;
+    letter-spacing:-.6px; margin:var(--s2) 0 var(--s1); }
+  .ev-date { color:var(--text2); font-size:var(--t-sub); margin-bottom:var(--s5); }
+  /* сгруппированный список: одна плашка, строки через волосяную линию */
+  #evRows {
+    background:rgba(255,255,255,.72); border-radius:14px; overflow:hidden;
+    box-shadow: var(--shadow-1);
   }
-  @keyframes starsTw { to { opacity:.55; } }
-  .ev-moon {
-    font-size:46px; line-height:1;
-    filter: drop-shadow(0 0 18px rgba(255,225,130,.7));
-    animation: moonFloat 5s ease-in-out infinite alternate;
-    display:inline-block;
-  }
-  @keyframes moonFloat { to { transform: translateY(-5px) rotate(-6deg); } }
-  .ev-title { color:#fff; font-size:21px; margin:8px 0 2px; }
-  .ev-date { color:rgba(255,255,255,.55); font-size:13px; margin-bottom:16px; text-transform:capitalize; }
   .ev-row {
-    display:flex; align-items:center; gap:12px;
-    padding:11px 12px; margin-bottom:8px; text-align:left;
-    font-size:14px; color:rgba(255,255,255,.92);
-    background: rgba(255,255,255,.09);
-    border:1px solid rgba(255,255,255,.13);
-    border-radius:16px;
+    display:flex; align-items:center; gap:var(--s3);
+    padding:var(--s3) var(--s3); text-align:left;
+    font-size:var(--t-item); color:var(--text); line-height:1.35;
   }
-  .ev-row b { color:#fff; font-variant-numeric: tabular-nums; }
+  .ev-row + .ev-row { box-shadow: inset 0 .5px 0 rgba(60,70,110,.16); }
+  .ev-row b { color:var(--text); font-weight:600; font-variant-numeric: tabular-nums; }
   .ev-badge {
-    width:36px; height:36px; flex-shrink:0; border-radius:12px;
-    display:flex; align-items:center; justify-content:center; font-size:18px;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.25);
+    width:30px; height:30px; flex-shrink:0; border-radius:8px;
+    display:flex; align-items:center; justify-content:center; font-size:16px;
   }
-  #evBtns { margin-top:14px; }
+  #evBtns { margin-top:var(--s5); }
   #evBtns .m-ok, #evBtns .m-cancel { width:100%; }
-  #evBtns .m-ok + .m-ok, #evBtns .m-cancel { margin-top:8px; }
-  #evening .m-cancel {
-    background: rgba(255,255,255,.13); color: rgba(255,255,255,.8);
-    border:1px solid rgba(255,255,255,.15);
-  }
+  #evBtns .m-ok + .m-ok, #evBtns .m-cancel { margin-top:var(--s2); }
 
   /* мастер цели */
   #goalModal {
@@ -1789,46 +1840,37 @@
     transition: opacity .4s, top .4s cubic-bezier(.22,1,.36,1);
     opacity:0;
   }
-  /* ---- календарь привычек: светлый, без баннера, огненная гамма ---- */
-  .hcal {
-    width:100%; border-radius:24px; overflow:hidden;
-    background: rgba(255,255,255,.82);
-    box-shadow: 0 12px 28px rgba(60,40,60,.14);
-  }
-  .hcal-head {
-    position:relative; z-index:1; display:flex; align-items:center; justify-content:space-between;
-    padding:14px 16px 12px; border-bottom:1px solid rgba(120,130,160,.14);
-  }
+  /* ---- календарь привычек: та же раскладка, что и у выбора дня ---- */
+  .hcal { width:100%; border-radius:14px; background:none; box-shadow:none; }
+  .hcal-head { display:flex; align-items:center; gap:var(--s2); padding:0 0 var(--s2); }
   .hcal-nav {
-    width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center;
-    font-size:16px; font-weight:700; color:#c76a1a;
-    background: rgba(255,150,50,.1);
-    border: 1px solid rgba(242,113,42,.22);
-    transition: transform .15s ease;
+    width:32px; height:32px; border:none; border-radius:10px; cursor:pointer;
+    background:rgba(255,255,255,.6); color:var(--text); font-size:17px; line-height:1;
+    display:flex; align-items:center; justify-content:center;
+    touch-action: manipulation; transition: transform .15s ease;
   }
   .hcal-nav:active { transform: scale(.9); }
   .hcal-nav:disabled { opacity:.3; }
-  .hcal-title { font-size:14.5px; font-weight:700; color:#a8500c; text-transform:capitalize; }
-  .hcal-body { padding:14px 14px 16px; }
-  .hcal-wd { display:grid; grid-template-columns:repeat(7,1fr); gap:5px; margin-bottom:8px; }
-  .hcal-wd span { text-align:center; font-size:9.5px; font-weight:500; color:rgba(28,28,46,.38); text-transform:uppercase; letter-spacing:.3px; }
-  .hcal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:5px; }
+  .hcal-title { flex:1; text-align:center; font-size:14.5px; font-weight:700;
+    color:var(--text); text-transform:capitalize; }
+  .hcal-body { padding:0; }
+  .hcal-wd, .hcal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
+  .hcal-wd { margin-bottom:var(--s1); }
+  .hcal-wd span { text-align:center; font-size:11px; font-weight:700;
+    color:var(--text2); text-transform:uppercase; letter-spacing:.3px; padding-bottom:5px; }
+  /* день — такой же кружок, как в системном календаре */
   .hcal-day {
-    aspect-ratio:1; border-radius:50%; display:flex; align-items:center; justify-content:center;
-    font-size:11.5px; font-weight:500; color:rgba(28,28,46,.45); position:relative;
-    background: rgba(120,130,160,.09);
+    position:relative; aspect-ratio:1; border:none; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background:none; color:var(--text); font-size:16px; font-weight:400;
     transition: background .3s, color .3s;
   }
   .hcal-day.pad { background:none; }
-  .hcal-day.done {
-    background: linear-gradient(160deg, #ffb03e, #f2712a);
-    color:#fff; font-weight:600;
-    box-shadow: 0 3px 9px rgba(242,113,42,.3);
-  }
-  .hcal-day.part { background: rgba(242,113,42,.22); color:#a8500c; font-weight:600; }
-  .hcal-day.future { background:none; border:1px dashed rgba(120,130,160,.25); color:rgba(28,28,46,.2); }
-  .hcal-day.today { box-shadow: 0 0 0 2px #f2712a; }
-  .hcal-day.today.done { box-shadow: 0 3px 9px rgba(242,113,42,.3), 0 0 0 2px rgba(255,255,255,.95); }
+  .hcal-day.done { background:var(--accent); color:#fff; font-weight:600; }
+  .hcal-day.part { background:rgba(10,132,255,.16); color:var(--accent); font-weight:600; }
+  .hcal-day.future { background:none; color:var(--text3); }
+  .hcal-day.today { color:#ff3b30; font-weight:600; }
+  .hcal-day.today.done { color:#fff; }
   .hcal-day.celebrate { animation: hcalCelebrate .7s cubic-bezier(.34,1.56,.64,1); z-index:2; }
   @keyframes hcalCelebrate {
     0%   { transform: scale(1) rotate(0deg) translateY(0); }
@@ -1886,15 +1928,19 @@
   .fd-setup-btn:active, .fd-ok:active { transform:scale(.97); }
   /* переключатель даты */
   .fd-datebar { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
+  /* шапка дня — часть карточки, поэтому тише и без своего цвета */
+  .fd-datebar { display:flex; align-items:center; gap:var(--s1); margin-bottom:var(--s3); }
   .fd-dnav {
-    width:32px; height:32px; border-radius:50%; border:none; cursor:pointer; flex-shrink:0;
-    font-size:17px; font-weight:700; color:#1d7a3c; background:rgba(38,163,73,.12);
+    width:30px; height:30px; border-radius:10px; border:none; cursor:pointer; flex-shrink:0;
+    font-size:17px; font-weight:400; color:var(--text2); background:rgba(255,255,255,.6);
     display:flex; align-items:center; justify-content:center; font-family:inherit;
   }
   .fd-dnav:active { transform:scale(.9); }
   .fd-dnav:disabled { opacity:.3; }
   .fd-date {
-    border:none; background:none; font-family:inherit; cursor:pointer; flex:1; text-align:center; font-size:14px; font-weight:700; color:var(--text); cursor:pointer; }
+    border:none; background:none; font-family:inherit; cursor:pointer; flex:1; text-align:center;
+    font-size:16px; font-weight:600; letter-spacing:-.2px; color:var(--text);
+    text-transform:capitalize; padding:4px 2px; }
   /* круг-стакан */
   .fd-hero { gap:12px; }
   .fd-circle-wrap { position:relative; width:200px; height:200px; }
@@ -2088,32 +2134,63 @@
   .sph-wrap.splash .sph-liquid .wave-move2 { animation: waveSlide 5.2s linear infinite reverse, fdSplash .85s ease-out .06s; }
   /* ---- шапка раздела вместо таб-бара ---- */
   /* плавающая панель раздела поверх содержимого */
+  /* панель раздела: полоса во всю ширину, стекло и одна волосяная линия снизу */
   .sec-bar {
-    position:sticky; top:8px; z-index:25;
-    display:flex; align-items:center; gap:10px; padding:8px 12px; margin-bottom:8px;
-    background: rgba(255,255,255,.42);
-    -webkit-backdrop-filter: blur(18px) saturate(170%); backdrop-filter: blur(18px) saturate(170%);
-    border:.5px solid rgba(255,255,255,.5); border-radius:20px;
-    box-shadow: none;
-    transition: background .25s, box-shadow .25s, border-color .25s, backdrop-filter .25s;
+    /* приклеена к своему месту: за прокруткой не едет */
+    position:relative; z-index:25;
+    /* ровно та же коробка, что у карточек: ширина, отступы, радиус, материал */
+    margin:0; padding:var(--s3) var(--s4);
+    background: var(--surface);
+    -webkit-backdrop-filter: blur(24px) saturate(180%); backdrop-filter: blur(24px) saturate(180%);
+    border:.5px solid rgba(255,255,255,.85);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-1), inset 0 .5px 0 rgba(255,255,255,1); transition:none;
   }
-  /* прокрутили — панель наливается плотностью и отделяется от содержимого */
-  .sec-bar.scrolled {
-    background: rgba(255,255,255,.78);
-    -webkit-backdrop-filter: blur(28px) saturate(190%); backdrop-filter: blur(28px) saturate(190%);
-    border-color: rgba(255,255,255,.95);
-    box-shadow: var(--shadow-2), inset 0 .5px 0 rgba(255,255,255,1);
+  .sec-bar.scrolled { background: var(--surface); box-shadow: var(--shadow-1), inset 0 .5px 0 rgba(255,255,255,1); }
+  /* один каркас на обе шапки: слот — центр — слот */
+  .sec-bar, .today-head {
+    display:grid; grid-template-columns:38px 1fr 38px; align-items:center; gap:var(--s2);
   }
-  .sec-back {
-    flex-shrink:0; height:34px; padding:0 12px 0 10px; border:none; border-radius:11px; cursor:pointer;
-    background:rgba(255,255,255,.72); color:var(--accent); display:flex; align-items:center; gap:6px;
-    font-family:inherit; font-size:14px; font-weight:500; letter-spacing:-.2px;
-    touch-action: manipulation;
+  .nav-slot { display:block; width:38px; height:38px; }
+  .nav-btn {
+    width:38px; height:38px; border:none; border-radius:50%; cursor:pointer; padding:0;
+    background:rgba(255,255,255,.66); color:var(--accent);
+    display:flex; align-items:center; justify-content:center;
+    touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+    transition: transform .18s var(--spring), background .2s;
   }
-  .sec-back:active { opacity:.55; }
-  .sec-back:active { transform:scale(.92); }
-  .sec-title { flex:1; min-width:0; font-size:var(--t-body); font-weight:650; color:var(--text); }
-  .sec-day { font-size:var(--t-sub); font-weight:500; color:var(--text2); white-space:nowrap; }
+  .nav-btn:active { transform:scale(.9); background:rgba(255,255,255,.9); }
+  /* плюс в привычках: ровный кружок в цвет своей сферы */
+  .hab-add {
+    flex-shrink:0; width:34px; height:34px; padding:0;
+    border:none; border-radius:50%; cursor:pointer;
+    background:#f2712a; color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+    transition: transform .18s var(--spring), background .2s;
+  }
+  .hab-add:active { transform:scale(.9); background:#dd5f1c; }
+  .nav-mid { min-width:0; text-align:center; }
+  /* пункт списка: иконка — название — шеврон */
+  .list-row {
+    display:flex; align-items:center; gap:var(--s3); width:100%;
+    font-family:inherit; text-align:left; cursor:pointer;
+    padding:var(--s3) var(--s4); color:var(--text);
+    transition: transform .18s var(--spring);
+  }
+  .list-row:active { transform:scale(.985); }
+  .lr-ico {
+    width:28px; height:28px; flex-shrink:0; border-radius:7px;
+    background:var(--accent); color:#fff;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .lr-txt { flex:1; min-width:0; font-size:var(--t-body); font-weight:500; }
+  .lr-arrow { flex-shrink:0; color:var(--text3); font-size:20px; line-height:1; }
+  .sec-title { font-size:var(--t-body); font-weight:650; color:var(--text); letter-spacing:-.3px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .sec-day { font-size:var(--t-cap); font-weight:500; color:var(--text2); white-space:nowrap;
+    overflow:hidden; text-overflow:ellipsis; }
+  .sec-day:empty { display:none; }
   .sec-day.past { color:#c2410c; }
 
   /* ---- выбор дня ---- */
@@ -2154,8 +2231,8 @@
   .dp-dow span { font-size:11px; }
 
   /* ---- экран «Сегодня» ---- */
-  .today-head { display:flex; align-items:center; justify-content:space-between; gap:var(--s2); margin-bottom:var(--s4); }
-  .td-nav { display:flex; align-items:center; gap:4px; flex:1; min-width:0; }
+  .today-head { margin-bottom:var(--s4); }
+  .td-nav { display:flex; align-items:center; justify-content:center; gap:var(--s1); min-width:0; }
   .td-arrow {
     flex-shrink:0; width:30px; height:30px; border:none; border-radius:10px; cursor:pointer;
     background:rgba(255,255,255,.6); color:var(--text2); font-size:17px; line-height:1;
@@ -2163,18 +2240,26 @@
   }
   .td-arrow:disabled { opacity:.28; cursor:default; }
   .td-date {
-    flex:1; min-width:0; border:none; background:none; cursor:pointer; font-family:inherit;
+    min-width:0; max-width:100%; border:none; background:none; cursor:pointer; font-family:inherit;
     font-size:16px; font-weight:800; color:var(--text); text-align:center; letter-spacing:-.2px;
     text-transform:capitalize; padding:4px 2px; touch-action: manipulation;
   }
   .td-date:active { opacity:.6; }
-  .td-settings {
-    flex-shrink:0; width:38px; height:38px; border:none; border-radius:12px; cursor:pointer;
-    background:rgba(255,255,255,.6); color:var(--text2); display:flex; align-items:center; justify-content:center;
-    touch-action: manipulation;
-  }
-  .td-settings:active { transform:scale(.93); }
   .td-grid { display:grid; grid-template-columns:1fr 1fr; gap:var(--s4) var(--s3); }
+  /* перенос плиток: соседи разъезжаются пружиной, взятая идёт за пальцем */
+  .td-cell { touch-action: manipulation; }
+  .td-grid.reordering { touch-action: none; }
+  .td-grid.reordering .td-cell { transition: transform .28s var(--spring); }
+  .td-cell.dragging {
+    position:relative; z-index:5; pointer-events:none;
+    transition: none !important;          /* ни кадра задержки: плитка ровно под пальцем */
+    filter: drop-shadow(0 14px 26px rgba(60,70,110,.24));
+  }
+  .td-cell.settling { position:relative; z-index:5; pointer-events:none; }
+  .td-cell.no-anim { transition: none !important; }
+  @media (prefers-reduced-motion: reduce) {
+    .td-grid.reordering .td-cell { transition: none; }
+  }
   .td-cell {
     display:flex; flex-direction:column; align-items:center; cursor:pointer;
     background:none; border:none; padding:0; font-family:inherit; touch-action: manipulation;
@@ -2649,6 +2734,7 @@
   #hdList .q-moon:not(.show), #hdList .q-sun:not(.show),
   #hdList .q-book-open:not(.show), #hdList .q-book-closed:not(.show) { display:none; }
   .fr-more { font-size:11.5px; color:var(--text2); font-weight:700; }
+  .fi-phrase:empty { display:none; }
   .fi-phrase { font-size:12.5px; font-weight:600; color:var(--text2); margin-top:6px; font-style:italic; }
   .fi-neglect { font-size:11.5px; color:var(--text2); margin-top:4px; cursor:pointer; text-decoration:underline dotted rgba(120,120,140,.5); }
   #flZzz { display:none; }
@@ -2674,6 +2760,13 @@
   /* плитка плавно прижимается, пока держишь палец */
   #habitsGrid .q-tile { transition: transform .45s cubic-bezier(.3,.8,.4,1), filter .45s; }
   #habitsGrid .q-tile.q-hold { transform: scale(.93); filter: brightness(.96); }
+  /* перенос привычек */
+  #habitsGrid.reordering { touch-action: none; }
+  #habitsGrid.reordering .q-tile { transition: transform .28s var(--spring); }
+  #habitsGrid .q-tile.dragging {
+    position:relative; z-index:5; pointer-events:none;
+    transition: none !important; filter: drop-shadow(0 14px 26px rgba(60,70,110,.24));
+  }
   .flame.hold { transform: scale(.95); transition: transform .45s cubic-bezier(.3,.8,.4,1); }
   .q-tile.q-hint { animation: qHint 1.2s ease 2; }
   @keyframes qHint { 0%,100% { box-shadow:none; transform:scale(1); } 50% { box-shadow:0 0 0 3px rgba(242,99,42,.55), 0 8px 20px rgba(242,99,42,.3); transform:scale(1.06); } }
@@ -2777,36 +2870,46 @@
 <div class="app">
   <!-- шапка раздела: возврат на «Сегодня» и название -->
   <div class="sec-bar" id="secBar" style="display:none">
-    <button class="sec-back" onclick="switchTab('today')" aria-label="На главную">
-      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+    <button class="nav-btn" onclick="switchTab('today')" aria-label="На главную">
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
         <path d="M4 11.2 12 4l8 7.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         <path d="M6.5 10.2V19a1 1 0 0 0 1 1h3v-5h3v5h3a1 1 0 0 0 1-1v-8.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
-      <span>Главная</span>
     </button>
-    <div class="sec-title" id="secTitle"></div>
-    <div class="sec-day" id="secDay"></div>
+    <div class="nav-mid">
+      <div class="sec-title" id="secTitle"></div>
+      <div class="sec-day" id="secDay"></div>
+    </div>
+    <span class="nav-slot"></span>
   </div>
 
   <!-- ============ СЕГОДНЯ: четыре сферы одним взглядом ============ -->
   <div class="view" id="viewToday">
     <div class="card">
       <div class="today-head">
+        <span class="nav-slot"></span>
         <div class="td-nav">
           <button class="td-arrow" onclick="tdShiftDay(-1)" aria-label="Предыдущий день">‹</button>
           <button class="td-date" id="tdDate" onclick="openDayPicker()"></button>
           <button class="td-arrow" id="tdNext" onclick="tdShiftDay(1)" aria-label="Следующий день">›</button>
         </div>
-        <button class="td-settings" onclick="openSettings()" aria-label="Настройки">
-          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-            <path d="M4 7h9M17 7h3M4 17h3M11 17h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            <circle cx="15" cy="7" r="2.4" fill="none" stroke="currentColor" stroke-width="2"/>
-            <circle cx="9" cy="17" r="2.4" fill="none" stroke="currentColor" stroke-width="2"/>
-          </svg>
-        </button>
+        <span class="nav-slot"></span>
       </div>
       <div class="td-grid" id="tdGrid"></div>
     </div>
+
+    <!-- настройки отдельной строкой, как пункт системного списка -->
+    <button class="card list-row" onclick="openSettings()">
+      <span class="lr-ico">
+        <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true">
+          <path d="M4 7h9M17 7h3M4 17h3M11 17h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="15" cy="7" r="2.4" fill="none" stroke="currentColor" stroke-width="2"/>
+          <circle cx="9" cy="17" r="2.4" fill="none" stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </span>
+      <span class="lr-txt">Настройки</span>
+      <span class="lr-arrow">›</span>
+    </button>
   </div>
 
   <div class="view" id="viewSave" style="display:none">
@@ -2819,7 +2922,6 @@
         <div class="sph-h">Накоплено</div>
         <div class="sph-big" id="saved">0</div>
         <div class="sph-note" id="goalLabel">из 15 000 BYN ✎</div>
-        <div class="sph-note sph-dim"><span id="starCount">0</span> ★ · <span id="pigLvl"></span></div>
         <div class="pct" id="pct" style="display:none">0%</div>
         <div class="xp-bar" style="display:none"><i id="xpBar"></i></div>
       </div>
@@ -2860,26 +2962,33 @@
   <!-- стрик (тап — итог дня) -->
   <div class="card" onclick="openEvening()" style="cursor:pointer" title="Итог дня">
     <div class="streak-row">
-      <div class="flame" id="flame">🔥</div>
+      <span class="streak-ico" id="flame">
+        <svg viewBox="0 0 32 40" width="30" height="36" aria-hidden="true">
+          <defs>
+            <linearGradient id="flmOut" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#ffb340"/><stop offset=".5" stop-color="#ff7a1a"/><stop offset="1" stop-color="#f04e23"/>
+            </linearGradient>
+            <linearGradient id="flmIn" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#fff3c4"/><stop offset="1" stop-color="#ffc93c"/>
+            </linearGradient>
+          </defs>
+          <path class="flm-out" fill="url(#flmOut)"
+                d="M16 1c1.6 4.2 4.4 6.6 7.2 9.6C26.4 14 28 17.4 28 21.2 28 29.4 22.6 35 16 35S4 29.4 4 21.2c0-3.4 1.2-5.8 3.4-8.4 1.1 1.4 2.3 2.3 3.6 2.6-.9-4.6.6-9.8 5-14.4z"/>
+          <path class="flm-in" fill="url(#flmIn)"
+                d="M16 16.4c1.4 1.9 3.4 3.4 4.6 5.2 1 1.5 1.4 2.9 1.4 4.4 0 3.6-2.6 6.2-6 6.2s-6-2.6-6-6.2c0-2.6 1.4-4.4 3.4-6.4.5.8 1.1 1.3 1.8 1.5-.4-1.7 0-3.4.8-4.7z"/>
+        </svg>
+      </span>
       <div class="streak-info">
         <div class="big" id="streakNow">0 дней подряд</div>
         <div class="small" id="streakBest">рекорд: 0</div>
       </div>
-      <div class="freeze-badge" id="freezeBadge">❄️ заморозка<br>1 пропуск/нед</div>
+      <span class="freeze-badge" id="freezeBadge">Заморозка · 1 в неделю</span>
     </div>
-  </div>
-
-  <!-- задания -->
-  <div class="card">
-    <div class="section-title">Задания на сегодня · <span style="color:#c78a00">+1⭐</span></div>
-    <div class="q-grid" id="qDaily"></div>
-    <div class="section-title" style="margin-top:18px">Задания недели · <span style="color:#c78a00">+3⭐</span></div>
-    <div class="q-grid" id="qWeekly"></div>
   </div>
 
   <!-- ещё (свёрнуто) -->
   <div class="card more-btn" onclick="toggleMore()">
-    <span id="moreLabel">Ещё: статистика, награды…</span>
+    <span id="moreLabel">Ещё: статистика и история</span>
     <span class="more-arrow" id="moreArrow">▾</span>
   </div>
   <div id="moreWrap" style="display:none">
@@ -2893,12 +3002,6 @@
       <div class="sbox"><div class="v" id="sPace">—</div><div class="l">темп, BYN/день</div></div>
       <div class="sbox"><div class="v" id="sForecast">—</div><div class="l">прогноз финиша</div></div>
     </div>
-  </div>
-
-  <!-- ачивки -->
-  <div class="card">
-    <div class="section-title">Достижения · <span id="achCount">0/16</span></div>
-    <div class="ach-grid" id="achGrid"></div>
   </div>
 
   <!-- история -->
@@ -3000,7 +3103,11 @@
         <div class="sph-side flame-info">
           <div class="fi-head">
             <div class="sph-h" id="fiToday">Пока нет привычек</div>
-            <button class="flame-add-btn" onclick="openAddHabitModal()" aria-label="Добавить привычку">+</button>
+            <button class="hab-add" onclick="openAddHabitModal()" aria-label="Добавить привычку">
+              <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+                <path d="M12 5.5v13M5.5 12h13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+              </svg>
+            </button>
           </div>
           <div class="sph-note sph-dim" id="fiStreak" style="display:none"></div>
           <div class="fi-rem-icons" id="fiRemaining"></div>
@@ -3041,15 +3148,13 @@
     </div>
 
     <div id="foodMain" style="display:none">
-      <!-- дата -->
-      <div class="fd-datebar">
-        <button class="fd-dnav" onclick="fdShiftDay(-1)" aria-label="Предыдущий день">‹</button>
-        <button class="fd-date" id="fdDateLabel" onclick="openDayPicker()">Сегодня</button>
-        <button class="fd-dnav" id="fdNextBtn" onclick="fdShiftDay(1)" aria-label="Следующий день">›</button>
-      </div>
-
-      <!-- круг-стакан -->
+      <!-- круг-стакан: день переключается прямо в шапке карточки -->
       <div class="card hero">
+        <div class="fd-datebar">
+          <button class="fd-dnav" onclick="fdShiftDay(-1)" aria-label="Предыдущий день">‹</button>
+          <button class="fd-date" id="fdDateLabel" onclick="openDayPicker()">Сегодня</button>
+          <button class="fd-dnav" id="fdNextBtn" onclick="fdShiftDay(1)" aria-label="Следующий день">›</button>
+        </div>
         <div class="sph-row">
           <div id="foodSphere"></div>
           <div class="sph-side">
@@ -3467,7 +3572,11 @@
 <!-- вечерний итог дня -->
 <div id="evening">
   <div class="ev-card">
-    <div class="ev-moon">🌙</div>
+    <div class="ev-moon">
+      <svg viewBox="0 0 44 44" width="36" height="36" aria-hidden="true">
+        <path d="M30 4a18 18 0 1 0 10 30A15 15 0 0 1 30 4z" fill="#a9b0c4"/>
+      </svg>
+    </div>
     <h3 class="ev-title">Итог дня</h3>
     <div class="ev-date" id="evDate"></div>
     <div id="evRows"></div>
@@ -3539,7 +3648,7 @@
 
 <div id="finale" onclick="this.classList.remove('show')">
   <div class="finale-card">
-    <div style="font-size:56px">🎄🐷🎉</div>
+    <div style="font-size:56px">🎉</div>
     <h2 id="finaleSum">15 000 BYN!</h2>
     <p>Цель достигнута. Ты сделал это — с Новым годом!</p>
     <div class="finale-stats">
@@ -3783,6 +3892,22 @@ function flick(delay, vol) {              // бумажный щелчок (дл
 }
 const sndFlip = () => { flick(0, .05); tone(980, .08, .02, 'triangle', .06); };
 const sndCoin = () => { tone(1320, .18, 0, 'triangle', .14); tone(1760, .22, .07, 'triangle', .1); };
+// капля в жидкость: тон уходит вниз, снизу подпирает глухой плюм
+function slide(f0, f1, dur, delay, type, vol) {
+  try {
+    const ctx = ac(), t = ctx.currentTime + (delay || 0);
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type || 'sine';
+    o.frequency.setValueAtTime(f0, t);
+    o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(vol || .12, t + .012);
+    g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    o.connect(g); g.connect(ctx.destination);
+    o.start(t); o.stop(t + dur + .05);
+  } catch(e) {}
+}
+const sndEnvFill = () => { slide(420, 190, .18, 0, 'sine', .14); slide(160, 90, .3, .04, 'sine', .1); };
 const sndStar = () => { tone(880, .12, 0, 'sine', .12); tone(1174, .14, .09, 'sine', .12); tone(1568, .2, .18, 'sine', .12); };
 const sndAch  = () => { [523, 659, 784, 1046].forEach((f, i) => tone(f, .25, i * .11, 'triangle', .13)); };
 const sndBuy  = () => { tone(600, .09, 0, 'square', .06); tone(900, .12, .08, 'square', .06); };
@@ -3852,7 +3977,6 @@ function checkAchievements() {
   for (const a of ACH) {
     if (!state.unlocked.includes(a.id) && a.test()) {
       state.unlocked.push(a.id);
-      toast(a.icon + ' Достижение: ' + a.name + '!');
       sndAch();
       vib([30, 40, 30]);
       coinRain(14);
@@ -4011,7 +4135,6 @@ function awardStars(q) {
   }
   if (got > 0) {
     localStorage.setItem(KEY, JSON.stringify(state));
-    setTimeout(() => { toast('⭐ +' + got + ' — задание выполнено!'); sndStar(); vib([15, 30, 15]); }, 900);
     if (weeklyDone) setTimeout(() => sphSplash('save'), 1500);   // всплеск за недельное
   }
 }
@@ -4044,19 +4167,16 @@ function closeEnv(idx, el, quiet) {
       setTimeout(() => {
         state.stars += 1;
         localStorage.setItem(KEY, JSON.stringify(state));
-        toast('✨ Фольгированный конверт! +1⭐');
         sndStar();
         render({ grid: false });
       }, 1900);
     }
-    el.classList.add('animate');                 // 3D-переворот, как раньше
-    sndFlip();
-    sparkBurst(el);
-    // как только переворот закончился — переводим в статичное закрытое
-    // состояние без 3D (фикс секундного «зеркала» в Safari)
-    setTimeout(() => { el.classList.add('closed'); el.classList.remove('animate'); }, 720);
-    // во время анимации сетку не пересобираем — только цифры и свинку
-    flyCoin(el, () => { sndCoin(); vib(15); sphSplash('save'); render({ grid: false }); });
+    // конверт наливается на месте, ничего никуда не летит
+    el.classList.add('animate');
+    setTimeout(() => { el.classList.add('closed'); el.classList.remove('animate'); }, 780);
+    sndEnvFill(); vib([12, 30, 8]);
+    sphSplash('save');
+    render({ grid: false });
     setTimeout(() => {
       if (filter === 'all') { render({ grid: false }); updateReco(); }
       else render();                            // в фильтрах нужна пересборка
@@ -4289,7 +4409,8 @@ function renderLevel() {
   let lvl = 1;
   for (let i = 0; i < LEVELS.length; i++) if (xp >= LEVELS[i].xp) lvl = i + 1;
   const cur = LEVELS[lvl - 1], next = LEVELS[lvl];
-  document.getElementById('pigLvl').innerHTML = 'Ур. ' + lvl + ' · <b>' + cur.name + '</b>';
+  const lvlEl = document.getElementById('pigLvl');
+  if (lvlEl) lvlEl.innerHTML = 'Ур. ' + lvl + ' · <b>' + cur.name + '</b>';
   document.getElementById('xpBar').style.width = next
     ? Math.min(100, (xp - cur.xp) / (next.xp - cur.xp) * 100) + '%' : '100%';
 
@@ -4497,8 +4618,8 @@ function renderGrid() {
       + (fid ? ' fid' : '') + '" data-idx="' + i + '"'
       + (fid ? ' style="animation-delay:' + ((i * 1.3) % 5).toFixed(1) + 's"' : '') + '>'
       + '<div class="env-inner">'
-      +   '<div class="face front"><div class="amt">' + ENV[i] + '</div><div class="cur">BYN</div></div>'
-      +   '<div class="face back"><div class="amt">' + ENV[i] + '</div></div>'
+      +   '<i class="env-fill"></i><i class="env-gloss"></i>'
+      +   '<span class="amt">' + ENV[i] + '</span>'
       + '</div></div>';
   }
   grid.innerHTML = html;                       // один вброс в DOM вместо 171
@@ -4526,6 +4647,7 @@ function renderQuests() {
   const R = 29, C = 2 * Math.PI * R;
   const draw = (list, elId, reward) => {
     const el = document.getElementById(elId);
+    if (!el) return;                    // блок заданий убран из интерфейса
     el.innerHTML = '';
     for (const item of list) {
       const done = item.cur >= item.max;
@@ -5401,6 +5523,7 @@ let pressStartXY = null, pressTileEl = null;
 function habitPressStart(id, ev) {
   habitPressCancel();
   habitLongPressFired = false;
+  habitPointerId = (ev && ev.pointerId !== undefined) ? ev.pointerId : null;
   // запоминаем точку касания, чтобы отменить долгое нажатие при скролле
   const e = ev || window.event;
   pressStartXY = e && e.clientX !== undefined ? { x: e.clientX, y: e.clientY } : null;
@@ -5408,35 +5531,133 @@ function habitPressStart(id, ev) {
   pressTileEl = document.querySelector('#habitsGrid [onclick="habitTileClick(' + id + ')"]');
   if (pressTileEl) pressTileEl.classList.add('q-hold');
   habitPeekTimer = setTimeout(() => showWhyPop(id), 250);
+  // через четверть секунды удержания жест «заряжается»: повёл — перенос, замер — меню
+  habitArmTimer = setTimeout(() => { habitDragArmed = pressTileEl; }, HAB_ARM_MS);
   habitPressTimer = setTimeout(() => {
     habitLongPressFired = true;
+    habitDragArmed = null;
     habitPressCancel(true);
     hideWhyPop(); vib(20); openHabitEdit(id);
   }, LONG_PRESS_MS);
 }
-// сдвинул палец — значит скроллит, отменяем
+// сдвинул палец: если жест уже зарядился — переносим, если нет — это прокрутка
 function habitPressMove(ev) {
+  if (habitDrag) { habitDragMove(ev); return; }
   if (!pressStartXY || habitLongPressFired) return;
   const e = ev || window.event;
   if (!e || e.clientX === undefined) return;
-  if (Math.hypot(e.clientX - pressStartXY.x, e.clientY - pressStartXY.y) > PRESS_MOVE_TOL) {
-    habitPressCancel();
+  if (Math.hypot(e.clientX - pressStartXY.x, e.clientY - pressStartXY.y) <= PRESS_MOVE_TOL) return;
+  if (habitDragArmed && !isPastDay()) {
+    habitDragStart(habitDragArmed, pressStartXY);
+    habitPressCancel(true);
     hideWhyPop();
+    habitDragMove(ev);
+    return;
   }
+  habitPressCancel();
+  hideWhyPop();
+}
+
+// ---------- перенос привычек: та же механика, что у сфер на «Сегодня» ----------
+const HAB_ARM_MS = 260, HAB_SETTLE = 280;
+let habitArmTimer = null, habitDragArmed = null, habitDrag = null, habitDragged = false;
+let habitPointerId = null;
+
+(function bindHabitScrollGuard() {
+  const grid = document.getElementById('habitsGrid');
+  blockScrollWhileDragging(grid, () => !!habitDrag || !!habitDragArmed);
+})();
+function habTiles() { return Array.prototype.slice.call(document.querySelectorAll('#habitsGrid .q-tile')); }
+function habSlotFor(i, from, to) {
+  if (i === from) return to;
+  if (from < to) return (i > from && i <= to) ? i - 1 : i;
+  return (i >= to && i < from) ? i + 1 : i;
+}
+function habLayout() {
+  const { tiles, slots, from, to } = habitDrag;
+  tiles.forEach((el, i) => {
+    if (i === from) return;
+    const j = habSlotFor(i, from, to);
+    el.style.transform = j === i ? ''
+      : 'translate(' + (slots[j].x - slots[i].x) + 'px,' + (slots[j].y - slots[i].y) + 'px)';
+  });
+}
+function habitDragStart(tile, start) {
+  // палец ведём по всей странице, а не только по плитке
+  try { if (tile.setPointerCapture && habitPointerId != null) tile.setPointerCapture(habitPointerId); } catch (e) {}
+  const tiles = habTiles();
+  const from = tiles.indexOf(tile);
+  if (from < 0) return;
+  const slots = tiles.map(el => {
+    const r = el.getBoundingClientRect();
+    return { x: r.left, y: r.top, cx: r.left + r.width / 2, cy: r.top + r.height / 2 };
+  });
+  habitDrag = { tile, tiles, slots, from, to: from, x0: start.x, y0: start.y };
+  habitDragged = true;
+  document.getElementById('habitsGrid').classList.add('reordering');
+  tile.classList.remove('q-hold');
+  tile.classList.add('dragging');
+  vib(18);
+}
+function habitDragMove(ev) {
+  const e = ev || window.event;
+  if (!habitDrag || !e || e.clientX === undefined) return;
+  if (e.preventDefault) e.preventDefault();
+  const dx = e.clientX - habitDrag.x0, dy = e.clientY - habitDrag.y0;
+  habitDrag.tile.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(1.06)';
+  const s0 = habitDrag.slots[habitDrag.from];
+  const cx = s0.cx + dx, cy = s0.cy + dy;
+  let best = habitDrag.to, bestD = Infinity;
+  habitDrag.slots.forEach((sl, i) => {
+    const d = (sl.cx - cx) * (sl.cx - cx) + (sl.cy - cy) * (sl.cy - cy);
+    if (d < bestD) { bestD = d; best = i; }
+  });
+  if (best !== habitDrag.to) { habitDrag.to = best; habLayout(); vib(8); }
+}
+function habitDragEnd() {
+  if (!habitDrag) return;
+  const g = habitDrag;
+  habitDrag = null;
+  const s0 = g.slots[g.from], s1 = g.slots[g.to];
+  g.tile.classList.remove('dragging');
+  g.tile.style.transform = 'translate(' + (s1.x - s0.x) + 'px,' + (s1.y - s0.y) + 'px)';
+  setTimeout(() => {
+    // порядок привычек меняем в самих данных, разметку потом перерисует renderHabits
+    const ids = g.tiles.map(el => {
+      const m = /habitTileClick\((\d+)\)/.exec(el.getAttribute('onclick') || '');
+      return m ? Number(m[1]) : null;
+    });
+    const ordered = [];
+    ids.forEach((id, i) => { ordered[habSlotFor(i, g.from, g.to)] = id; });
+    const byId = {};
+    state.habits.forEach(h => { byId[h.id] = h; });
+    const rest = state.habits.filter(h => ordered.indexOf(h.id) < 0);
+    state.habits = ordered.map(id => byId[id]).filter(Boolean).concat(rest);
+    save();
+    g.tiles.forEach(el => { el.style.transform = ''; });
+    document.getElementById('habitsGrid').classList.remove('reordering');
+    renderHabits();
+    setTimeout(() => { habitDragged = false; }, 0);
+  }, HAB_SETTLE);
+  vib(12);
 }
 function habitPressCancel(keepTile) {
   clearTimeout(habitPressTimer);
   clearTimeout(habitPeekTimer);
+  clearTimeout(habitArmTimer);
+  habitDragArmed = null;
   pressStartXY = null;
   if (pressTileEl && !keepTile) pressTileEl.classList.remove('q-hold');
   if (pressTileEl && keepTile) pressTileEl.classList.remove('q-hold');
   pressTileEl = null;
 }
 function habitPressEnd() {
+  if (habitDrag) { habitDragEnd(); return; }
   habitPressCancel();
   setTimeout(hideWhyPop, 900);   // заметка ещё мгновение видна после отпускания
 }
 function habitTileClick(id) {
+  if (habitDragged) { habitDragged = false; return; }   // это был перенос, а не тап
   if (isPastDay()) { toast('Прошлый день — только просмотр'); return; }
   if (habitLongPressFired) { habitLongPressFired = false; return; }
   const h = state.habits.find(x => x.id === id);
@@ -5576,6 +5797,7 @@ const FLAME_PHRASES = {
   happy: ['«Горю как не в себя!»', '«Идеальный день! Я в ударе»', '«Салют в твою честь!»', '«Меня теперь не потушить»', '«Вот это пламя! Так держать»']
 };
 function flamePhrase(doneToday, total) {
+  return '';                            // реплики убраны
   const cat = flameMood();
   const arr = FLAME_PHRASES[cat] || FLAME_PHRASES.neutral;
   let hash = 0;
@@ -5850,7 +6072,7 @@ function renderHabits() {
     return (
       '<div class="q-tile' + (done ? ' done' : '') + '" onclick="habitTileClick(' + h.id + ')" ' +
         'onpointerdown="habitPressStart(' + h.id + ', event)" onpointermove="habitPressMove(event)" ' +
-        'onpointerup="habitPressEnd()" onpointerleave="habitPressEnd()" onpointercancel="habitPressEnd()">' +
+        'onpointerup="habitPressEnd()" onpointercancel="habitPressEnd()">' +
         '<div class="q-ring" data-hid="' + h.id + '">' +
           objectMarkup +
           (showBadge ? '<div class="q-ico"><span class="q-emo" style="background:#78c69626">' + icon + '</span></div>' : '') +
@@ -5978,11 +6200,15 @@ function render(opts) {
   const s = streak();
   document.getElementById('streakNow').textContent = s + ' ' + plural(s, 'день', 'дня', 'дней') + ' подряд';
   document.getElementById('streakBest').textContent = 'рекорд: ' + bestStreak();
-  document.getElementById('flame').textContent = s === 0 ? '🕯️' : s < 7 ? '🔥' : s < 30 ? '🔥🔥' : '🔥🔥🔥';
-  document.getElementById('freezeBadge').innerHTML = freezesUsed > 0
-    ? '❄️ заморозка<br>использована' : '❄️ заморозка<br>1 пропуск/нед';
+  // длину серии показываем насыщенностью иконки, а не числом эмодзи
+  const fl = document.getElementById('flame');
+  fl.classList.toggle('cold', s === 0);
+  // чем длиннее серия, тем крупнее и ярче пламя
+  fl.style.transform = 'scale(' + (s === 0 ? 1 : s < 7 ? 1 : s < 30 ? 1.1 : 1.2) + ')';
+  const fz = document.getElementById('freezeBadge');
+  fz.textContent = freezesUsed > 0 ? 'Заморозка использована' : 'Заморозка · 1 в неделю';
+  fz.classList.toggle('used', freezesUsed > 0);
 
-  document.getElementById('starCount').textContent = state.stars;
   renderLevel();
   try { renderDayCard(); } catch(e) {}
   try { pushNotifTags(); } catch(e) {}
@@ -6007,8 +6233,10 @@ function renderAch() {
       ((AICONS[a.id] || ['#8e8e93'])[0]) + '22">' + a.icon + '</span></div>' +
       '<div class="name">' + a.name + '</div></div>';
   }
-  document.getElementById('achGrid').innerHTML = html;
-  document.getElementById('achCount').textContent = cnt + '/' + ACH.length;
+  const agEl = document.getElementById('achGrid');
+  if (agEl) agEl.innerHTML = html;
+  const acEl = document.getElementById('achCount');
+  if (acEl) acEl.textContent = cnt + '/' + ACH.length;
 }
 
 function plural(n, one, few, many) {
@@ -6492,7 +6720,7 @@ function sphereMarkup(id, theme) {
   let raf = null;
   const upd = () => {
     raf = null;
-    bar.classList.toggle('scrolled', window.scrollY > 6);
+    bar.classList.remove('scrolled');   // панель всегда одинаковая
   };
   window.addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(upd); }, { passive: true });
   upd();
@@ -6569,6 +6797,7 @@ function dismissSheet(box) {
   if (box.classList.contains('show')) box.classList.remove('show');   // на случай окна без обработчика фона
 }
 function sheetPointerDown(e) {
+  return;                               // окна статичны: свайпом не закрываем
   if (!isSheetMode() || prefersReducedMotion()) return;
   const card = e.target.closest && e.target.closest('.modal-card');
   if (!card) return;
@@ -6650,7 +6879,7 @@ function todayCells() {
   const n = state.nutri;
   const eaten = n ? fdTotals(t).k : 0;
   const norm = n ? n.kcal + fdBurned(t) : 0;
-  return [
+  return tdApplyOrder([
     { id: 'tdSave', tab: 'save', theme: 'gold', name: 'Копилка',
       frac: goalPct, val: Math.round(Math.min(100, goalPct * 100)) + '%', lab: 'до цели',
       hint: fmt(Math.round(Math.max(0, GOAL - sum))) + ' BYN осталось' },
@@ -6667,7 +6896,14 @@ function todayCells() {
       frac: norm ? eaten / norm : 0, over: norm > 0 && eaten > norm,
       val: norm ? Math.round(eaten / norm * 100) + '%' : '—', lab: 'нормы',
       hint: norm ? (eaten > norm ? 'перебор ' + fmt(eaten - norm) : fmt(norm - eaten) + ' ккал осталось') : 'анкета не заполнена' }
-  ];
+  ]);
+}
+// свой порядок плиток, если пользователь их переставлял
+function tdApplyOrder(cells) {
+  const ord = state.tdOrder;
+  if (!Array.isArray(ord) || !ord.length) return cells;
+  const pos = id => { const i = ord.indexOf(id); return i < 0 ? 99 : i; };
+  return cells.slice().sort((a, b) => pos(a.id) - pos(b.id));
 }
 let todayMounted = false;
 function renderToday() {
@@ -6676,7 +6912,7 @@ function renderToday() {
   const cells = todayCells();
   if (!todayMounted) {
     grid.innerHTML = cells.map(c =>
-      '<button type="button" class="td-cell" onclick="switchTab(\'' + c.tab + '\')">' +
+      '<button type="button" class="td-cell" data-cell="' + c.id + '" onclick="switchTab(\'' + c.tab + '\')">' +
         sphereMarkup(c.id, c.theme) +
         '<div class="td-name">' + c.name + '</div>' +
         '<div class="td-hint" id="' + c.id + 'Hint"></div>' +
@@ -6696,6 +6932,129 @@ function renderToday() {
   document.getElementById('tdDate').textContent = dayLabel(curDay());
   document.getElementById('tdNext').disabled = curDay() >= todayStr();
 }
+
+// ---------- перестановка сфер: взятая идёт за пальцем, соседи разъезжаются ----------
+const TD_HOLD = 420, TD_SLOP = 8, TD_SETTLE = 280;
+let tdHold = null, tdHoldTimer = null, tdDrag = null, tdMoved = false;
+
+function tdCells() { return Array.prototype.slice.call(document.querySelectorAll('#tdGrid .td-cell')); }
+function tdCancelHold() { clearTimeout(tdHoldTimer); tdHoldTimer = null; tdHold = null; }
+
+// куда уезжает плитка с местом i, когда взятую переносят с from на to
+function tdSlotFor(i, from, to) {
+  if (i === from) return to;
+  if (from < to) return (i > from && i <= to) ? i - 1 : i;
+  return (i >= to && i < from) ? i + 1 : i;
+}
+
+// разложить соседей по новым слотам; взятую не трогаем — ею управляет палец
+function tdLayout() {
+  const { cells, slots, from, to, drag } = tdDrag;
+  cells.forEach((el, i) => {
+    if (i === from) return;
+    const j = tdSlotFor(i, from, to);
+    el.style.transform = j === i ? ''
+      : 'translate(' + (slots[j].x - slots[i].x) + 'px,' + (slots[j].y - slots[i].y) + 'px)';
+  });
+  void drag;
+}
+
+function tdPointerDown(e) {
+  const cell = e.target.closest && e.target.closest('#tdGrid .td-cell');
+  if (!cell) return;
+  tdHold = { cell, x0: e.clientX, y0: e.clientY };
+  clearTimeout(tdHoldTimer);
+  tdHoldTimer = setTimeout(() => {
+    tdHoldTimer = null;
+    if (!tdHold) return;
+    const cells = tdCells();
+    const from = cells.indexOf(cell);
+    if (from < 0) { tdHold = null; return; }
+    // слоты меряем один раз: сетка при переносе не перестраивается
+    const slots = cells.map(el => {
+      const r = el.getBoundingClientRect();
+      return { x: r.left, y: r.top, cx: r.left + r.width / 2, cy: r.top + r.height / 2 };
+    });
+    tdDrag = { cell, cells, slots, from, to: from, x0: tdHold.x0, y0: tdHold.y0, drag: true };
+    tdHold = null;
+    document.getElementById('tdGrid').classList.add('reordering');
+    cell.classList.add('dragging');
+    vib(18);
+  }, TD_HOLD);
+}
+
+function tdPointerMove(e) {
+  // палец поехал раньше срока — это прокрутка, а не перенос
+  if (tdHold) {
+    if (Math.abs(e.clientX - tdHold.x0) > TD_SLOP || Math.abs(e.clientY - tdHold.y0) > TD_SLOP) tdCancelHold();
+    return;
+  }
+  if (!tdDrag) return;
+  e.preventDefault();
+  tdMoved = true;
+  const dx = e.clientX - tdDrag.x0, dy = e.clientY - tdDrag.y0;
+  tdDrag.cell.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(1.06)';
+
+  // ближайший слот к центру взятой плитки — туда она и метит
+  const s0 = tdDrag.slots[tdDrag.from];
+  const cx = s0.cx + dx, cy = s0.cy + dy;
+  let best = tdDrag.to, bestD = Infinity;
+  tdDrag.slots.forEach((sl, i) => {
+    const d = (sl.cx - cx) * (sl.cx - cx) + (sl.cy - cy) * (sl.cy - cy);
+    if (d < bestD) { bestD = d; best = i; }
+  });
+  if (best !== tdDrag.to) { tdDrag.to = best; tdLayout(); vib(8); }
+}
+
+function tdPointerUp() {
+  tdCancelHold();
+  if (!tdDrag) return;
+  const g = tdDrag;
+  tdDrag = null;
+  // плитка мягко доезжает до своего слота, а не пропадает из-под пальца
+  const s0 = g.slots[g.from], s1 = g.slots[g.to];
+  g.cell.classList.remove('dragging');
+  g.cell.classList.add('settling');
+  g.cell.style.transform = 'translate(' + (s1.x - s0.x) + 'px,' + (s1.y - s0.y) + 'px)';
+  setTimeout(() => {
+    const grid = document.getElementById('tdGrid');
+    // переставляем в разметке и снимаем сдвиги одним кадром, без мигания
+    const ordered = [];
+    g.cells.forEach((el, i) => { ordered[tdSlotFor(i, g.from, g.to)] = el; });
+    g.cells.forEach(el => { el.classList.add('no-anim'); el.style.transform = ''; });
+    ordered.forEach(el => grid.appendChild(el));
+    void grid.offsetWidth;
+    g.cells.forEach(el => { el.classList.remove('no-anim'); el.classList.remove('settling'); });
+    grid.classList.remove('reordering');
+    state.tdOrder = tdCells().map(el => el.dataset.cell);
+    save();
+    tdMoved = false;
+  }, TD_SETTLE);
+  vib(12);
+}
+
+// Пока идёт перенос, страницу листать нельзя — иначе браузер забирает жест себе
+// и присылает pointercancel, а перенос обрывается на первом же движении пальца.
+function blockScrollWhileDragging(el, isActive) {
+  if (!el) return;
+  el.addEventListener('touchmove', e => { if (isActive()) e.preventDefault(); }, { passive: false });
+}
+
+(function bindTdReorder() {
+  const grid = document.getElementById('tdGrid');
+  if (!grid) return;
+  blockScrollWhileDragging(grid, () => !!tdDrag || !!tdHold);
+  grid.addEventListener('pointerdown', tdPointerDown);
+  grid.addEventListener('pointermove', tdPointerMove, { passive: false });
+  grid.addEventListener('pointerup', tdPointerUp);
+  grid.addEventListener('pointercancel', tdPointerUp);
+  grid.addEventListener('pointerleave', tdPointerUp);
+  // после переноса палец отпускается над плиткой — раздел открывать не надо
+  grid.addEventListener('click', e => {
+    if (!tdMoved) return;
+    e.preventDefault(); e.stopPropagation();
+  }, true);
+})();
 
 // ---------- календарь выбора дня ----------
 let dpMonth = null;   // первое число показываемого месяца
@@ -8224,16 +8583,6 @@ function addExpense() {
   const ts = Date.now();
   state.expenses.push({ ts, date: todayStr(), amount: Math.round(v * 100) / 100, cat: selCat, note });
 
-  // реплика хомяка при переборе дневного бюджета
-  if (allow0 > 0 && todayBefore <= allow0 && todayBefore + v > allow0) {
-    const HAM_LINES = [
-      '🐹 Я не жалуюсь, но я уже не влезаю в норку...',
-      '🐹 Ещё одна такая трата — и мне нужен второй стул',
-      '🐹 Дневной бюджет всхлипнул. Я тоже.',
-      '🐹 Толстею тут я, а стыдно должно быть тебе!'
-    ];
-    setTimeout(() => toast(HAM_LINES[Math.floor(Math.random() * HAM_LINES.length)]), 4600);
-  }
   lastAddedTs = ts;
   save();
   inp.value = ''; document.getElementById('expNote').value = '';
@@ -8242,10 +8591,6 @@ function addExpense() {
   renderSpend(); sphSplash('spend');
 
   const after = monthSpent(), L = state.limit;
-  // реплика свинки — чуть позже основного тоста
-  const remark = pigComment(v, selCat);
-  if (remark) setTimeout(() => toast('🐷 ' + remark), 2900);
-
   if (L > 0 && before < L && after >= L) { toast('🚨 Лимит месяца превышен!'); sndAch(); vib([60, 50, 60, 50, 120]); }
   else if (L > 0 && before < L * .8 && after >= L * .8) toast('⚠️ Уже 80% лимита месяца');
   else if (v >= DAY_TARGET) {
@@ -8498,10 +8843,8 @@ function renderInsight() {
         const reward = ch.reward || 2;
         if (spent === 0) {
           state.stars += reward;
-          toast('🏆 Челлендж выполнен: день без ' + cgen + '! +' + reward + '⭐');
           sndAch(); vib([20, 30, 20]);
         } else {
-          toast('🐹 Челлендж «День без ' + cgen + '» не удался. Бывает!');
         }
       } else stillActive.push(ch);
     }
@@ -8509,6 +8852,7 @@ function renderInsight() {
     localStorage.setItem(KEY, JSON.stringify(state));
   }
 
+  box.style.display = 'none'; return;   // челленджи с наградами убраны
   const suggestions = detectLeakCats();
   if (!state.chals.length && !suggestions.length) { box.style.display = 'none'; return; }
   box.style.display = '';
@@ -8534,7 +8878,6 @@ function startChal(cat, reward) {
   const d = new Date(); d.setDate(d.getDate() + 1);
   state.chals.push({ cat, day: todayStr(d), reward: reward || 2 });
   localStorage.setItem(KEY, JSON.stringify(state));
-  toast('🐹 Принято! Завтра — день без «' + catById(cat).name + '». Я слежу.');
   sndStar();
   renderInsight();
 }
@@ -9531,6 +9874,7 @@ function renderEvening() {
   const IC_WARN = G('<path d="M12 4.5v9.5"/><circle cx="12" cy="18.5" r="1.7" fill="#fff" stroke="none"/>');
   const IC_ENV  = G('<rect x="3.5" y="6" width="17" height="12" rx="2"/><path d="M4.5 7.5l7.5 5.5 7.5-5.5"/>');
   const IC_NUM  = '<b style="color:#fff; font-size:15px">' + s + '</b>';
+  const IC_HAB  = G('<path d="M4 12.5l5 5L20 6.5"/><path d="M4 19h16" opacity=".45"/>');
 
   const rows = [];
   if (L > 0) rows.push(sumToday <= allowance + .01
@@ -9540,9 +9884,29 @@ function renderEvening() {
   rows.push(envToday.length
     ? [IC_OK, '#e8a820', 'Конверт закрыт: <b>+' + fmt(envSum) + ' BYN</b> в копилку']
     : [IC_ENV, '#64d2ff', 'Конверт сегодня ещё не закрыт']);
+  // привычки за день
+  const hTot = state.habits.length;
+  if (hTot) {
+    const day = todayStr();
+    const hDone = state.habits.filter(h => h.log.includes(day)).length;
+    rows.push(hDone === hTot
+      ? [IC_OK, '#f2712a', 'Привычки: <b>все ' + hTot + '</b> закрыты']
+      : [IC_HAB, '#f2712a', 'Привычки: <b>' + hDone + ' из ' + hTot + '</b>' +
+          (hDone ? '' : ' — сегодня ещё ничего')]);
+  }
+  // питание за день
+  const nut = state.nutri;
+  if (nut) {
+    const day = todayStr();
+    const eatenK = fdTotals(day).k, normK = nut.kcal + fdBurned(day);
+    if (eatenK > normK) rows.push([IC_WARN, '#e2653c',
+      'Питание: <b>' + fmt(Math.round(eatenK - normK)) + '</b> ккал сверх нормы']);
+    else rows.push([IC_OK, '#26a349',
+      'Питание: <b>' + fmt(Math.round(eatenK)) + '</b> из ' + fmt(Math.round(normK)) + ' ккал']);
+  }
   rows.push([IC_NUM, '#ff6b35', 'Стрик: <b>' + s + '</b> ' + plural(s, 'день', 'дня', 'дней') + ' подряд']);
   document.getElementById('evRows').innerHTML =
-    rows.map(r => '<div class="ev-row"><span class="ev-badge" style="background:' + r[1] + '55">' +
+    rows.map(r => '<div class="ev-row"><span class="ev-badge" style="background:' + r[1] + '">' +
       r[0] + '</span><span>' + r[2] + '</span></div>').join('');
 
   const btns = [];
@@ -9550,8 +9914,8 @@ function renderEvening() {
   if (!envToday.length && reco >= 0)
     btns.push('<button class="m-ok" onclick="evCloseReco()">Закрыть конверт · ~' + ENV[reco] + ' BYN</button>');
   if (L > 0 && todayLeft > 0 && total() < GOAL)
-    btns.push('<button class="m-ok" style="background:linear-gradient(135deg,#30d158,#5be07f); box-shadow:0 6px 16px rgba(48,209,88,.35)" ' +
-      'onclick="evSweep(' + todayLeft + ')">Отложить остаток дня · ' + fmt(todayLeft) + ' BYN</button>');
+    btns.push('<button class="m-ok" onclick="evSweep(' + todayLeft + ')">' +
+      'Отложить остаток дня · ' + fmt(todayLeft) + ' BYN</button>');
   btns.push('<button class="m-cancel" onclick="closeEvening()">Готово</button>');
   document.getElementById('evBtns').innerHTML = btns.join('');
 }
