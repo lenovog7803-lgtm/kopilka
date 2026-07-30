@@ -51,7 +51,7 @@
     --accent-soft: rgba(0,122,255,.12);
     --green: #34c759;
     --red: #ff3b30;
-    --orange: #ff9500;
+    --orange: #0a84ff;
     --yellow: #ffcc00;
     --radius: 16px;
 
@@ -77,7 +77,15 @@
   body {
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
     color: var(--text);
-    background: var(--bg);
+    background-color: var(--bg);
+    /* пятна прибиты к экрану: сколько бы ни было содержимого, стыка не будет */
+    background-image:
+      radial-gradient(60vmax 60vmax at -8% -6%,  rgba(255,209,102,.42), transparent 70%),
+      radial-gradient(52vmax 52vmax at 106% -4%, rgba(255,155,143,.42), transparent 70%),
+      radial-gradient(58vmax 58vmax at 104% 104%, rgba(121,230,164,.42), transparent 70%),
+      radial-gradient(48vmax 48vmax at -6% 106%, rgba(168,198,255,.42), transparent 70%);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
     letter-spacing: -.24px;
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
@@ -88,13 +96,18 @@
   }
 
   /* ---- animated pastel blobs ---- */
-  /* мягкие цветные пятна: тихие, без дрейфа — только свет под стеклом */
-  .blobs { position:fixed; inset:0; z-index:-1; overflow:hidden; filter:blur(80px); }
-  .blob { position:absolute; border-radius:50%; opacity:.42; }
-  .b1 { width:60vmax; height:60vmax; background:#ffd166; top:-18%; left:-18%; }
-  .b2 { width:50vmax; height:50vmax; background:#ff9b8f; top:-10%; right:-16%; }
-  .b3 { width:55vmax; height:55vmax; background:#79e6a4; bottom:-18%; right:-14%; }
-  .b4 { width:45vmax; height:45vmax; background:#a8c6ff; bottom:-10%; left:-14%; }
+  /* Мягкие цветные пятна. Раньше это были залитые круги под фильтром размытия:
+     на телефоне такой слой пересчитывается каждый кадр и тормозит прокрутку.
+     Теперь размытость нарисована самим градиентом — картинка та же, фильтра нет. */
+  .blobs { display:none; }
+  .blob {
+    position:absolute; border-radius:50%; opacity:.42;
+    background-image: radial-gradient(circle at 50% 50%, var(--c) 0%, rgba(255,255,255,0) 68%);
+  }
+  .b1 { width:90vmax; height:90vmax; --c:#ffd166; top:-32%; left:-32%; }
+  .b2 { width:78vmax; height:78vmax; --c:#ff9b8f; top:-24%; right:-28%; }
+  .b3 { width:85vmax; height:85vmax; --c:#79e6a4; bottom:-30%; right:-26%; }
+  .b4 { width:72vmax; height:72vmax; --c:#a8c6ff; bottom:-22%; left:-26%; }
   @keyframes drift {
     from { transform: translate(0,0) scale(1); }
     to   { transform: translate(6vmax,-5vmax) scale(1.15); }
@@ -209,8 +222,8 @@
   .limit-cta {
     display:block; width:100%; margin-top:12px; border:none; cursor:pointer; font-family:inherit;
     font-size:15px; font-weight:700; padding:13px 0; border-radius:18px; color:#fff;
-    background:linear-gradient(160deg,#4cd97b,#26a349);
-    box-shadow:0 6px 15px rgba(38,163,73,.3);
+    background:var(--accent);
+    box-shadow:0 6px 15px rgba(10,132,255,.3);
   }
   .limit-cta:active { transform:scale(.97); }
 
@@ -227,8 +240,8 @@
     font-variant-numeric: tabular-nums;
     transition: color .4s;
   }
-  .db-sum.ok { color:#26a349; }
-  .db-sum.mid { color:#e0730f; }
+  .db-sum.ok { color:#0a84ff; }
+  .db-sum.mid { color:#0a84ff; }
   .db-sum.bad { color:#d63a3a; }
   .db-note { font-size:12.5px; color:var(--text2); }
 
@@ -237,11 +250,11 @@
     display:flex; align-items:center; gap:7px; justify-content:center;
     margin-top:9px; padding:8px 11px; border-radius:13px;
     font-size:12.5px; font-weight:600; text-align:center;
-    background: rgba(38,163,73,.1);
-    color: #1d7a3c;
+    background: rgba(10,132,255,.1);
+    color: #0a84ff;
   }
   .forecast-line b { color:#146b31; font-variant-numeric:tabular-nums; }
-  .forecast-line.risk { background:rgba(224,115,15,.12); color:#a85c0c; }
+  .forecast-line.risk { background:rgba(10,132,255,.12); color:#a85c0c; }
   .forecast-line.risk b { color:#8f4d08; }
   .forecast-line.over { background:rgba(214,58,58,.12); color:#b03131; }
   .forecast-line.over b { color:#962727; }
@@ -254,7 +267,7 @@
   .cmp-sum { width:74px; text-align:right; font-weight:700; font-size:13px; font-variant-numeric:tabular-nums; }
   .cc-arrow { font-weight:800; font-size:13px; width:52px; text-align:right; font-variant-numeric:tabular-nums; }
   .cc-arrow.up { color:#d63a3a; }
-  .cc-arrow.down { color:#26a349; }
+  .cc-arrow.down { color:#0a84ff; }
 
   /* порядок карточек расходов: хомяк первым */
   #viewSpend > .card:nth-child(1) { order:2; }
@@ -435,11 +448,11 @@
     background:
       radial-gradient(circle 4px at 8% 70%,  #ff5d5d 0 4px, transparent 5px),
       radial-gradient(circle 4px at 22% 40%, #ffd35c 0 4px, transparent 5px),
-      radial-gradient(circle 4px at 36% 75%, #30d158 0 4px, transparent 5px),
+      radial-gradient(circle 4px at 36% 75%, #0a84ff 0 4px, transparent 5px),
       radial-gradient(circle 4px at 50% 40%, #5e9dff 0 4px, transparent 5px),
       radial-gradient(circle 4px at 64% 75%, #ff5d5d 0 4px, transparent 5px),
       radial-gradient(circle 4px at 78% 40%, #ffd35c 0 4px, transparent 5px),
-      radial-gradient(circle 4px at 92% 70%, #30d158 0 4px, transparent 5px);
+      radial-gradient(circle 4px at 92% 70%, #0a84ff 0 4px, transparent 5px);
     animation: twinkle 1.6s ease-in-out infinite alternate;
     pointer-events:none;
   }
@@ -527,13 +540,13 @@
   /* сумма и процент в одну строку: процент справа от числа */
   .sum-row { display:flex; align-items:baseline; gap:8px; flex-wrap:nowrap; }
   .jar-info .pct {
-    font-size:15px; font-weight:700; color:#c78a00; flex-shrink:0;
+    font-size:15px; font-weight:700; color:#0a84ff; flex-shrink:0;
     background:rgba(255,211,92,.28); border-radius:9px; padding:2px 7px;
     line-height:1.25; white-space:nowrap;
   }
   .jar-info .sum { font-size:36px; font-weight:800; letter-spacing:-1px; margin:2px 0; font-variant-numeric: tabular-nums; }
   .jar-info .goal { font-size:13px; color:var(--text2); }
-  .jar-info .stars { margin-top:8px; font-size:14px; font-weight:700; color:#c78a00; }
+  .jar-info .stars { margin-top:8px; font-size:14px; font-weight:700; color:#0a84ff; }
   .lvl { margin-top:7px; font-size:12px; font-weight:600; color:var(--text2); }
   .lvl b { color:var(--text); }
   .xp-bar {
@@ -593,7 +606,7 @@
     position:fixed; left:0; top:0; z-index:60; pointer-events:none;
     width:28px; height:28px; margin:-14px 0 0 -14px;
     border-radius:50%;
-    background: radial-gradient(circle at 36% 30%, #ffeeb0 0%, #ffd35c 48%, #e39d15 100%);
+    background: radial-gradient(circle at 36% 30%, #ffeeb0 0%, #ffd35c 48%, #0a84ff 100%);
     box-shadow: inset 0 -3px 5px rgba(160,105,10,.5), inset 0 2px 3px rgba(255,255,255,.8), 0 4px 12px rgba(180,120,20,.45);
   }
   .fly-coin::after { content:''; position:absolute; inset:4px; border-radius:50%; border:2px solid rgba(180,125,20,.5); }
@@ -672,7 +685,9 @@
     max-height: 440px; overflow-y:auto; padding:6px 3px 10px;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
-    perspective: 900px;
+    /* perspective больше не нужна: разворотов нет, а она поднимала
+       все шестьдесят ячеек в отдельные 3D-слои */
+    contain: layout paint style;
   }
   .env { position:relative; aspect-ratio: 1 / .78; cursor:pointer; user-select:none; contain: layout style; }
   .env-inner {
@@ -726,13 +741,13 @@
     transform: rotateY(180deg) translateZ(.5px);
     background: linear-gradient(160deg, #f7e09e 0%, #eec96e 55%, #e5b954 100%);
     border:1px solid rgba(214,164,60,.55);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.7), inset 0 -2px 6px rgba(180,125,30,.25), 0 3px 10px rgba(190,140,40,.18);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.7), inset 0 -2px 6px rgba(180,125,30,.25), 0 3px 10px rgba(10,132,255,.18);
     justify-content:center; gap:0; padding-bottom:0;
   }
   .seal {                                  /* золотая монетка на конверте */
     position:relative;
     width:30px; height:30px; border-radius:50%;
-    background: radial-gradient(circle at 36% 30%, #ffeeb0 0%, #ffd35c 48%, #e39d15 100%);
+    background: radial-gradient(circle at 36% 30%, #ffeeb0 0%, #ffd35c 48%, #0a84ff 100%);
     box-shadow:
       inset 0 -2px 4px rgba(160,105,10,.5),
       inset 0 1px 2px rgba(255,255,255,.8),
@@ -805,34 +820,34 @@
     border-radius:22px;
     transition: background .4s, box-shadow .4s;
   }
-  .q-tile.done { background: rgba(255,255,255,.6); box-shadow: 0 6px 18px rgba(48,209,88,.18); }
+  .q-tile.done { background: rgba(255,255,255,.6); box-shadow: 0 6px 18px rgba(10,132,255,.18); }
   .q-ring { position:relative; width:66px; height:66px; }
   .q-ring svg { position:absolute; inset:0; transform: rotate(-90deg); }
   .q-ring .rbg { stroke: rgba(255,255,255,.65); }
   .q-ring .rfg { stroke:#0a84ff; stroke-linecap:round; transition: stroke-dashoffset .9s cubic-bezier(.22,1,.36,1), stroke .4s; }
-  .q-tile.done .rfg { stroke:#30d158; }
+  .q-tile.done .rfg { stroke:#0a84ff; }
   .q-ico { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:25px; }
   .q-check {
     position:absolute; top:-3px; right:-3px; width:21px; height:21px;
-    border-radius:50%; background:#30d158; color:#fff;
+    border-radius:50%; background:#0a84ff; color:#fff;
     font-size:11px; font-weight:800;
     display:flex; align-items:center; justify-content:center;
-    box-shadow: 0 2px 7px rgba(48,209,88,.5);
+    box-shadow: 0 2px 7px rgba(10,132,255,.5);
     animation: pop .5s cubic-bezier(.22,1.6,.36,1);
   }
   @keyframes pop { 0%{transform:scale(0)} 70%{transform:scale(1.2)} 100%{transform:scale(1)} }
   .q-tile { position:relative; }
   .q-name { font-size:11.5px; font-weight:600; line-height:1.25; color:var(--text); min-height:29px; display:flex; align-items:center; justify-content:center; }
   .q-val { font-size:12px; font-weight:700; color:var(--text2); font-variant-numeric: tabular-nums; }
-  .q-tile.done .q-val { color:#26a349; }
+  .q-tile.done .q-val { color:#0a84ff; }
   /* в привычках зелёный — только когда план полностью выполнен (неделя/цель), иначе нейтральный */
   #habitsGrid .q-tile.done .q-val { color:var(--text2); }
-  #habitsGrid .q-val.full { color:#26a349; }
+  #habitsGrid .q-val.full { color:#0a84ff; }
   /* единый визуальный размер всех иконок-объектов на плитках + воздух между строками */
   #habitsGrid svg.q-vessel { width:48px; height:44px; }
   #habitsGrid .q-tile { gap:9px; }
   #habitsGrid .q-val { margin-top:1px; }
-  .q-reward { font-size:11px; font-weight:700; color:#c78a00; }
+  .q-reward { font-size:11px; font-weight:700; color:#0a84ff; }
   /* привычки: плитки без своей рамки — все на одном общем фоне карточки */
   #habitsGrid .q-tile, #habitsGrid .q-tile.done {
     background:none; border:none; box-shadow:none;
@@ -841,7 +856,7 @@
   .habits-card { padding:14px 10px; transition: none; }
   #habitsGrid { row-gap:6px; }
   /* пустые слоты-добивки держат высоту ряда, чтобы фон менялся ровными шагами */
-  #habitsGrid .q-empty { pointer-events:none; visibility:hidden; }
+  #habitsGrid .q-empty { display:none; }
   #habitsGrid .q-tile.done .q-flame { display:inline-block; animation: qFlameBounce 1.6s ease-in-out infinite; }
   @keyframes qFlameBounce { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-3px) scale(1.15); } }
 
@@ -857,10 +872,10 @@
   }
   .shop-item:active { transform: scale(.92); }
   .shop-item .s-ico { font-size:26px; }
-  .shop-item .s-cost { font-size:11px; font-weight:700; color:#c78a00; }
+  .shop-item .s-cost { font-size:11px; font-weight:700; color:#0a84ff; }
   .shop-item.locked { opacity:.55; }
   .shop-item.worn { background: rgba(255,255,255,.7); box-shadow: 0 4px 14px rgba(10,132,255,.2); }
-  .shop-item.owned .s-cost { color:#26a349; }
+  .shop-item.owned .s-cost { color:#0a84ff; }
   /* редкости: бронза / серебро / золото */
   .shop-item.r1 { border-color: rgba(201,141,95,.55); }
   .shop-item.r2 {
@@ -886,8 +901,8 @@
   }
   .sbox .v { font-size:19px; font-weight:800; font-variant-numeric: tabular-nums; }
   .sbox .l { font-size:11.5px; color:var(--text2); margin-top:2px; }
-  .sbox .v.ok { color:#26a349; }
-  .sbox .v.warn { color:#e0730f; }
+  .sbox .v.ok { color:#0a84ff; }
+  .sbox .v.warn { color:#0a84ff; }
 
   /* ---- ачивки ---- */
   .ach-grid { display:grid; grid-template-columns: repeat(4,1fr); gap:10px; margin-top:12px; }
@@ -1225,8 +1240,8 @@
   }
 
   /* ---- оптимизация для телефона ---- */
-  .env-grid { content-visibility: auto; contain-intrinsic-size: auto 440px; }
-  .ach-grid { content-visibility: auto; contain-intrinsic-size: auto 300px; }
+  /* content-visibility резервировал место под ещё не нарисованное содержимое —
+     на телефоне это выглядело как белый прямоугольник под карточкой */
   @media (max-width: 700px) {
     /* карточки без blur-подложки: выглядит почти так же, работает в разы легче */
     .card {
@@ -1234,8 +1249,7 @@
       backdrop-filter: none;
       background: rgba(252,253,255,.82);
     }
-    /* фон: пятна не дрейфуют — размытие считается один раз, а не каждый кадр */
-    .blobs { filter: blur(46px); }
+    /* на телефоне фон и так без фильтра — трогать нечего */
     .blob { animation: none; }
     /* аура уровня — статичная (пульс размытого слоя очень дорог) */
     .pig-aura { animation: none; }
@@ -1265,7 +1279,7 @@
     .env.fid { animation: none; }
     /* конверты: простые тени — 171 штука рисуется заметно быстрее */
     .face.front { box-shadow: 0 2px 6px rgba(60,70,110,.10); }
-    .face.back { box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 2px 6px rgba(190,140,40,.16); }
+    .face.back { box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 2px 6px rgba(10,132,255,.16); }
     /* hover-эффекты не нужны на таче (залипают после тапа) */
     .env:not(.closed):hover { filter: none; }
     .env:not(.closed):hover .face.front::before { transform: none; }
@@ -1336,13 +1350,13 @@
   .chal-txt { flex:1; min-width:140px; font-size:13px; }
   .chal-txt b { font-weight:700; }
   .chal-sub { font-size:11.5px; color:var(--text2); margin-top:2px; }
-  .chal-reward { font-weight:800; color:#c78a00; font-size:13px; flex-shrink:0; }
+  .chal-reward { font-weight:800; color:#0a84ff; font-size:13px; flex-shrink:0; }
   .chal-row button {
     flex-shrink:0; border:none; cursor:pointer; font-family:inherit;
     font-size:12px; font-weight:700; color:#fff; white-space:nowrap;
-    background: linear-gradient(135deg,#30d158,#5be07f);
+    background: linear-gradient(135deg,#0a84ff,#5be07f);
     padding:9px 13px; border-radius:12px;
-    box-shadow: 0 3px 8px rgba(48,209,88,.3);
+    box-shadow: 0 3px 8px rgba(10,132,255,.3);
   }
   @media (max-width: 420px) {
     .chal-row button { width:100%; }
@@ -1431,14 +1445,14 @@
   #heDaysRow { margin-top:2px; }
   .he-today-row {
     display:flex; align-items:center; justify-content:space-between; gap:10px;
-    background:rgba(255,150,50,.1); border-radius:14px; padding:8px 9px 8px 14px;
+    background:rgba(10,132,255,.1); border-radius:14px; padding:8px 9px 8px 14px;
   }
   .he-today-txt { font-size:13px; font-weight:600; color:var(--text2); }
-  .he-today-txt b { color:#c76a1a; }
+  .he-today-txt b { color:#0a84ff; }
   .he-step { display:flex; gap:6px; }
   .he-step button {
     width:31px; height:31px; border-radius:50%; border:none; cursor:pointer; font-family:inherit;
-    font-size:17px; font-weight:700; line-height:1; color:#c76a1a; background:#fff;
+    font-size:17px; font-weight:700; line-height:1; color:#0a84ff; background:#fff;
     box-shadow:0 1px 3px rgba(120,80,40,.14);
     display:flex; align-items:center; justify-content:center;
     transition: transform .15s;
@@ -1446,14 +1460,14 @@
   .he-step button:active { transform: scale(.88); background:rgba(255,180,110,.35); }
   /* дни недели в огненной гамме, чтобы не спорить со вкладкой привычек */
   #heDaysRow .dchip.sel, #chDays .dchip.sel {
-    background: rgba(242,113,42,.13);
-    color:#c76a1a; border-color:#f2712a;
-    box-shadow: 0 0 0 2px rgba(242,113,42,.12);
+    background: rgba(10,132,255,.13);
+    color:#0a84ff; border-color:#0a84ff;
+    box-shadow: 0 0 0 2px rgba(10,132,255,.12);
   }
   .he-save {
-    background: linear-gradient(160deg, #ffb03e, #f2712a) !important;
+    background: var(--accent) !important;
     color:#fff !important;
-    box-shadow: 0 5px 13px rgba(242,113,42,.32);
+    box-shadow: 0 5px 13px rgba(10,132,255,.32);
   }
   /* заметка «зачем» в шапке модалки редактирования */
   .he-why {
@@ -1464,7 +1478,7 @@
   .he-why-txt { flex:1; font-size:12.5px; line-height:1.45; color:#8a5a12; font-style:italic; }
   .he-why-edit {
     flex-shrink:0; width:24px; height:24px; border-radius:50%; border:none; cursor:pointer;
-    background:rgba(255,255,255,.7); color:#c76a1a; font-size:12px; font-family:inherit;
+    background:rgba(255,255,255,.7); color:#0a84ff; font-size:12px; font-family:inherit;
   }
   .he-why-edit:active { transform:scale(.9); }
   /* мини-календарь конкретной привычки с правкой прошлых дней */
@@ -1472,13 +1486,13 @@
   .he-cal-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:7px; }
   .he-cal-nav {
     width:24px; height:24px; border-radius:50%; border:none; cursor:pointer; font-family:inherit;
-    font-size:14px; font-weight:700; color:#c76a1a; background:rgba(255,150,50,.12);
+    font-size:14px; font-weight:700; color:#0a84ff; background:rgba(10,132,255,.12);
     display:flex; align-items:center; justify-content:center;
   }
   .he-cal-nav:active { transform:scale(.9); }
   .he-cal-nav:disabled { opacity:.3; }
   .he-cal-stats { font-size:11px; font-weight:600; color:var(--text2); }
-  .he-cal-stats b { color:#c76a1a; }
+  .he-cal-stats b { color:#0a84ff; }
   .he-cal-wd { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; margin-bottom:3px; }
   .he-cal-wd span { text-align:center; font-size:8.5px; font-weight:500; color:rgba(28,28,46,.34); text-transform:uppercase; }
   .he-cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
@@ -1490,11 +1504,11 @@
   }
   .hc-day:active { transform:scale(.85); }
   .hc-day.pad { background:none; cursor:default; }
-  .hc-day.done { background:linear-gradient(160deg,#ffb03e,#f2712a); color:#fff; font-weight:600; }
-  .hc-day.part { background:rgba(242,113,42,.24); color:#a8500c; font-weight:600; }
+  .hc-day.done { background:var(--accent); color:#fff; font-weight:600; }
+  .hc-day.part { background:rgba(10,132,255,.24); color:#0a84ff; font-weight:600; }
   .hc-day.off { background:none; color:rgba(28,28,46,.2); }
   .hc-day.future { background:none; color:rgba(28,28,46,.15); cursor:default; }
-  .hc-day.today { box-shadow:0 0 0 1.6px #f2712a; }
+  .hc-day.today { box-shadow:0 0 0 1.6px #0a84ff; }
   .he-cal-hint { font-size:9.5px; color:rgba(28,28,46,.35); text-align:center; margin:6px 0 0; }
   /* модалка «зачем» при добавлении привычки */
   #whyModal {
@@ -1514,12 +1528,12 @@
     padding:11px 13px; font-size:14px; font-family:inherit; color:var(--text);
     outline:none; resize:none; line-height:1.45;
   }
-  #whyText:focus { border-color:rgba(242,113,42,.6); }
+  #whyText:focus { border-color:rgba(10,132,255,.6); }
   .why-save {
     display:block; width:100%; margin-top:13px; border:none; cursor:pointer; font-family:inherit;
     font-size:15px; font-weight:700; padding:12px 0; border-radius:16px; color:#fff;
-    background:linear-gradient(160deg,#ffb03e,#f2712a);
-    box-shadow:0 6px 14px rgba(242,113,42,.3);
+    background:var(--accent);
+    box-shadow:0 6px 14px rgba(10,132,255,.3);
   }
   .why-save:active { transform:scale(.97); }
   .why-skip {
@@ -1648,7 +1662,7 @@
   .drag-coin {
     position:fixed; z-index:130; width:40px; height:40px; border-radius:50%;
     margin:-20px 0 0 -20px; cursor:grab; touch-action:none;
-    background: radial-gradient(circle at 36% 30%, #ffeeb0, #ffd35c 48%, #e39d15);
+    background: radial-gradient(circle at 36% 30%, #ffeeb0, #ffd35c 48%, #0a84ff);
     box-shadow: inset 0 -3px 5px rgba(160,105,10,.5), 0 6px 16px rgba(180,120,20,.45);
   }
   .drag-coin::after { content:''; position:absolute; inset:6px; border-radius:50%; border:2px solid rgba(180,125,20,.5); }
@@ -1707,6 +1721,7 @@
   .ev-badge {
     width:30px; height:30px; flex-shrink:0; border-radius:8px;
     display:flex; align-items:center; justify-content:center; font-size:16px;
+    background: var(--accent);
   }
   #evBtns { margin-top:var(--s5); }
   #evBtns .m-ok, #evBtns .m-cancel { width:100%; }
@@ -1921,8 +1936,8 @@
   .fd-setup-btn, .fd-ok {
     display:block; width:100%; border:none; cursor:pointer; font-family:inherit;
     font-size:15px; font-weight:700; padding:13px 0; border-radius:16px; color:#fff;
-    background:linear-gradient(160deg,#5fe08a,#26a349);
-    box-shadow:0 6px 15px rgba(38,163,73,.3);
+    background:var(--accent);
+    box-shadow:0 6px 15px rgba(10,132,255,.3);
   }
   .fd-ok { box-shadow:none; }
   .fd-setup-btn:active, .fd-ok:active { transform:scale(.97); }
@@ -1986,7 +2001,7 @@
   .fd-m-head b { font-size:12px; color:var(--text); font-variant-numeric:tabular-nums; white-space:nowrap; }
   .fd-m-bar { height:6px; border-radius:3px; background:rgba(120,130,160,.16); overflow:hidden; }
   .fd-m-bar i { display:block; height:100%; border-radius:3px; transition:width .6s cubic-bezier(.22,1,.36,1); }
-  .fd-m-bar i.m-p { background:linear-gradient(90deg,#5fe08a,#26a349); }
+  .fd-m-bar i.m-p { background:var(--accent); }
   .fd-m-bar i.m-f { background:linear-gradient(90deg,#ffd36a,#f0a72e); }
   .fd-m-bar i.m-c { background:linear-gradient(90deg,#8fb8ff,#4a7fe0); }
   .fd-m-bar i.over { background:linear-gradient(90deg,#ff8080,#d63a3a) !important; }
@@ -2164,7 +2179,7 @@
   .hab-add {
     flex-shrink:0; width:34px; height:34px; padding:0;
     border:none; border-radius:50%; cursor:pointer;
-    background:#f2712a; color:#fff;
+    background:#0a84ff; color:#fff;
     display:flex; align-items:center; justify-content:center;
     touch-action: manipulation; -webkit-tap-highlight-color: transparent;
     transition: transform .18s var(--spring), background .2s;
@@ -2320,7 +2335,7 @@
   .set-block .add-btn {
     display:block; width:100%; margin:11px 0 0; padding:0 14px; height:44px;
     border:none; border-radius:14px; cursor:pointer; box-shadow:none;
-    background:linear-gradient(135deg,#5fe08a,#26a349); color:#fff;
+    background:var(--accent); color:#fff;
     font-size:13.5px; font-weight:700; font-family:inherit;
   }
   .set-block .add-btn:active { transform:scale(.985); }
@@ -2331,21 +2346,21 @@
     font-size:14px; font-family:inherit; color:var(--text); outline:none;
   }
   .set-block .extra-row input::placeholder { font-size:12.5px; text-transform:none; letter-spacing:0; }
-  .set-block .extra-row input:focus { border-color:rgba(38,163,73,.6); }
+  .set-block .extra-row input:focus { border-color:rgba(10,132,255,.6); }
   .set-block .extra-row button {
     flex:0 0 70px; height:44px; border:none; border-radius:14px; cursor:pointer;
-    background:rgba(38,163,73,.14); color:#1d7a3c;
+    background:rgba(10,132,255,.14); color:#0a84ff;
     font-size:13.5px; font-weight:700; font-family:inherit;
   }
   .set-block .extra-row button:active { transform:scale(.96); }
   .set-block .sync-code {
     text-align:center; font-size:26px; font-weight:800; letter-spacing:4px;
-    padding:12px; border-radius:14px; background:rgba(38,163,73,.1); color:#1d7a3c;
+    padding:12px; border-radius:14px; background:rgba(10,132,255,.1); color:#0a84ff;
     cursor:pointer; margin:0 0 8px;
   }
   .set-warn {
     padding:11px 12px; border-radius:12px;
-    background:rgba(242,113,42,.09); border:1px solid rgba(242,113,42,.22); color:#8a4a12 !important;
+    background:rgba(10,132,255,.09); border:1px solid rgba(10,132,255,.22); color:#8a4a12 !important;
   }
   .set-why {
     display:block; margin-top:7px; font-size:11px; opacity:.75; word-break:break-word;
@@ -2387,7 +2402,7 @@
     width:100%; border:1px solid rgba(120,130,160,.3); background:#fff; border-radius:14px;
     padding:11px 13px; font-size:15px; font-family:inherit; color:var(--text); outline:none; margin-bottom:10px;
   }
-  #dishModal input:focus, #quickModal input:focus { border-color:rgba(38,163,73,.6); }
+  #dishModal input:focus, #quickModal input:focus { border-color:rgba(10,132,255,.6); }
   /* повтор приёма */
   .rp-opt {
     display:flex; align-items:center; gap:10px; padding:11px 12px; border-radius:14px; cursor:pointer;
@@ -2397,7 +2412,7 @@
   .rp-opt-n { flex:1; min-width:0; }
   .rp-opt-d { font-size:11px; color:var(--text2); font-weight:700; text-transform:uppercase; letter-spacing:.3px; }
   .rp-opt-l { font-size:13px; color:var(--text); margin-top:2px; line-height:1.35; }
-  .rp-opt-k { font-size:13px; font-weight:800; color:#1d7a3c; flex-shrink:0; font-variant-numeric:tabular-nums; }
+  .rp-opt-k { font-size:13px; font-weight:800; color:#0a84ff; flex-shrink:0; font-variant-numeric:tabular-nums; }
   /* блюдо */
   .dish-items { margin:2px 0 10px; }
   .dish-row { display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:12px; background:rgba(255,255,255,.55); margin-bottom:6px; }
@@ -2405,8 +2420,8 @@
   .dish-row-g { font-size:11.5px; color:var(--text2); }
   .dish-row-x { border:none; background:none; color:var(--text2); font-size:15px; cursor:pointer; padding:2px 4px; }
   .dish-total {
-    padding:9px 12px; border-radius:13px; background:rgba(38,163,73,.1);
-    font-size:12.5px; font-weight:700; color:#1d7a3c; text-align:center; margin-bottom:10px;
+    padding:9px 12px; border-radius:13px; background:rgba(10,132,255,.1);
+    font-size:12.5px; font-weight:700; color:#0a84ff; text-align:center; margin-bottom:10px;
   }
   .dish-total:empty { display:none; }
   .fa-dish { border-color:rgba(90,120,255,.4) !important; background:linear-gradient(135deg, rgba(120,150,255,.2), rgba(70,110,255,.14)) !important; color:#2b46a8 !important; }
@@ -2424,7 +2439,7 @@
   }
   .rm-act.danger { color:#c33; }
   .rm-act:active { transform:scale(.985); }
-  .fd-row.pressed { background:rgba(38,163,73,.1); border-radius:12px; }
+  .fd-row.pressed { background:rgba(10,132,255,.1); border-radius:12px; }
   /* чем добрать */
   .fd-tip-sub { font-size:12.5px; color:var(--text2); margin:-4px 0 10px; line-height:1.4; }
   .fd-tips { display:flex; flex-direction:column; gap:7px; }
@@ -2436,7 +2451,7 @@
   .fd-tip:active { transform:scale(.985); }
   .fd-tip-n { flex:1; min-width:0; font-size:13.5px; font-weight:700; color:var(--text); }
   .fd-tip-g { display:block; font-size:11px; color:var(--text2); font-weight:600; margin-top:2px; }
-  .fd-tip-k { font-size:12.5px; font-weight:800; color:#1d7a3c; flex-shrink:0; font-variant-numeric:tabular-nums; }
+  .fd-tip-k { font-size:12.5px; font-weight:800; color:#0a84ff; flex-shrink:0; font-variant-numeric:tabular-nums; }
   .pt-mode { display:flex; gap:6px; margin:0 0 12px; }
   .pt-mode .pchip { flex:1; font-size:13px; padding:9px 4px; }
   .fd-meal-head { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
@@ -2444,13 +2459,13 @@
   .fd-meal-kcal { font-size:12.5px; color:var(--text2); font-weight:700; font-variant-numeric:tabular-nums; }
   .fd-meal-rep {
     border:none; border-radius:11px; padding:6px 10px; cursor:pointer; font-family:inherit;
-    background:rgba(38,163,73,.12); color:#1d7a3c; font-size:11.5px; font-weight:700; flex-shrink:0;
+    background:rgba(10,132,255,.12); color:#0a84ff; font-size:11.5px; font-weight:700; flex-shrink:0;
   }
   .fd-meal-rep:active { transform:scale(.95); }
   .fd-meal-add {
     width:28px; height:28px; border-radius:50%; border:none; cursor:pointer; flex-shrink:0;
     font-size:17px; font-weight:800; line-height:1; color:#fff; font-family:inherit;
-    background:linear-gradient(160deg,#5fe08a,#26a349);
+    background:var(--accent);
     display:flex; align-items:center; justify-content:center;
   }
   .fd-meal-add:active { transform:scale(.9); }
@@ -2473,7 +2488,7 @@
   .fd-sec { display:flex; align-items:center; justify-content:space-between; }
   .fd-add-w {
     border:none; cursor:pointer; font-family:inherit; font-size:12px; font-weight:700;
-    color:#1d7a3c; background:rgba(38,163,73,.12); border-radius:11px; padding:6px 11px;
+    color:#0a84ff; background:rgba(10,132,255,.12); border-radius:11px; padding:6px 11px;
   }
   .fd-add-w:active { transform:scale(.94); }
   /* вес */
@@ -2481,7 +2496,7 @@
   .fd-w-val { font-size:26px; font-weight:800; letter-spacing:-.6px; font-variant-numeric:tabular-nums; }
   .fd-w-unit { font-size:13px; color:var(--text2); }
   .fd-w-delta { font-size:12.5px; font-weight:700; }
-  .fd-w-delta.down { color:#26a349; }
+  .fd-w-delta.down { color:#0a84ff; }
   .fd-w-delta.up { color:#d63a3a; }
   .fd-w-goal { font-size:12px; color:var(--text2); margin-top:2px; }
   /* неделя */
@@ -2490,12 +2505,12 @@
   .fd-wd-bar { height:56px; display:flex; align-items:flex-end; justify-content:center; }
   .fd-wd-bar i {
     display:block; width:70%; border-radius:5px 5px 3px 3px; min-height:3px;
-    background:linear-gradient(180deg,#5fe08a,#26a349); transition:height .6s cubic-bezier(.22,1,.36,1);
+    background:var(--accent); transition:height .6s cubic-bezier(.22,1,.36,1);
   }
   .fd-wd-bar i.over { background:linear-gradient(180deg,#ff8080,#d63a3a); }
   .fd-wd-bar i.empty { background:rgba(120,130,160,.18); }
   .fd-wd-lab { font-size:9px; color:var(--text2); text-transform:uppercase; margin-top:4px; font-weight:600; }
-  .fd-wd.today .fd-wd-lab { color:#1d7a3c; font-weight:800; }
+  .fd-wd.today .fd-wd-lab { color:#0a84ff; font-weight:800; }
   .fd-wd-k { font-size:9.5px; color:var(--text2); font-variant-numeric:tabular-nums; }
   /* модалки питания */
   #foodAddModal, #portionModal, #myFoodModal, #foodWizard {
@@ -2524,9 +2539,9 @@
   .fa-item-m { font-size:10.5px; color:var(--text2); opacity:.8; margin-top:1px; }
   .fa-my {
     display:flex; align-items:center; gap:9px; padding:10px 12px; border-radius:14px; cursor:pointer;
-    background:linear-gradient(135deg, rgba(95,224,138,.22), rgba(38,163,73,.16));
-    border:1.5px dashed rgba(38,163,73,.4); margin-bottom:10px;
-    font-size:13.5px; font-weight:700; color:#1d7a3c;
+    background:linear-gradient(135deg, rgba(95,224,138,.22), rgba(10,132,255,.16));
+    border:1.5px dashed rgba(10,132,255,.4); margin-bottom:10px;
+    font-size:13.5px; font-weight:700; color:#0a84ff;
   }
   .fa-none { font-size:13px; color:var(--text2); text-align:center; padding:14px 0; }
   /* порция */
@@ -2540,7 +2555,7 @@
   #ptPresets .pchip { font-size:12.5px; padding:9px 2px; }
   .pt-preview {
     margin-top:12px; padding:10px; border-radius:14px; text-align:center;
-    background:rgba(38,163,73,.1); font-size:12.5px; font-weight:700; color:#1d7a3c;
+    background:rgba(10,132,255,.1); font-size:12.5px; font-weight:700; color:#0a84ff;
   }
   .pt-preview:empty { display:none; }
   /* свой продукт и анкета */
@@ -2550,7 +2565,7 @@
     width:100%; border:1px solid rgba(120,130,160,.3); background:#fff; border-radius:14px;
     padding:11px 13px; font-size:15px; font-family:inherit; color:var(--text); outline:none;
   }
-  #myFoodModal input:focus, #foodWizard input:focus { border-color:rgba(38,163,73,.6); }
+  #myFoodModal input:focus, #foodWizard input:focus { border-color:rgba(10,132,255,.6); }
   /* карточки внутри питания живут в обычной колонке — те же отступы, что и на других вкладках */
   #foodMain, #fdMeals { display:flex; flex-direction:column; gap:16px; }
   .fd-week { display:flex; align-items:flex-end; justify-content:space-between; gap:5px; padding-top:4px; }
@@ -2558,18 +2573,18 @@
   .fd-wd-bar { height:56px; display:flex; align-items:flex-end; width:100%; }
   .fd-wd-bar i {
     display:block; width:100%; border-radius:6px 6px 3px 3px;
-    background:linear-gradient(180deg,#5fe08a,#26a349); transition:height .35s cubic-bezier(.4,1.4,.5,1);
+    background:var(--accent); transition:height .35s cubic-bezier(.4,1.4,.5,1);
   }
   .fd-wd-bar i.over { background:linear-gradient(180deg,#ff8080,#d63a3a); }
   .fd-wd-bar i.empty { background:rgba(0,0,0,.07); }
   .fd-wd-k { font-size:10.5px; color:var(--text2); font-variant-numeric:tabular-nums; }
   .fd-wd-lab { font-size:11px; color:var(--text2); font-weight:600; }
-  .fd-wd.today .fd-wd-lab { color:#26a349; }
+  .fd-wd.today .fd-wd-lab { color:#0a84ff; }
   .fd-w-now { display:flex; align-items:baseline; gap:6px; }
   .fd-w-val { font-size:30px; font-weight:800; color:var(--text); letter-spacing:-.5px; }
   .fd-w-unit { font-size:14px; color:var(--text2); font-weight:600; }
   .fd-w-delta { margin-left:auto; font-size:13px; font-weight:700; }
-  .fd-w-delta.down { color:#26a349; }
+  .fd-w-delta.down { color:#0a84ff; }
   .fd-w-delta.up { color:#d68b1f; }
   .fd-w-goal { font-size:12.5px; color:var(--text2); margin-top:3px; }
   .fw-acts { display:flex; flex-direction:column; gap:7px; }
@@ -2579,18 +2594,18 @@
   }
   .fw-act b { display:block; font-size:13.5px; font-weight:700; color:var(--text); }
   .fw-act small { display:block; font-size:11px; color:var(--text2); margin-top:1px; }
-  .fw-act.sel { background:rgba(38,163,73,.12); border-color:#26a349; }
-  .fw-act.sel b { color:#1d7a3c; }
+  .fw-act.sel { background:rgba(10,132,255,.12); border-color:#0a84ff; }
+  .fw-act.sel b { color:#0a84ff; }
   #foodWizard .pchip.sel {
-    background:linear-gradient(135deg,#5fe08a,#26a349);
+    background:var(--accent);
     color:#fff; border-color:transparent;
-    box-shadow:0 5px 14px rgba(38,163,73,.32);
+    box-shadow:0 5px 14px rgba(10,132,255,.32);
   }
-  .fw-pace { margin-top:10px; padding:9px 12px; border-radius:13px; background:rgba(38,163,73,.1); font-size:12px; font-weight:600; color:#1d7a3c; text-align:center; }
+  .fw-pace { margin-top:10px; padding:9px 12px; border-radius:13px; background:rgba(10,132,255,.1); font-size:12px; font-weight:600; color:#0a84ff; text-align:center; }
   .fw-pace:empty { display:none; }
-  .fw-pace.warn { background:rgba(224,115,15,.13); color:#a85c0c; }
-  .fw-result { padding:14px; border-radius:16px; background:rgba(38,163,73,.1); text-align:center; }
-  .fw-r-k { font-size:34px; font-weight:800; letter-spacing:-1px; color:#1d7a3c; line-height:1; }
+  .fw-pace.warn { background:rgba(10,132,255,.13); color:#a85c0c; }
+  .fw-result { padding:14px; border-radius:16px; background:rgba(10,132,255,.1); text-align:center; }
+  .fw-r-k { font-size:34px; font-weight:800; letter-spacing:-1px; color:#0a84ff; line-height:1; }
   .fw-r-lab { font-size:11.5px; color:var(--text2); margin-top:3px; font-weight:600; }
   .fw-r-m { font-size:12.5px; color:var(--text2); margin-top:8px; font-weight:600; }
   .hcat-ico { font-size:22px; display:flex; align-items:center; justify-content:center; width:30px; }
@@ -2609,11 +2624,11 @@
   /* своя привычка */
   .hcat-custom {
     display:flex; align-items:center; gap:10px; padding:11px 12px; border-radius:14px; cursor:pointer;
-    background: linear-gradient(135deg, rgba(255,176,86,.25), rgba(242,99,42,.18));
-    border: 1.5px dashed rgba(242,99,42,.45); margin-bottom:10px;
+    background: linear-gradient(135deg, rgba(10,132,255,.25), rgba(10,132,255,.18));
+    border: 1.5px dashed rgba(10,132,255,.45); margin-bottom:10px;
   }
-  .hcat-custom:active { background: linear-gradient(135deg, rgba(255,176,86,.4), rgba(242,99,42,.3)); }
-  .hcat-custom .hcat-name { font-weight:700; color:#c76a1a; }
+  .hcat-custom:active { background: linear-gradient(135deg, rgba(10,132,255,.4), rgba(10,132,255,.3)); }
+  .hcat-custom .hcat-name { font-weight:700; color:#0a84ff; }
   .hcat-custom svg { width:26px; height:24px; display:block; }
   #customHabitForm { padding:4px 2px 10px; }
   #customHabitForm input { margin-bottom:10px; }
@@ -2626,7 +2641,7 @@
   }
   .ch-ico svg { width:34px; height:30px; }
   .ch-ico:active { transform: scale(.9); }
-  .ch-ico.sel { border-color:#f2632a; background:rgba(255,150,50,.16); }
+  .ch-ico.sel { border-color:#0a84ff; background:rgba(10,132,255,.16); }
   .ch-type { display:flex; gap:8px; margin-bottom:10px; }
   .ch-type button {
     flex:1; border:1.5px solid rgba(150,165,200,.45); cursor:pointer;
@@ -2635,14 +2650,14 @@
     padding:9px 0; border-radius:12px;
   }
   .ch-type button.sel {
-    background: rgba(242,99,42,.13); color:#c76a1a; border-color:#f2632a;
-    box-shadow: 0 0 0 2px rgba(242,99,42,.12);
+    background: rgba(10,132,255,.13); color:#0a84ff; border-color:#0a84ff;
+    box-shadow: 0 0 0 2px rgba(10,132,255,.12);
   }
   .ch-create {
     display:block; width:100%; border:none; cursor:pointer; font-family:inherit;
     font-size:15px; font-weight:700; padding:12px 0; border-radius:16px; color:#fff;
-    background: linear-gradient(135deg, #ffb056, #f2632a);
-    box-shadow: 0 6px 14px rgba(242,99,42,.3);
+    background: var(--accent);
+    box-shadow: 0 6px 14px rgba(10,132,255,.3);
   }
   .ch-create:active { transform: scale(.97); }
   /* анимации кастомных иконок */
@@ -2714,17 +2729,17 @@
   .flame-info .fi-today { font-size:19px; font-weight:800; letter-spacing:-.3px; }
   .fi-bar-row { display:flex; align-items:center; width:100%; margin-top:8px; }
   .fi-bar { flex:1 1 auto; min-width:0; height:6px; border-radius:3px; background:rgba(120,130,160,.18); overflow:hidden; }
-  .fi-bar i { display:block; height:100%; border-radius:3px; background:linear-gradient(90deg,#ffb056,#f2632a); transition: width .6s cubic-bezier(.22,1,.36,1); }
+  .fi-bar i { display:block; height:100%; border-radius:3px; background:var(--accent); transition: width .6s cubic-bezier(.22,1,.36,1); }
   /* невыполненные — отдельной строкой под баром: переносятся, за карточку не вылезают */
   .fi-rem-icons {
     display:flex; align-items:center; gap:4px; flex-wrap:wrap;
     width:100%; max-width:100%; min-width:0; margin-top:7px;
   }
   .fi-rem-icons:empty { display:none; margin-top:0; }
-  .flame-info .fi-streak { font-size:14.5px; font-weight:700; color:#c76a1a; margin-top:7px; }
+  .flame-info .fi-streak { font-size:14.5px; font-weight:700; color:#0a84ff; margin-top:7px; }
   .flame-info .fi-record { font-size:12.5px; color:var(--text2); margin-top:4px; }
   .fi-remaining { display:flex; align-items:center; gap:5px; margin-top:7px; flex-wrap:wrap; font-size:12.5px; font-weight:700; color:var(--text2); }
-  .fr-ico { cursor:pointer; background:rgba(255,150,50,.13); border-radius:9px; padding:2px 4px; display:inline-flex; align-items:center; transition: transform .15s; flex:0 0 auto; }
+  .fr-ico { cursor:pointer; background:rgba(10,132,255,.13); border-radius:9px; padding:2px 4px; display:inline-flex; align-items:center; transition: transform .15s; flex:0 0 auto; }
   .fr-ico:active { transform: scale(.85); }
   .fr-ico svg { width:22px; height:20px; display:block; }
   .fr-ico .q-before:not(.show), .fr-ico .q-after:not(.show),
@@ -2754,7 +2769,7 @@
   .hd-row svg { width:24px; height:22px; flex-shrink:0; }
   .hd-name { flex:1; color:var(--text); }
   .hd-st { font-weight:800; font-size:13px; }
-  .hd-st.ok { color:#30d158; }
+  .hd-st.ok { color:#0a84ff; }
   .hd-st.no { color:rgba(200,60,60,.8); }
   .hd-empty { font-size:13px; color:var(--text2); text-align:center; padding:8px 0; }
   /* плитка плавно прижимается, пока держишь палец */
@@ -2769,7 +2784,7 @@
   }
   .flame.hold { transform: scale(.95); transition: transform .45s cubic-bezier(.3,.8,.4,1); }
   .q-tile.q-hint { animation: qHint 1.2s ease 2; }
-  @keyframes qHint { 0%,100% { box-shadow:none; transform:scale(1); } 50% { box-shadow:0 0 0 3px rgba(242,99,42,.55), 0 8px 20px rgba(242,99,42,.3); transform:scale(1.06); } }
+  @keyframes qHint { 0%,100% { box-shadow:none; transform:scale(1); } 50% { box-shadow:0 0 0 3px rgba(10,132,255,.55), 0 8px 20px rgba(10,132,255,.3); transform:scale(1.06); } }
   .hcal-week-wrap { width:100%; margin-top:6px; }
   .hcal-week { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; }
   /* дни недели — кружки с кольцом прогресса (огненная гамма) */
@@ -2777,7 +2792,7 @@
   .wd-lab { font-size:9px; font-weight:500; color:rgba(28,28,46,.38); letter-spacing:.3px; text-transform:uppercase; }
   .wd-ring { display:block; }
   .wd-ring .wr-bg { stroke:rgba(120,130,160,.18); }
-  .wd-ring .wr-fg { stroke:#f7a13c; transition: stroke-dashoffset .7s cubic-bezier(.22,1,.36,1); }
+  .wd-ring .wr-fg { stroke:#0a84ff; transition: stroke-dashoffset .7s cubic-bezier(.22,1,.36,1); }
   .wd-ring .wr-fill { fill:none; transition: fill .5s; }
   .wd-ring.done .wr-fill { fill:url(#wdGrad); }
   .wd-ring.done .wr-fg { stroke:none; }
@@ -2785,9 +2800,9 @@
   .wd-ring.done .wr-num { fill:#fff; font-weight:600; }
   .wd-ring.future .wr-bg { stroke:rgba(120,130,160,.14); stroke-dasharray:2.5 3; }
   .wd-ring.future .wr-num { fill:rgba(28,28,46,.22); }
-  .wd-cell.today .wd-lab { color:#c76a1a; font-weight:700; }
+  .wd-cell.today .wd-lab { color:#0a84ff; font-weight:700; }
   .wd-cell.today .wd-ring { filter: drop-shadow(0 0 0 rgba(0,0,0,0)); }
-  .wd-cell.today .wd-ring .wr-halo { stroke: rgba(242,113,42,.45); }
+  .wd-cell.today .wd-ring .wr-halo { stroke: rgba(10,132,255,.45); }
   .wd-ring.celebrate { animation: wdPop .7s cubic-bezier(.34,1.56,.64,1); }
   @keyframes wdPop { 0%,100% { transform:scale(1); } 40% { transform:scale(1.22); } 70% { transform:scale(.94); } }
   #viewHabits .card.hero { position:relative; }
@@ -2796,10 +2811,10 @@
   .flame-add-btn {
     flex-shrink:0;
     width:32px; height:32px; border-radius:50%;
-    background: linear-gradient(165deg, #ffb066, #f2632a);
+    background: linear-gradient(165deg, #0a84ff, #0a84ff);
     border:1px solid rgba(255,255,255,.7); color:#fff; font-size:19px; font-weight:800;
     display:flex; align-items:center; justify-content:center; cursor:pointer;
-    box-shadow: 0 5px 12px rgba(242,99,42,.35);
+    box-shadow: 0 5px 12px rgba(10,132,255,.35);
     transition: transform .15s;
   }
   .flame-add-btn:active { transform: scale(.9); }
@@ -2832,6 +2847,143 @@
     font-size:15px; font-weight:700; cursor:pointer; box-shadow:0 6px 14px rgba(0,0,0,.18);
   }
   .hcm-close:active { transform: scale(.92); }
+
+  /* ============================================================
+     ЕДИНЫЙ СТИЛЬ КНОПОК И ВЫБРАННЫХ СОСТОЯНИЙ
+     Один акцент на всё приложение: ни зелёных, ни оранжевых кнопок,
+     ни градиентов, ни цветного свечения. Блок стоит последним,
+     потому что перекрывает правила отдельных разделов.
+     ============================================================ */
+  :root { --btn-h: 50px; --btn-r: 14px; }
+
+  /* главное действие */
+  .m-ok, .add-btn, .set-block .add-btn, .fd-setup-btn, .fd-ok,
+  .ch-create, .he-save, .fd-save, .rp-go, .qk-go {
+    display:block; width:100%; min-height:var(--btn-h); padding:0 16px;
+    border:none !important; border-radius:var(--btn-r) !important; cursor:pointer;
+    font-family:inherit; font-size:17px; font-weight:600; letter-spacing:-.3px;
+    color:#fff !important; background:var(--accent) !important;
+    box-shadow:none !important;
+    transition: transform .18s var(--spring), opacity .2s;
+  }
+  .m-ok:active, .add-btn:active, .fd-setup-btn:active, .fd-ok:active,
+  .ch-create:active, .he-save:active { transform:scale(.97); opacity:.88; }
+
+  /* второстепенное действие — текстом, как в системных листах */
+  .m-cancel {
+    display:block; width:100%; min-height:var(--btn-h); padding:0 16px;
+    border:none !important; border-radius:var(--btn-r) !important; cursor:pointer;
+    font-family:inherit; font-size:17px; font-weight:400; letter-spacing:-.3px;
+    color:var(--accent) !important; background:none !important; box-shadow:none !important;
+  }
+  .m-cancel:active { opacity:.55; }
+
+  /* опасное действие */
+  .he-del, .h-del, .danger-btn {
+    color:#ff3b30 !important; background:none !important;
+    border:none !important; box-shadow:none !important; font-weight:400;
+  }
+
+  /* маленькие круглые «плюсы» — тем же акцентом */
+  .hab-add, .fd-meal-add { background:var(--accent) !important; color:#fff !important;
+    box-shadow:none !important; border:none !important; }
+
+  /* выбранные состояния: мягкая подложка акцента вместо цветных заливок */
+  .pchip.sel, #foodWizard .pchip.sel, .ch-type button.sel, .dchip.sel,
+  .fw-act.sel, .ch-ico.sel, .chip.active, .fd-tab.active {
+    background: rgba(10,132,255,.12) !important;
+    color: var(--accent) !important;
+    border-color: var(--accent) !important;
+    box-shadow: none !important;
+  }
+  .fw-act.sel b { color: var(--accent) !important; }
+  .fw-pace { background: rgba(10,132,255,.1) !important; color: var(--accent) !important; }
+
+  /* календарь внутри окна привычки — как все остальные календари */
+  .hc-day.done { background: var(--accent) !important; color:#fff !important; }
+  .hc-day.today { box-shadow: none !important; color:#ff3b30; }
+
+  /* каталог привычек: сгруппированный список, а не плитки с пунктиром */
+  #habitCatalogList { }
+  .hcat-group-title {
+    font-size:var(--t-sub) !important; font-weight:400 !important;
+    color:var(--text2) !important; text-transform:none !important;
+    letter-spacing:-.1px !important; margin:var(--s5) 0 var(--s2) !important;
+    padding:0 var(--s1) !important;
+  }
+  .hcat-row, .hcat-custom {
+    background: rgba(255,255,255,.72) !important;
+    border: none !important; border-radius:0 !important;
+    margin:0 !important; padding: var(--s3) var(--s4) !important;
+    box-shadow: inset 0 -.5px 0 rgba(60,70,110,.14);
+  }
+  .hcat-row:first-of-type, .hcat-custom { border-radius: 12px 12px 0 0 !important; }
+  .hcat-row:last-of-type { border-radius: 0 0 12px 12px !important; box-shadow:none; }
+  .hcat-row:active, .hcat-custom:active { background: rgba(120,140,180,.14) !important; }
+  .hcat-custom .hcat-name { color: var(--text) !important; font-weight:400 !important; }
+  .hcat-name { font-size:var(--t-body) !important; font-weight:400 !important; }
+  .hcat-plus { font-size:20px !important; font-weight:400 !important; color:var(--accent) !important; }
+
+  /* поля ввода — одной высоты с кнопками */
+  .modal-card input[type="text"], .modal-card input[type="number"],
+  .modal-card input[type="date"], .modal-card select {
+    min-height:44px; border-radius:12px;
+  }
+
+  /* ============================================================
+     ЗАВЕРШЕНИЕ ЕДИНОЙ ГАММЫ
+     Зелёный и золотой оставались в текстах, кантах и подсказках.
+     Всё, что означает «хорошо/выбрано/активно», теперь один акцент.
+     ============================================================ */
+  .today-line b, .fd-left b, .limit-ok, .fd-ok-text,
+  .sph-side .good, .cmp-now, .fw-pace, .fd-tip b, .chal-sub b { color: var(--accent) !important; }
+
+  /* крупные зелёные цифры «Можно сегодня» и «Вес» */
+  #spendLeft, #fdLeftBig, #wNow, .big-green, .sph-big.good { color: var(--accent) !important; }
+
+  /* подсказки-плашки: были золотые и зелёные */
+  .tip, .fd-tip, .limit-hint, .goal-hint, .hint.set-warn, .fd-adv {
+    background: rgba(10,132,255,.10) !important;
+    border-color: rgba(10,132,255,.28) !important;
+    color: var(--accent) !important;
+  }
+  .tip b, .fd-tip b, .limit-hint b { color: var(--accent) !important; }
+
+  /* неделя привычек: выбранный и выполненный день */
+  .wd-strip .wd.done, .hc-day.done, .fd-wd.today .fd-wd-num {
+    background: var(--accent) !important; color:#fff !important;
+    border-color: var(--accent) !important;
+  }
+  .wd-strip .wd.today, .fd-wd.today {
+    border-color: var(--accent) !important; color: var(--accent) !important;
+  }
+  .wd-strip .wd-name.today, .fd-wd.today .fd-wd-name { color: var(--accent) !important; }
+
+  /* «Повторить» — прозрачная синяя, а не зелёная */
+  .fd-meal-rep {
+    background: rgba(10,132,255,.12) !important;
+    color: var(--accent) !important; border:none !important;
+    font-weight:500 !important;
+  }
+
+  /* плюсы: ровный крест по центру, а не текстовый символ */
+  .fd-meal-add, .hab-add {
+    font-size:0 !important; position:relative;
+  }
+  .fd-meal-add::before, .fd-meal-add::after,
+  .hab-add::before, .hab-add::after {
+    content:''; position:absolute; left:50%; top:50%; background:#fff; border-radius:1px;
+  }
+  .fd-meal-add::before, .hab-add::before { width:13px; height:2px; transform:translate(-50%,-50%); }
+  .fd-meal-add::after,  .hab-add::after  { width:2px; height:13px; transform:translate(-50%,-50%); }
+  .hab-add svg { display:none; }
+
+  /* окно «зачем тебе привычка»: оранжевый кант и кнопка */
+  #whyModal textarea, #whyModal input { border-color: rgba(10,132,255,.35) !important; }
+  #whyModal textarea:focus, #whyModal input:focus { border-color: var(--accent) !important; }
+
+  /* подсказка «потяни вниз» больше не висит полупрозрачным пятном */
+  .pull-hint { display:none; }
 </style>
 <!-- OneSignal: push-уведомления. Воркер объединён с офлайн-кэшем в один файл
      OneSignalSDKWorker.js в корне сайта — так, как OneSignal ждёт по умолчанию -->
@@ -3120,7 +3272,7 @@
       <div class="hcal-week-wrap">
         <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
           <linearGradient id="wdGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#ffb03e"/><stop offset="1" stop-color="#f2712a"/>
+            <stop offset="0" stop-color="#0a84ff"/><stop offset="1" stop-color="#0a84ff"/>
           </linearGradient>
         </defs></svg>
         <div class="hcal-week" id="hcalWeekGrid"></div>
@@ -3138,8 +3290,8 @@
     <div class="card" id="foodSetupCard" style="display:none">
       <div class="fd-setup-ico">
         <svg viewBox="0 0 44 44" width="44" height="44" aria-hidden="true">
-          <circle cx="22" cy="22" r="19" fill="none" stroke="#30d158" stroke-width="3"/>
-          <path d="M13 23 l6 6 l12 -14" fill="none" stroke="#30d158" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="22" cy="22" r="19" fill="none" stroke="#0a84ff" stroke-width="3"/>
+          <path d="M13 23 l6 6 l12 -14" fill="none" stroke="#0a84ff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
       <h3 class="fd-setup-h">Считаем твою норму</h3>
@@ -3184,7 +3336,7 @@
             <b id="fdWaterVal">0/8</b>
           </div>
           <div class="fd-ex" id="fdBurnBox">
-            <svg width="18" height="20" viewBox="0 0 18 20" aria-hidden="true"><path d="M9 1 C6 6 4 8 4 11 C4 14 6.2 16 9 16 C11.8 16 14 14 14 11 C14 8 12 6 9 1 Z" fill="#f2712a"/></svg>
+            <svg width="18" height="20" viewBox="0 0 18 20" aria-hidden="true"><path d="M9 1 C6 6 4 8 4 11 C4 14 6.2 16 9 16 C11.8 16 14 14 14 11 C14 8 12 6 9 1 Z" fill="#0a84ff"/></svg>
             <span class="fd-ex-t">Сожжено</span>
             <b id="fdBurnVal">0</b>
           </div>
@@ -3730,6 +3882,11 @@ function load() {
   let s = null;
   try { s = JSON.parse(localStorage.getItem(KEY)); } catch(e) {}
   if (!s || !Array.isArray(s.closed)) s = {};
+  return normalizeState(s);
+}
+// Приводит любой набор данных к рабочему виду: и своё хранилище, и то,
+// что пришло из облака. Без этого недостающие поля роняют отрисовку.
+function normalizeState(s) {
   const merged = Object.assign({
     startDate: todayStr(), closed: [], unlocked: [],
     stars: 0, qAwarded: [], bought: [], worn: [],
@@ -3749,6 +3906,15 @@ function load() {
   }
   if (typeof merged.flameAwarded !== 'object' || !merged.flameAwarded) merged.flameAwarded = {};
   if (!Array.isArray(merged.habits)) merged.habits = [];
+  // каждая привычка должна иметь log-массив и counts-объект: без этого
+  // h.log.includes(...) на экране «Сегодня» роняет весь экран
+  merged.habits = merged.habits.filter(h => h && typeof h === 'object');
+  merged.habits.forEach(h => {
+    if (!Array.isArray(h.log)) h.log = [];
+    if (!h.counts || typeof h.counts !== 'object') h.counts = {};
+    if (typeof h.name !== 'string') h.name = 'Привычка';
+    if (!(h.target > 0)) h.target = 1;
+  });
   // у закрытого конверта могла потеряться дата (старый или правленый бэкап) — восстанавливаем из метки времени
   (merged.closed || []).forEach(c => {
     if (!c.date) c.date = todayStr(new Date(c.ts || Date.now()));
@@ -3997,38 +4163,38 @@ const I_FIRE = '<path d="M12 3.5s5 4.4 5 9a5 5 0 0 1-10 0c0-4.6 5-9 5-9z"/><path
 const I_RCKT = '<path d="M12 3c3 2 4.6 6 3.8 10.4L12 16l-3.8-2.6C7.4 9 9 5 12 3z"/><circle cx="12" cy="8.6" r="1.6"/><path d="M8.6 14.5L7 19l3.4-1.7M15.4 14.5L17 19l-3.4-1.7"/>';
 const QICONS = {
   d1:  ['#0a84ff', I_ENV],
-  d2:  ['#ff9500', '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="M12 12h.01"/>'],
+  d2:  ['#0a84ff', '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="M12 12h.01"/>'],
   d3:  ['#5e5ce6', '<rect x="6.5" y="4" width="13.5" height="9.5" rx="2"/><rect x="4" y="9.5" width="13.5" height="9.5" rx="2"/>'],
   d4:  ['#bf5af2', '<circle cx="7" cy="15.5" r="3.2"/><circle cx="17" cy="15.5" r="3.2"/><circle cx="12" cy="8" r="3.2"/>'],
   d5:  ['#64d2ff', I_DIAM],
-  d6:  ['#30d158', '<path d="M20 4.5c-6 .3-11.5 5-12.7 11.5L4.5 20"/><path d="M20 4.5c.8 6-3.2 11.6-9 12.6H7.6"/>'],
-  d7:  ['#e8a820', I_BAG],
+  d6:  ['#0a84ff', '<path d="M20 4.5c-6 .3-11.5 5-12.7 11.5L4.5 20"/><path d="M20 4.5c.8 6-3.2 11.6-9 12.6H7.6"/>'],
+  d7:  ['#0a84ff', I_BAG],
   d8:  ['#ff375f', '<path d="M4 17l5-5 4 3 7-8"/><path d="M15 7h5v5"/>'],
-  d9:  ['#ff9500', '<path d="M4 17h16M7.5 13.5a4.5 4.5 0 0 1 9 0"/><path d="M12 4.5v3M5.5 8.5L7 10M18.5 8.5L17 10"/>'],
+  d9:  ['#0a84ff', '<path d="M4 17h16M7.5 13.5a4.5 4.5 0 0 1 9 0"/><path d="M12 4.5v3M5.5 8.5L7 10M18.5 8.5L17 10"/>'],
   d10: ['#5e5ce6', '<path d="M19 14A8 8 0 1 1 10 5a6.5 6.5 0 0 0 9 9z"/>'],
   d11: ['#8e8e93', '<rect x="4" y="4" width="16" height="16" rx="3.5"/><path d="M9 9h.01M15 15h.01M15 9h.01M9 15h.01M12 12h.01"/>'],
   w1:  ['#0a84ff', '<rect x="4" y="5.5" width="16" height="15" rx="2.5"/><path d="M4 10h16M8 3.5v4M16 3.5v4"/>'],
-  w2:  ['#e8a820', I_BAG],
-  w3:  ['#ff6b35', I_FIRE],
+  w2:  ['#0a84ff', I_BAG],
+  w3:  ['#0a84ff', I_FIRE],
   w4:  ['#d4667a', '<rect x="5" y="6" width="14" height="8" rx="3.5"/><path d="M12 14v6.5M5 10h14"/>'],
   w5:  ['#64d2ff', I_DIAM],
   w6:  ['#bf5af2', I_RCKT],
 };
 const AICONS = {
   first: ['#0a84ff', I_ENV],
-  s3:    ['#ff6b35', I_FIRE],
-  s7:    ['#e8a820', '<path d="M13 2.5L5.5 13h5.5l-1 8.5L18 10.5h-5.5l.5-8z"/>'],
+  s3:    ['#0a84ff', I_FIRE],
+  s7:    ['#0a84ff', '<path d="M13 2.5L5.5 13h5.5l-1 8.5L18 10.5h-5.5l.5-8z"/>'],
   s14:   ['#bf5af2', I_STAR],
   s30:   ['#00b8a2', '<path d="M6.5 8.5v7M3.8 10v4M17.5 8.5v7M20.2 10v4M6.5 12h11"/>'],
-  s60:   ['#e8a820', '<path d="M8 4h8v5a4 4 0 0 1-8 0V4z"/><path d="M8 5H5a3 3 0 0 0 3 4M16 5h3a3 3 0 0 1-3 4M12 13v3M9 20h6M10.5 16.5h3V20h-3z"/>'],
+  s60:   ['#0a84ff', '<path d="M8 4h8v5a4 4 0 0 1-8 0V4z"/><path d="M8 5H5a3 3 0 0 0 3 4M16 5h3a3 3 0 0 1-3 4M12 13v3M9 20h6M10.5 16.5h3V20h-3z"/>'],
   e25:   ['#8e8e93', I_ENV],
   e75:   ['#64d2ff', I_ENV],
   e125:  ['#5e5ce6', I_ENV],
-  m1k:   ['#e8a820', I_BAG],
-  m25:   ['#30d158', '<rect x="3" y="7" width="18" height="10" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/>'],
+  m1k:   ['#0a84ff', I_BAG],
+  m25:   ['#0a84ff', '<rect x="3" y="7" width="18" height="10" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/>'],
   m5k:   ['#bf5af2', I_RCKT],
-  m75:   ['#ff9500', I_STAR],
-  m10k:  ['#e8a820', '<path d="M4.5 17.5h15M4.5 17.5L3.5 8.5l5 4 3.5-7 3.5 7 5-4-1 9"/>'],
+  m75:   ['#0a84ff', I_STAR],
+  m10k:  ['#0a84ff', '<path d="M4.5 17.5h15M4.5 17.5L3.5 8.5l5 4 3.5-7 3.5 7 5-4-1 9"/>'],
   big:   ['#64d2ff', I_DIAM],
   goal:  ['#ff375f', '<path d="M6 21V4"/><path d="M6 5c4-2 8 2 12 0v8c-4 2-8-2-12 0"/>'],
 };
@@ -4182,7 +4348,7 @@ function closeEnv(idx, el, quiet) {
       else render();                            // в фильтрах нужна пересборка
     }, 1600);
   } else render();
-  if (!quiet) toast('✉️ +' + fmt(ENV[idx]) + ' BYN — конверт закрыт!');
+  if (!quiet) toast('+' + fmt(ENV[idx]) + ' BYN в копилку');
 }
 
 // ---------- доп. сумма: авто-подбор конвертов ----------
@@ -4225,7 +4391,7 @@ function autoDeposit() {
 
   if (!picked.length) {
     render();
-    toast('💼 Мало для конверта — ' + fmt2(state.wallet) + ' BYN ждут в кошельке');
+    toast('В кошельке ' + fmt2(state.wallet) + ' BYN');
     return;
   }
 
@@ -4420,7 +4586,6 @@ function renderLevel() {
     state.lastLevel = lvl;
     localStorage.setItem(KEY, JSON.stringify(state));
     setTimeout(() => {
-      toast('🎉 Свинка выросла: ' + cur.name + '!');
       sndAch(); vib([30, 40, 30, 40, 80]);
       sphSplash('save');
     }, 1300);
@@ -4586,7 +4751,7 @@ function celebrate() {
 
   sndAch();
   setTimeout(sndAch, 600);
-  const colors = ['#ff5d5d','#ffd35c','#30d158','#5e9dff','#c58bff','#ff9ec7'];
+  const colors = ['#ff5d5d','#ffd35c','#0a84ff','#5e9dff','#c58bff','#ff9ec7'];
   for (let i = 0; i < 120; i++) {
     setTimeout(() => {
       const c = document.createElement('div');
@@ -4743,7 +4908,7 @@ function checkHabitNeglect() {
 // ---------- привычки: универсальный «сосуд»-виджет (вода и все остальные) ----------
 function isWaterHabit(h) { return /вод|пить|попить/i.test(h.name) && isCounterHabit(h); }
 function findWaterHabit() { return state.habits.find(isWaterHabit); }
-const HABIT_VESSEL_COLORS = ['#0a84ff', '#ff9500', '#ff375f', '#8e44ff', '#00b8a2', '#ffb340', '#5e5ce6', '#34c759'];
+const HABIT_VESSEL_COLORS = ['#0a84ff', '#0a84ff', '#ff375f', '#8e44ff', '#00b8a2', '#0a84ff', '#5e5ce6', '#34c759'];
 function habitColor(name) {
   let h = 0;
   for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
@@ -4771,7 +4936,7 @@ function habitSunMoonSVG(done) {
     const a = i * Math.PI / 4;
     const x1 = (22 + Math.cos(a) * 13).toFixed(1), y1 = (22 + Math.sin(a) * 13).toFixed(1);
     const x2 = (22 + Math.cos(a) * 17).toFixed(1), y2 = (22 + Math.sin(a) * 17).toFixed(1);
-    rays.push('<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="#ffb340" stroke-width="2.2" stroke-linecap="round"/>');
+    rays.push('<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="#0a84ff" stroke-width="2.2" stroke-linecap="round"/>');
   }
   return (
     '<svg class="q-vessel q-sunmoon" width="44" height="44" viewBox="0 0 44 44">' +
@@ -4780,7 +4945,7 @@ function habitSunMoonSVG(done) {
         '<circle cx="10" cy="10" r="1.4" fill="#c9d0ec"/><circle cx="6" cy="20" r="1" fill="#c9d0ec"/><circle cx="15" cy="5" r="1" fill="#c9d0ec"/>' +
       '</g>' +
       '<g class="q-sun' + (done ? ' show' : '') + '">' +
-        '<circle cx="22" cy="22" r="9" fill="#ffb340" stroke="#ff9500" stroke-width="1"/>' +
+        '<circle cx="22" cy="22" r="9" fill="#0a84ff" stroke="#0a84ff" stroke-width="1"/>' +
         rays.join('') +
       '</g>' +
     '</svg>'
@@ -5134,7 +5299,7 @@ const HABIT_OBJECTS = {
   },
   vitamins: {
     before: '<path d="M14 16h8v12h-8a6 6 0 0 1-6-6 6 6 0 0 1 6-6z" fill="#c3ccdc"/><path d="M22 16h8a6 6 0 0 1 6 6 6 6 0 0 1-6 6h-8z" fill="#b0bcd0"/><line x1="22" y1="16" x2="22" y2="28" stroke="#fff" stroke-width="1"/>',
-    after: '<path d="M14 16h8v12h-8a6 6 0 0 1-6-6 6 6 0 0 1 6-6z" fill="#ff9500"/><path d="M22 16h8a6 6 0 0 1 6 6 6 6 0 0 1-6 6h-8z" fill="#5ac8fa"/><line x1="22" y1="16" x2="22" y2="28" stroke="#fff" stroke-width="1"/><circle cx="34" cy="10" r="1.4" fill="#ffd60a"/><circle cx="10" cy="32" r="1.2" fill="#ffd60a"/>'
+    after: '<path d="M14 16h8v12h-8a6 6 0 0 1-6-6 6 6 0 0 1 6-6z" fill="#0a84ff"/><path d="M22 16h8a6 6 0 0 1 6 6 6 6 0 0 1-6 6h-8z" fill="#5ac8fa"/><line x1="22" y1="16" x2="22" y2="28" stroke="#fff" stroke-width="1"/><circle cx="34" cy="10" r="1.4" fill="#ffd60a"/><circle cx="10" cy="32" r="1.2" fill="#ffd60a"/>'
   },
   nosugar: {
     before: '<circle cx="22" cy="22" r="9" fill="#ff9ee0"/><path d="M9 22l-5-4v8zM35 22l5-4v8z" fill="#ff9ee0"/>',
@@ -5145,12 +5310,12 @@ const HABIT_OBJECTS = {
     after: '<g transform="rotate(180 22 22)"><path d="M14 6h16l-3 14a5 5 0 0 1-10 0z" fill="none" stroke="#9aa8c4" stroke-width="1.6"/><path d="M22 25v11M15 36h14" stroke="#9aa8c4" stroke-width="2.4" stroke-linecap="round"/></g>'
   },
   nosmoking: {
-    before: '<rect x="6" y="20" width="26" height="6" rx="2" fill="#fff" stroke="#c3ccdc" stroke-width="1"/><rect x="28" y="20" width="8" height="6" rx="2" fill="#ff9500"/><path d="M37 18c1 2 1 4 0 6" stroke="#c3ccdc" stroke-width="1.6" fill="none"/>',
-    after: '<g transform="rotate(-10 19 23)"><rect x="6" y="20" width="12" height="6" rx="2" fill="#fff" stroke="#c3ccdc" stroke-width="1"/></g><g transform="rotate(14 26 23)"><rect x="20" y="20" width="12" height="6" rx="2" fill="#fff" stroke="#c3ccdc" stroke-width="1"/><rect x="26" y="20" width="6" height="6" fill="#ff9500"/></g>'
+    before: '<rect x="6" y="20" width="26" height="6" rx="2" fill="#fff" stroke="#c3ccdc" stroke-width="1"/><rect x="28" y="20" width="8" height="6" rx="2" fill="#0a84ff"/><path d="M37 18c1 2 1 4 0 6" stroke="#c3ccdc" stroke-width="1.6" fill="none"/>',
+    after: '<g transform="rotate(-10 19 23)"><rect x="6" y="20" width="12" height="6" rx="2" fill="#fff" stroke="#c3ccdc" stroke-width="1"/></g><g transform="rotate(14 26 23)"><rect x="20" y="20" width="12" height="6" rx="2" fill="#fff" stroke="#c3ccdc" stroke-width="1"/><rect x="26" y="20" width="6" height="6" fill="#0a84ff"/></g>'
   },
   breakfast: {
     before: '<circle cx="22" cy="22" r="14" fill="#fff8ec" stroke="#e0c9a0" stroke-width="1.6"/>',
-    after: '<circle cx="22" cy="22" r="14" fill="#fff8ec" stroke="#e0c9a0" stroke-width="1.6"/><circle cx="18" cy="20" r="5" fill="#fff"/><circle cx="18" cy="20" r="2.2" fill="#ffb340"/><rect x="24" y="24" width="10" height="6" rx="1.5" fill="#e2b04a"/>'
+    after: '<circle cx="22" cy="22" r="14" fill="#fff8ec" stroke="#e0c9a0" stroke-width="1.6"/><circle cx="18" cy="20" r="5" fill="#fff"/><circle cx="18" cy="20" r="2.2" fill="#0a84ff"/><rect x="24" y="24" width="10" height="6" rx="1.5" fill="#e2b04a"/>'
   },
   lesscoffee: {
     before: '<path d="M10 16h20v10a10 10 0 0 1-20 0z" fill="#8c6a46"/><path d="M30 18h4a4 4 0 0 1 0 8h-4" fill="none" stroke="#8c6a46" stroke-width="2.4"/>',
@@ -5158,7 +5323,7 @@ const HABIT_OBJECTS = {
   },
   meditation: {
     before: '<rect x="8" y="32" width="28" height="4" rx="2" fill="#e0c9a0"/><rect x="16" y="10" width="12" height="24" rx="3" fill="#fff8ec" stroke="#e0c9a0" stroke-width="1.2"/><rect x="21" y="6" width="2" height="4" fill="#8c6a46"/>',
-    after: '<rect x="8" y="32" width="28" height="4" rx="2" fill="#caa06a"/><rect x="16" y="12" width="12" height="22" rx="3" fill="#fff8ec" stroke="#e0c9a0" stroke-width="1.2"/><rect x="21" y="8" width="2" height="4" fill="#8c6a46"/><circle cx="22" cy="7" r="8" fill="#ffd968" opacity=".3"/><path d="M22 2c4 4 4 8 0 12-4-4-4-8 0-12z" fill="#ffb340"/>'
+    after: '<rect x="8" y="32" width="28" height="4" rx="2" fill="#caa06a"/><rect x="16" y="12" width="12" height="22" rx="3" fill="#fff8ec" stroke="#e0c9a0" stroke-width="1.2"/><rect x="21" y="8" width="2" height="4" fill="#8c6a46"/><circle cx="22" cy="7" r="8" fill="#ffd968" opacity=".3"/><path d="M22 2c4 4 4 8 0 12-4-4-4-8 0-12z" fill="#0a84ff"/>'
   },
   gratitude: {
     before: '<rect x="9" y="8" width="26" height="28" rx="3" fill="#fff8ec" stroke="#caa06a" stroke-width="1.4"/><rect x="9" y="8" width="6" height="28" fill="#caa06a"/>',
@@ -5186,7 +5351,7 @@ const HABIT_OBJECTS = {
   },
   drawing: {
     before: '<path d="M22 6a16 16 0 1 0 6 31c-2-1-3-3-1-5 3-2 8 1 10-4A16 16 0 0 0 22 6z" fill="#eef1fb" stroke="#c3ccdc" stroke-width="1.4"/>',
-    after: '<path d="M22 6a16 16 0 1 0 6 31c-2-1-3-3-1-5 3-2 8 1 10-4A16 16 0 0 0 22 6z" fill="#eef1fb" stroke="#c3ccdc" stroke-width="1.4"/><circle cx="15" cy="18" r="2.6" fill="#ff375f"/><circle cx="22" cy="14" r="2.6" fill="#ffb340"/><circle cx="29" cy="18" r="2.6" fill="#0a84ff"/><path d="M14 30q6-4 12 0" stroke="#34c759" stroke-width="2.4" fill="none" stroke-linecap="round"/>'
+    after: '<path d="M22 6a16 16 0 1 0 6 31c-2-1-3-3-1-5 3-2 8 1 10-4A16 16 0 0 0 22 6z" fill="#eef1fb" stroke="#c3ccdc" stroke-width="1.4"/><circle cx="15" cy="18" r="2.6" fill="#ff375f"/><circle cx="22" cy="14" r="2.6" fill="#0a84ff"/><circle cx="29" cy="18" r="2.6" fill="#0a84ff"/><path d="M14 30q6-4 12 0" stroke="#34c759" stroke-width="2.4" fill="none" stroke-linecap="round"/>'
   },
   music: {
     before: '<circle cx="16" cy="32" r="5" fill="#c3ccdc"/><rect x="19" y="8" width="2.4" height="24" fill="#c3ccdc"/><path d="M21 8l10 3v6l-10-3z" fill="#c3ccdc"/>',
@@ -5206,7 +5371,7 @@ const HABIT_OBJECTS = {
   },
   plants: {
     before: '<path d="M10 30h24l-2 8H12z" fill="#caa06a"/><path d="M22 30v-8" stroke="#34c759" stroke-width="2.4" stroke-linecap="round"/><path d="M22 22c-4-2-4-6-2-8 3 1 4 5 2 8z" fill="#34c759"/>',
-    after: '<path d="M10 30h24l-2 8H12z" fill="#caa06a"/><path d="M22 30v-10" stroke="#34c759" stroke-width="2.4" stroke-linecap="round"/><circle cx="22" cy="12" r="4" fill="#ffb340"/><circle cx="16" cy="16" r="4" fill="#ff9ee0"/><circle cx="28" cy="16" r="4" fill="#ff9ee0"/><circle cx="22" cy="20" r="4" fill="#ff9ee0"/><circle cx="22" cy="16" r="3" fill="#ffd60a"/>'
+    after: '<path d="M10 30h24l-2 8H12z" fill="#caa06a"/><path d="M22 30v-10" stroke="#34c759" stroke-width="2.4" stroke-linecap="round"/><circle cx="22" cy="12" r="4" fill="#0a84ff"/><circle cx="16" cy="16" r="4" fill="#ff9ee0"/><circle cx="28" cy="16" r="4" fill="#ff9ee0"/><circle cx="22" cy="20" r="4" fill="#ff9ee0"/><circle cx="22" cy="16" r="3" fill="#ffd60a"/>'
   },
   calling: {
     before: '<path d="M12 12c4-4 8-4 10-2l3 3c1 1 1 3-1 4l-2 2c1 4 5 8 9 9l2-2c1-2 3-2 4-1l3 3c2 2 2 6-2 10-8 2-20-10-22-18-1-3-1-5-4-8z" fill="#c3ccdc"/>',
@@ -5214,7 +5379,7 @@ const HABIT_OBJECTS = {
   },
   pet: {
     before: '<circle cx="22" cy="26" r="8" fill="#c3ccdc"/><circle cx="12" cy="16" r="3.4" fill="#c3ccdc"/><circle cx="20" cy="10" r="3.4" fill="#c3ccdc"/><circle cx="28" cy="10" r="3.4" fill="#c3ccdc"/><circle cx="34" cy="17" r="3.4" fill="#c3ccdc"/>',
-    after: '<circle cx="22" cy="26" r="8" fill="#ffb340"/><circle cx="12" cy="16" r="3.4" fill="#ffb340"/><circle cx="20" cy="10" r="3.4" fill="#ffb340"/><circle cx="28" cy="10" r="3.4" fill="#ffb340"/><circle cx="34" cy="17" r="3.4" fill="#ffb340"/><path d="M6 30q-3-2-1-5M8 34q-4-1-3-5" stroke="#ffb340" stroke-width="2" fill="none" stroke-linecap="round"/>'
+    after: '<circle cx="22" cy="26" r="8" fill="#0a84ff"/><circle cx="12" cy="16" r="3.4" fill="#0a84ff"/><circle cx="20" cy="10" r="3.4" fill="#0a84ff"/><circle cx="28" cy="10" r="3.4" fill="#0a84ff"/><circle cx="34" cy="17" r="3.4" fill="#0a84ff"/><path d="M6 30q-3-2-1-5M8 34q-4-1-3-5" stroke="#0a84ff" stroke-width="2" fill="none" stroke-linecap="round"/>'
   }
 };
 // frac (0..1) необязателен: если задан (привычки со счётчиком) — «до» и «после»
@@ -5814,7 +5979,7 @@ function habitMiniIcon(h, done) {
   if (entry) {
     if (entry.key === 'sunrise') return habitSunMoonSVG(done);
     if (entry.key === 'reading') return habitBookSVG(done);
-    if (entry.key === 'water') return habitVesselSVG('mini' + h.id, done ? 1 : (h.target ? Math.min(1, habitCounterToday(h) / h.target) : 0), done ? '#30d158' : '#5ac8fa');
+    if (entry.key === 'water') return habitVesselSVG('mini' + h.id, done ? 1 : (h.target ? Math.min(1, habitCounterToday(h) / h.target) : 0), done ? '#0a84ff' : '#5ac8fa');
     if (HABIT_OBJECTS[entry.key]) return habitCatalogObjectSVG(entry.key, done);
   }
   return '<span style="font-size:15px">' + habitIcon(h.name) + '</span>';
@@ -6061,7 +6226,7 @@ function renderHabits() {
       valFull = wc >= target;
       valLine = wc + '/' + target + (streak > 0 ? ' · <span class="q-flame">🔥' + streak + '</span>' : '');
     }
-    const vesselColor = done ? '#30d158' : (entry && entry.key === 'water' ? '#5ac8fa' : habitColor(h.name));
+    const vesselColor = done ? '#0a84ff' : (entry && entry.key === 'water' ? '#5ac8fa' : habitColor(h.name));
     let objectMarkup, showBadge;
     if (h.customIcon && CUSTOM_ICONS[h.customIcon]) { objectMarkup = customIconSVG(h.customIcon, done, counter ? p : undefined); showBadge = false; }
     else if (entry && entry.key === 'sunrise') { objectMarkup = habitSunMoonSVG(done); showBadge = false; }
@@ -6165,7 +6330,7 @@ function render(opts) {
   document.getElementById('pct').textContent = pct.toFixed(pct < 10 ? 1 : 0) + '%';
   countTo(document.getElementById('saved'), sum);
   document.getElementById('goalLabel').innerHTML =
-    'из ' + fmt(GOAL) + ' BYN · <b>' + (state.goal.name || 'Цель') + '</b> ✎';
+    'из ' + fmt(GOAL) + ' BYN · <b>' + ((state.goal && state.goal.name) || 'Цель') + '</b> ✎';
   document.getElementById('stDays').textContent = daysLeft();
   document.getElementById('stEnv').textContent = state.closed.length + '/' + N;
   document.getElementById('stLeft').textContent = fmt(Math.max(0, GOAL - sum));
@@ -6180,7 +6345,7 @@ function render(opts) {
     '<span class="wl-ico">' +
       '<svg viewBox="0 0 20 20" aria-hidden="true">' +
         '<path d="M2.5 6.5h15v10a1.5 1.5 0 0 1-1.5 1.5H4a1.5 1.5 0 0 1-1.5-1.5z" fill="#c8961a"/>' +
-        '<path d="M2.5 6.5 4 3.2A1.5 1.5 0 0 1 5.4 2.3h9.2a1.5 1.5 0 0 1 1.4.9l1.5 3.3z" fill="#e8a820"/>' +
+        '<path d="M2.5 6.5 4 3.2A1.5 1.5 0 0 1 5.4 2.3h9.2a1.5 1.5 0 0 1 1.4.9l1.5 3.3z" fill="#0a84ff"/>' +
         '<circle cx="14" cy="11.5" r="2.2" fill="#fff8e2"/>' +
       '</svg>' +
     '</span>' +
@@ -6249,9 +6414,9 @@ function plural(n, one, few, many) {
 // ================== РАСХОДЫ ==================
 const CATS = [
   { id:'cafe',      name:'Кафе',        color:'#b0713a', svg:'<path d="M5 9h11v6a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4V9z"/><path d="M16 10.5h1.3a2.5 2.5 0 0 1 0 5H16"/><path d="M8.5 4.5c0 1.2.9 1.3.9 2.5M12 4.5c0 1.2.9 1.3.9 2.5"/>' },
-  { id:'food',      name:'Еда',         color:'#ff9500', svg:'<path d="M9 3v6a2 2 0 0 1-2 2 2 2 0 0 1-2-2V3"/><path d="M7 11v10"/><path d="M17 3c-2.4 1.2-3.4 4.2-3 7 .1.7.6 1 1.2 1H17"/><path d="M17 3v18"/>' },
+  { id:'food',      name:'Еда',         color:'#0a84ff', svg:'<path d="M9 3v6a2 2 0 0 1-2 2 2 2 0 0 1-2-2V3"/><path d="M7 11v10"/><path d="M17 3c-2.4 1.2-3.4 4.2-3 7 .1.7.6 1 1.2 1H17"/><path d="M17 3v18"/>' },
   { id:'transport', name:'Транспорт',   color:'#0a84ff', svg:'<path d="M5 15l1.4-4.2A2 2 0 0 1 8.3 9.5h7.4a2 2 0 0 1 1.9 1.3L19 15"/><path d="M5 15h14a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-2a1 1 0 0 1 1-1z"/><path d="M7.5 16.8h.01M16.5 16.8h.01"/>' },
-  { id:'home',      name:'Дом',         color:'#30d158', svg:'<path d="M4 11l8-7 8 7"/><path d="M6 9.5V19a1 1 0 0 0 1 1h3v-5.5h4V20h3a1 1 0 0 0 1-1V9.5"/>' },
+  { id:'home',      name:'Дом',         color:'#0a84ff', svg:'<path d="M4 11l8-7 8 7"/><path d="M6 9.5V19a1 1 0 0 0 1 1h3v-5.5h4V20h3a1 1 0 0 0 1-1V9.5"/>' },
   { id:'fun',       name:'Развлечения', color:'#bf5af2', svg:'<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.9L12 16.9l-5.2 2.8 1-5.9-4.3-4.1 5.9-.9L12 3.5z"/>' },
   { id:'clothes',   name:'Одежда',      color:'#ff375f', svg:'<path d="M8.5 4L4 7.5 6.5 10l1-0.7V20h9V9.3l1 .7L20 7.5 15.5 4a3.5 3.5 0 0 1-7 0z"/>' },
   { id:'health',    name:'Здоровье',    color:'#ff453a', svg:'<path d="M12 20s-7.2-4.6-9.2-9A5.2 5.2 0 0 1 12 6.6 5.2 5.2 0 0 1 21.2 11c-2 4.4-9.2 9-9.2 9z"/>' },
@@ -6870,12 +7035,18 @@ document.addEventListener('pointerup', () => { edgeDrag = null; edgeHint.classLi
 
 // ---------- экран «Сегодня» ----------
 // доли и подписи всех четырёх разделов в одном месте
+// Ни одно поле не должно обнулять весь экран: считаем каждую плитку отдельно
+// и подставляем прочерк, если данные раздела повреждены.
+function safeCell(fn, fallback) {
+  try { return fn(); } catch (e) { console.error('плитка:', e); return fallback; }
+}
 function todayCells() {
   const sum = total(), goalPct = GOAL ? sum / GOAL : 0;
   const L = state.limit, mSum = monthSpent();
   const t = curDay();
-  const hTotal = state.habits.length;
-  const hDone = state.habits.filter(h => h.log.includes(t)).length;
+  const habits = Array.isArray(state.habits) ? state.habits : [];
+  const hTotal = habits.length;
+  const hDone = habits.filter(h => h && Array.isArray(h.log) && h.log.includes(t)).length;
   const n = state.nutri;
   const eaten = n ? fdTotals(t).k : 0;
   const norm = n ? n.kcal + fdBurned(t) : 0;
@@ -6909,7 +7080,12 @@ let todayMounted = false;
 function renderToday() {
   const grid = document.getElementById('tdGrid');
   if (!grid) return;
-  const cells = todayCells();
+  const cells = safeCell(todayCells, [
+    { id: 'tdSave',  tab: 'save',   theme: 'gold',  name: 'Копилка',  frac: 0, val: '—', lab: '', hint: '' },
+    { id: 'tdSpend', tab: 'spend',  theme: 'coral', name: 'Расходы',  frac: 0, val: '—', lab: '', hint: '' },
+    { id: 'tdHabit', tab: 'habits', theme: 'fire',  name: 'Привычки', frac: 0, val: '—', lab: '', hint: '' },
+    { id: 'tdFood',  tab: 'food',   theme: 'green', name: 'Питание',  frac: 0, val: '—', lab: '', hint: '' }
+  ]);
   if (!todayMounted) {
     grid.innerHTML = cells.map(c =>
       '<button type="button" class="td-cell" data-cell="' + c.id + '" onclick="switchTab(\'' + c.tab + '\')">' +
@@ -6924,11 +7100,15 @@ function renderToday() {
     });
     todayMounted = true;
   }
+  document.getElementById('tdDate').textContent = dayLabel(curDay());
   cells.forEach(c => {
-    sphSet(c.id, { theme: c.theme, frac: c.frac, over: !!c.over, val: c.val, lab: c.lab, sub: '' });
-    const h = document.getElementById(c.id + 'Hint');
-    if (h) h.textContent = c.hint;
+    try {
+      sphSet(c.id, { theme: c.theme, frac: c.frac, over: !!c.over, val: c.val, lab: c.lab, sub: '' });
+      const h = document.getElementById(c.id + 'Hint');
+      if (h) h.textContent = c.hint;
+    } catch (e) { console.error('сфера ' + c.id + ':', e); }
   });
+  // дату ставим первой: она не зависит от данных разделов
   document.getElementById('tdDate').textContent = dayLabel(curDay());
   document.getElementById('tdNext').disabled = curDay() >= todayStr();
 }
@@ -8176,9 +8356,9 @@ function renderFoodWeight() {
     ]);
     const line = coords.map((c, i) => (i ? 'L' : 'M') + c[0].toFixed(1) + ' ' + c[1].toFixed(1)).join(' ');
     html += '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" height="' + H + '" style="margin-top:10px;display:block">' +
-      '<path d="' + line + '" fill="none" stroke="#26a349" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '<path d="' + line + '" fill="none" stroke="#0a84ff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>' +
       coords.map((c, i) => '<circle cx="' + c[0].toFixed(1) + '" cy="' + c[1].toFixed(1) + '" r="' +
-        (i === coords.length - 1 ? 4 : 2.5) + '" fill="#26a349"/>').join('') +
+        (i === coords.length - 1 ? 4 : 2.5) + '" fill="#0a84ff"/>').join('') +
     '</svg>';
   }
   box.innerHTML = html;
@@ -8593,13 +8773,6 @@ function addExpense() {
   const after = monthSpent(), L = state.limit;
   if (L > 0 && before < L && after >= L) { toast('🚨 Лимит месяца превышен!'); sndAch(); vib([60, 50, 60, 50, 120]); }
   else if (L > 0 && before < L * .8 && after >= L * .8) toast('⚠️ Уже 80% лимита месяца');
-  else if (v >= DAY_TARGET) {
-    // антиреклама трат: перевод в конверты копилки
-    const n = v / DAY_TARGET;
-    const nTxt = n >= 3 ? Math.round(n) : (Math.round(n * 10) / 10).toLocaleString('ru-RU');
-    toast('−' + fmt2(v) + ' BYN · ' + catById(selCat).name + ' — это ' + nTxt + ' ' +
-      plural(Math.round(n), 'конверт', 'конверта', 'конвертов') + ' по ' + DAY_TARGET + '! 🐷');
-  }
   else toast('−' + fmt2(v) + ' BYN · ' + catById(selCat).name);
 }
 
@@ -8635,7 +8808,7 @@ function monthSpent() {
   return state.expenses.filter(e => monthKey(e.date) === mk).reduce((s, e) => s + e.amount, 0);
 }
 
-const PIE_COLORS = ['#26a349','#ff6b6b','#7fd4a0','#ffd35c','#b98bff','#ff9ec7','#5edfdf','#f0a35e','#9aa5b8','#4cd97b'];
+const PIE_COLORS = ['#0a84ff','#ff6b6b','#7fd4a0','#ffd35c','#b98bff','#ff9ec7','#5edfdf','#f0a35e','#9aa5b8','#0a84ff'];
 
 function renderSpend() {
   const tDay = todayStr(), week = weekDates(), mk = monthKey();
@@ -8659,8 +8832,8 @@ function renderSpend() {
   const pMonth = L > 0 ? sumMonth / L : 0;
   const state3 = pMonth >= 1 ? 'over' : pMonth >= .8 ? 'risk' : 'ok';
   const BAR_BG = {
-    ok:   'linear-gradient(90deg,#4cd97b,#26a349)',
-    risk: 'linear-gradient(90deg,#ffb340,#f0912e)',
+    ok:   'var(--accent)',
+    risk: 'linear-gradient(90deg,#0a84ff,#0a84ff)',
     over: 'linear-gradient(90deg,#ff5d5d,#e2404f)'
   };
 
@@ -9003,7 +9176,7 @@ function renderCmp(monthExps) {
       '<div class="cmp-track"><div class="cmp-fill" style="width:' + (prevSum / maxV * 100) + '%; background:rgba(120,130,160,.5)"></div></div>' +
       '<div class="cmp-sum">' + fmt2(prevSum) + '</div></div>' +
     '<div class="cmp-row"><div class="cmp-label">' + mName(now) + '</div>' +
-      '<div class="cmp-track"><div class="cmp-fill" style="width:' + (curSum / maxV * 100) + '%; background:linear-gradient(90deg,#4cd97b,#26a349)"></div></div>' +
+      '<div class="cmp-track"><div class="cmp-fill" style="width:' + (curSum / maxV * 100) + '%; background:var(--accent)"></div></div>' +
       '<div class="cmp-sum">' + fmt2(curSum) + '</div></div>';
 
   const delta = document.getElementById('cmpDelta');
@@ -9011,7 +9184,7 @@ function renderCmp(monthExps) {
     const p = Math.round((curSum - prevSum) / prevSum * 100);
     delta.innerHTML = p === 0 ? 'Ровно как в прошлом месяце'
       : p > 0 ? 'Пока на <b style="color:#d63a3a">' + p + '% больше</b>, чем в прошлом месяце'
-      : 'На <b style="color:#26a349">' + (-p) + '% меньше</b>, чем в прошлом месяце 👍';
+      : 'На <b style="color:#0a84ff">' + (-p) + '% меньше</b>, чем в прошлом месяце 👍';
   } else if (!prevSum) {
     delta.textContent = 'В прошлом месяце трат не записано — сравнение появится со временем';
   } else delta.textContent = '';
@@ -9255,20 +9428,23 @@ function syncPull(force) {
       setSyncDot(true);
       if (!data || !data.state) { if (force) syncPush(); return; }
       if (force || (data.ts || 0) > (state.updatedAt || 0)) {
-        state = Object.assign({
-          startDate: todayStr(), closed: [], unlocked: [],
-          stars: 0, qAwarded: [], bought: [], worn: [],
-          celebrated: false, lastBackup: null, wallet: 0,
-          expenses: [], customCats: [], limit: 0, milestones: []
-        }, data.state);
+        // тем же разбором, что и своё хранилище: в облаке может лежать копия
+        // с другого устройства, где часть полей просто отсутствует
+        state = normalizeState(data.state || {});
         localStorage.setItem(KEY, JSON.stringify(state));
         ensureGoal(); applyGoal();
         dispSum = null;
-        render(); renderSpend();
+        redrawAll();
         toast('🔄 Данные синхронизированы');
       }
     })
     .catch(() => setSyncDot(false));
+}
+// перерисовать все разделы: после обмена данными меняется сразу всё
+function redrawAll() {
+  [render, renderSpend, renderHabits, renderFood, renderToday].forEach(fn => {
+    try { fn(); } catch (e) { console.error('перерисовка:', e); }
+  });
 }
 function connectSync(code) {
   syncCfg = { code: code.toUpperCase().trim() };
@@ -9661,8 +9837,8 @@ function dragCoinTo(targetEl) {
 const ONB_SPH = [
   { id: 'obA', x: 46,  dark: '#efa724', light: '#ffe289', name: 'Копилка' },
   { id: 'obB', x: 141, dark: '#e2653c', light: '#ffb08c', name: 'Расходы' },
-  { id: 'obC', x: 236, dark: '#f2712a', light: '#ffc46b', name: 'Привычки' },
-  { id: 'obD', x: 331, dark: '#26a349', light: '#5fe08a', name: 'Питание' }
+  { id: 'obC', x: 236, dark: '#0a84ff', light: '#ffc46b', name: 'Привычки' },
+  { id: 'obD', x: 331, dark: '#0a84ff', light: '#0a84ff', name: 'Питание' }
 ];
 function onbSpheresSvg() {
   return '<svg id="obStage" viewBox="0 0 377 150" width="330" height="131">' +
@@ -9873,16 +10049,16 @@ function renderEvening() {
   const IC_OK   = G('<path d="M4.5 12.5l5 5L19.5 7"/>');
   const IC_WARN = G('<path d="M12 4.5v9.5"/><circle cx="12" cy="18.5" r="1.7" fill="#fff" stroke="none"/>');
   const IC_ENV  = G('<rect x="3.5" y="6" width="17" height="12" rx="2"/><path d="M4.5 7.5l7.5 5.5 7.5-5.5"/>');
-  const IC_NUM  = '<b style="color:#fff; font-size:15px">' + s + '</b>';
+  const IC_NUM  = G('<path d="M12 3c2.6 3 4 5.2 4 7.2 0 1.2-.6 2.1-1.6 2.6.7-1.9-.4-3.9-2.7-6-.7 2.4-2 3.8-3.4 5.4-1.2 1.4-1.9 2.8-1.9 4.4A5.6 5.6 0 0 0 12 21a5.6 5.6 0 0 0 5.6-5.6c0-3.7-2.4-7.6-5.6-12.4z"/>');
   const IC_HAB  = G('<path d="M4 12.5l5 5L20 6.5"/><path d="M4 19h16" opacity=".45"/>');
 
   const rows = [];
   if (L > 0) rows.push(sumToday <= allowance + .01
-    ? [IC_OK, '#30d158', 'В бюджете дня: <b>' + fmt2(sumToday) + '</b> из ' + fmt(Math.round(allowance))]
+    ? [IC_OK, '#0a84ff', 'В бюджете дня: <b>' + fmt2(sumToday) + '</b> из ' + fmt(Math.round(allowance))]
     : [IC_WARN, '#ff9f43', 'Перебор: <b>' + fmt2(sumToday) + '</b> при бюджете ' + fmt(Math.round(allowance))]);
   else rows.push([IC_OK, '#64d2ff', 'Потрачено сегодня: <b>' + fmt2(sumToday) + ' BYN</b>']);
   rows.push(envToday.length
-    ? [IC_OK, '#e8a820', 'Конверт закрыт: <b>+' + fmt(envSum) + ' BYN</b> в копилку']
+    ? [IC_OK, '#0a84ff', 'Конверт закрыт: <b>+' + fmt(envSum) + ' BYN</b> в копилку']
     : [IC_ENV, '#64d2ff', 'Конверт сегодня ещё не закрыт']);
   // привычки за день
   const hTot = state.habits.length;
@@ -9890,8 +10066,8 @@ function renderEvening() {
     const day = todayStr();
     const hDone = state.habits.filter(h => h.log.includes(day)).length;
     rows.push(hDone === hTot
-      ? [IC_OK, '#f2712a', 'Привычки: <b>все ' + hTot + '</b> закрыты']
-      : [IC_HAB, '#f2712a', 'Привычки: <b>' + hDone + ' из ' + hTot + '</b>' +
+      ? [IC_OK, '#0a84ff', 'Привычки: <b>все ' + hTot + '</b> закрыты']
+      : [IC_HAB, '#0a84ff', 'Привычки: <b>' + hDone + ' из ' + hTot + '</b>' +
           (hDone ? '' : ' — сегодня ещё ничего')]);
   }
   // питание за день
@@ -9901,12 +10077,12 @@ function renderEvening() {
     const eatenK = fdTotals(day).k, normK = nut.kcal + fdBurned(day);
     if (eatenK > normK) rows.push([IC_WARN, '#e2653c',
       'Питание: <b>' + fmt(Math.round(eatenK - normK)) + '</b> ккал сверх нормы']);
-    else rows.push([IC_OK, '#26a349',
+    else rows.push([IC_OK, '#0a84ff',
       'Питание: <b>' + fmt(Math.round(eatenK)) + '</b> из ' + fmt(Math.round(normK)) + ' ккал']);
   }
-  rows.push([IC_NUM, '#ff6b35', 'Стрик: <b>' + s + '</b> ' + plural(s, 'день', 'дня', 'дней') + ' подряд']);
+  rows.push([IC_NUM, '#0a84ff', 'Стрик: <b>' + s + '</b> ' + plural(s, 'день', 'дня', 'дней') + ' подряд']);
   document.getElementById('evRows').innerHTML =
-    rows.map(r => '<div class="ev-row"><span class="ev-badge" style="background:' + r[1] + '">' +
+    rows.map(r => '<div class="ev-row"><span class="ev-badge">' +
       r[0] + '</span><span>' + r[2] + '</span></div>').join('');
 
   const btns = [];
