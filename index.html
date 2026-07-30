@@ -9428,14 +9428,25 @@ function syncPull(force) {
       setSyncDot(true);
       if (!data || !data.state) { if (force) syncPush(); return; }
       if (force || (data.ts || 0) > (state.updatedAt || 0)) {
-        // тем же разбором, что и своё хранилище: в облаке может лежать копия
-        // с другого устройства, где часть полей просто отсутствует
-        state = normalizeState(data.state || {});
-        localStorage.setItem(KEY, JSON.stringify(state));
-        ensureGoal(); applyGoal();
-        dispSum = null;
-        redrawAll();
-        toast('🔄 Данные синхронизированы');
+        // Облачную копию примеряем как одежду: если она не подошла — снимаем.
+        // Раньше сбой на середине оставлял приложение с половиной чужих данных.
+        const backup = localStorage.getItem(KEY);
+        try {
+          state = normalizeState(data.state || {});
+          localStorage.setItem(KEY, JSON.stringify(state));
+          ensureGoal(); applyGoal();
+          dispSum = null;
+          redrawAll();
+          toast('Данные синхронизированы');
+        } catch (e) {
+          console.error('синхронизация:', e);
+          if (backup) localStorage.setItem(KEY, backup);
+          state = load();
+          ensureGoal(); applyGoal();
+          dispSum = null;
+          redrawAll();
+          toast('Копия из облака не подошла — оставил ваши данные');
+        }
       }
     })
     .catch(() => setSyncDot(false));
