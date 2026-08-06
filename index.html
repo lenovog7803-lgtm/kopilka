@@ -1600,6 +1600,41 @@
   .m-ok { background: var(--accent); color:#fff; box-shadow:none; }
   .m-ok:disabled { background: var(--accent-soft); color: rgba(0,122,255,.4); }
 
+  /* ---- знакомство: подсветка элементов ---- */
+  #tour { position:fixed; inset:0; z-index:200; display:none; }
+  #tour.show { display:block; }
+  /* «дыра» в затемнении: сам элемент прозрачный, тень заливает всё вокруг */
+  #tourHole {
+    position:fixed; border-radius:18px; pointer-events:none;
+    box-shadow: 0 0 0 9999px rgba(20,24,40,.62);
+    transition: top .32s var(--spring), left .32s var(--spring),
+                width .32s var(--spring), height .32s var(--spring);
+  }
+  #tourCard {
+    position:fixed; left:50%; transform:translateX(-50%);
+    width:min(340px, calc(100vw - 32px));
+    background: rgba(248,249,252,.96);
+    -webkit-backdrop-filter: blur(30px) saturate(190%); backdrop-filter: blur(30px) saturate(190%);
+    border-radius:18px; padding:var(--s4);
+    box-shadow: var(--shadow-3);
+    transition: top .32s var(--spring);
+  }
+  .tour-step { font-size:var(--t-cap); color:var(--text2); margin-bottom:var(--s1); }
+  .tour-title { font-size:var(--t-body); font-weight:600; letter-spacing:-.3px; }
+  .tour-text { font-size:var(--t-item); color:var(--text2); line-height:1.4; margin-top:var(--s1); }
+  .tour-btns { display:flex; align-items:center; gap:var(--s2); margin-top:var(--s4); }
+  .tour-skip {
+    flex:1; text-align:left; border:none; background:none; cursor:pointer; font-family:inherit;
+    font-size:var(--t-item); color:var(--text2); padding:6px 0;
+  }
+  .tour-next {
+    border:none; border-radius:12px; cursor:pointer; font-family:inherit;
+    font-size:var(--t-item); font-weight:600; color:#fff; background:var(--accent);
+    padding:11px 20px;
+  }
+  .tour-next:disabled { opacity:.4; }
+  .tour-next:active { transform:scale(.96); }
+
   /* ---- интерактивное знакомство ---- */
   #onb {
     position:fixed; inset:0; z-index:120; display:none;
@@ -1705,7 +1740,17 @@
   .ev-moon { display:flex; justify-content:center; opacity:.75; }
   .ev-title { color:var(--text); font-size:var(--t-title); font-weight:700;
     letter-spacing:-.6px; margin:var(--s2) 0 var(--s1); }
-  .ev-date { color:var(--text2); font-size:var(--t-sub); margin-bottom:var(--s5); }
+  .ev-daybar { display:flex; align-items:center; justify-content:center; gap:var(--s1); margin-bottom:var(--s5); }
+  .ev-dnav {
+    width:28px; height:28px; border:none; border-radius:9px; cursor:pointer; flex-shrink:0;
+    background:rgba(255,255,255,.6); color:var(--text2); font-size:16px; line-height:1;
+    display:flex; align-items:center; justify-content:center; font-family:inherit;
+  }
+  .ev-dnav:disabled { opacity:.3; }
+  .ev-date {
+    border:none; background:none; font-family:inherit; cursor:pointer;
+    color:var(--text2); font-size:var(--t-sub); padding:4px 8px;
+  }
   /* сгруппированный список: одна плашка, строки через волосяную линию */
   #evRows {
     background:rgba(255,255,255,.72); border-radius:14px; overflow:hidden;
@@ -2200,6 +2245,11 @@
     display:flex; align-items:center; justify-content:center;
   }
   .lr-txt { flex:1; min-width:0; font-size:var(--t-body); font-weight:500; }
+  .lr-txt small { display:block; font-size:var(--t-sub); font-weight:400; color:var(--text2); margin-top:1px; }
+  /* огонёк вместо квадратной иконки: он и есть значок этой строки */
+  .lr-flame { background:none !important; width:26px; height:32px; }
+  .lr-flame svg { width:26px; height:32px; display:block;
+    filter: drop-shadow(0 3px 8px rgba(240,90,25,.32)); }
   .lr-arrow { flex-shrink:0; color:var(--text3); font-size:20px; line-height:1; }
   .sec-title { font-size:var(--t-body); font-weight:650; color:var(--text); letter-spacing:-.3px;
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -3050,6 +3100,29 @@
       <div class="td-grid" id="tdGrid"></div>
     </div>
 
+    <!-- итог дня: та же строка-пункт, что и настройки -->
+    <button class="card list-row" onclick="openEvening()">
+      <span class="lr-ico lr-flame"><svg viewBox="0 0 32 40" width="30" height="36" aria-hidden="true">
+            <defs>
+              <linearGradient id="flmOut" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#ffb340"/><stop offset=".5" stop-color="#ff7a1a"/><stop offset="1" stop-color="#f04e23"/>
+              </linearGradient>
+              <linearGradient id="flmIn" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#fff3c4"/><stop offset="1" stop-color="#ffc93c"/>
+              </linearGradient>
+            </defs>
+            <path class="flm-out" fill="url(#flmOut)"
+                  d="M16 1c1.6 4.2 4.4 6.6 7.2 9.6C26.4 14 28 17.4 28 21.2 28 29.4 22.6 35 16 35S4 29.4 4 21.2c0-3.4 1.2-5.8 3.4-8.4 1.1 1.4 2.3 2.3 3.6 2.6-.9-4.6.6-9.8 5-14.4z"/>
+            <path class="flm-in" fill="url(#flmIn)"
+                  d="M16 16.4c1.4 1.9 3.4 3.4 4.6 5.2 1 1.5 1.4 2.9 1.4 4.4 0 3.6-2.6 6.2-6 6.2s-6-2.6-6-6.2c0-2.6 1.4-4.4 3.4-6.4.5.8 1.1 1.3 1.8 1.5-.4-1.7 0-3.4.8-4.7z"/>
+          </svg></span>
+      <span class="lr-txt">Итог дня
+        <small id="streakNow">0 дней подряд</small>
+      </span>
+      <span class="lr-arrow">›</span>
+    </button>
+    <span id="streakBest" hidden></span><span id="freezeBadge" hidden></span><span id="flame" hidden></span>
+
     <!-- настройки отдельной строкой, как пункт системного списка -->
     <button class="card list-row" onclick="openSettings()">
       <span class="lr-ico">
@@ -3109,33 +3182,6 @@
     <div class="env-grid" id="envGrid"></div>
     <div class="today-line" id="todayLine"></div>
     <div class="undo"><button onclick="undoLast()">↩︎ отменить последний конверт</button></div>
-  </div>
-
-  <!-- стрик (тап — итог дня) -->
-  <div class="card" onclick="openEvening()" style="cursor:pointer" title="Итог дня">
-    <div class="streak-row">
-      <span class="streak-ico" id="flame">
-        <svg viewBox="0 0 32 40" width="30" height="36" aria-hidden="true">
-          <defs>
-            <linearGradient id="flmOut" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stop-color="#ffb340"/><stop offset=".5" stop-color="#ff7a1a"/><stop offset="1" stop-color="#f04e23"/>
-            </linearGradient>
-            <linearGradient id="flmIn" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stop-color="#fff3c4"/><stop offset="1" stop-color="#ffc93c"/>
-            </linearGradient>
-          </defs>
-          <path class="flm-out" fill="url(#flmOut)"
-                d="M16 1c1.6 4.2 4.4 6.6 7.2 9.6C26.4 14 28 17.4 28 21.2 28 29.4 22.6 35 16 35S4 29.4 4 21.2c0-3.4 1.2-5.8 3.4-8.4 1.1 1.4 2.3 2.3 3.6 2.6-.9-4.6.6-9.8 5-14.4z"/>
-          <path class="flm-in" fill="url(#flmIn)"
-                d="M16 16.4c1.4 1.9 3.4 3.4 4.6 5.2 1 1.5 1.4 2.9 1.4 4.4 0 3.6-2.6 6.2-6 6.2s-6-2.6-6-6.2c0-2.6 1.4-4.4 3.4-6.4.5.8 1.1 1.3 1.8 1.5-.4-1.7 0-3.4.8-4.7z"/>
-        </svg>
-      </span>
-      <div class="streak-info">
-        <div class="big" id="streakNow">0 дней подряд</div>
-        <div class="small" id="streakBest">рекорд: 0</div>
-      </div>
-      <span class="freeze-badge" id="freezeBadge">Заморозка · 1 в неделю</span>
-    </div>
   </div>
 
   <!-- ещё (свёрнуто) -->
@@ -3407,7 +3453,7 @@
         <div id="syncBody"></div>
       </div>
 
-      <div class="set-block more-btn" id="replayOnbBtn" onclick="replayOnbStory()">
+      <div class="set-block more-btn" id="replayOnbBtn" onclick="closeSettings(); setTimeout(startTour, 260);">
         <span>Посмотреть знакомство заново</span><span class="more-arrow">›</span>
       </div>
     </div>
@@ -3650,6 +3696,20 @@
 <div id="toast"><span id="toastMsg"></span><button class="t-undo" id="toastUndo">Вернуть</button></div>
 <div class="drop-hint">📥 Отпусти файл бэкапа, чтобы восстановить</div>
 
+<!-- знакомство: подсветка настоящих элементов -->
+<div id="tour" aria-hidden="true">
+  <div id="tourHole"></div>
+  <div id="tourCard">
+    <div class="tour-step" id="tourStep"></div>
+    <div class="tour-title" id="tourTitle"></div>
+    <div class="tour-text" id="tourText"></div>
+    <div class="tour-btns">
+      <button class="tour-skip" onclick="tourSkip()">Пропустить</button>
+      <button class="tour-next" id="tourNextBtn" onclick="tourNext()">Дальше</button>
+    </div>
+  </div>
+</div>
+
 <!-- интерактивное знакомство -->
 <div id="onb">
   <div class="onb-card">
@@ -3730,7 +3790,11 @@
       </svg>
     </div>
     <h3 class="ev-title">Итог дня</h3>
-    <div class="ev-date" id="evDate"></div>
+    <div class="ev-daybar">
+      <button class="ev-dnav" onclick="evShiftDay(-1)" aria-label="Предыдущий день">‹</button>
+      <button class="ev-date" id="evDate" onclick="evPickDay()"></button>
+      <button class="ev-dnav" id="evNext" onclick="evShiftDay(1)" aria-label="Следующий день">›</button>
+    </div>
     <div id="evRows"></div>
     <div class="modal-btns" id="evBtns" style="flex-direction:column"></div>
   </div>
@@ -7208,6 +7272,7 @@ function tdPointerUp() {
     grid.classList.remove('reordering');
     state.tdOrder = tdCells().map(el => el.dataset.cell);
     save();
+    if (typeof tourDragDone === 'function') tourDragDone();
     tdMoved = false;
   }, TD_SETTLE);
   vib(12);
@@ -7238,8 +7303,11 @@ function blockScrollWhileDragging(el, isActive) {
 
 // ---------- календарь выбора дня ----------
 let dpMonth = null;   // первое число показываемого месяца
-function openDayPicker() {
-  const d = parseD(curDay());
+// кому вернуть выбранный день: по умолчанию — общему дню приложения
+let dpTarget = null;
+function openDayPicker(opts) {
+  dpTarget = (opts && typeof opts.pick === 'function') ? opts.pick : null;
+  const d = parseD(dpTarget && opts.day ? opts.day : curDay());
   dpMonth = new Date(d.getFullYear(), d.getMonth(), 1);
   renderDayPicker();
   document.getElementById('dayPicker').classList.add('show');
@@ -7287,6 +7355,23 @@ let tdSwipeX = null, tdSwipeY = null;
   }, { passive: true });
 })();
 
+// свайп по «Питанию»: те же дни, что и на главной
+let fdSwipeX = null, fdSwipeY = null;
+(function bindFoodSwipe() {
+  const view = document.getElementById('viewFood');
+  if (!view) return;
+  view.addEventListener('pointerdown', e => { fdSwipeX = e.clientX; fdSwipeY = e.clientY; }, { passive: true });
+  view.addEventListener('pointerup', e => {
+    if (fdSwipeX === null) return;
+    const dx = e.clientX - fdSwipeX, dy = e.clientY - fdSwipeY;
+    fdSwipeX = null;
+    // горизонталь должна явно перевешивать вертикаль, иначе это был скролл
+    if (Math.abs(dx) < 55 || Math.abs(dx) < Math.abs(dy) * 1.7) return;
+    fdShiftDay(dx < 0 ? 1 : -1);
+    vib(8);
+  }, { passive: true });
+})();
+
 // был ли в этот день хоть какой-то след: еда, привычка или трата
 function dayHasData(d) {
   const n = state.nutri;
@@ -7298,7 +7383,8 @@ function dayHasData(d) {
 }
 function dpPick(d) {
   vib(8);
-  setViewDate(d);
+  if (dpTarget) { const fn = dpTarget; dpTarget = null; fn(d); }
+  else setViewDate(d);
   closeDayPicker();
 }
 
@@ -9890,6 +9976,86 @@ function obDrop(id, frac) {
   vib(10);
   return obWait(750);
 }
+// ---------- знакомство: четыре шага с подсветкой ----------
+const TOUR = [
+  { sel: '#tdGrid', title: 'Четыре сферы',
+    text: 'Копилка, расходы, привычки и питание. Каждая наливается по мере того, как проходит день. Тап открывает раздел.' },
+  { sel: '#tdGrid', title: 'Порядок под себя', drag: true,
+    text: 'Задержите сферу пальцем и перетащите. Поставьте их в том порядке, в каком удобнее вам.' },
+  { sel: '#tourEvRow', title: 'Итог дня',
+    text: 'Что получилось за день: траты, конверт, привычки, питание. Дни листаются стрелками, а по дате открывается календарь.' },
+  { sel: '#tourSetRow', title: 'Настройки',
+    text: 'Синхронизация между устройствами по коду и напоминания.' }
+];
+let tourIdx = -1, tourWaitDrag = false;
+
+function tourEls() {
+  const rows = Array.prototype.slice.call(document.querySelectorAll('#viewToday .list-row'));
+  const ev = rows.find(r => /Итог дня/.test(r.textContent));
+  const set = rows.find(r => /Настройки/.test(r.textContent));
+  if (ev) ev.id = 'tourEvRow';
+  if (set) set.id = 'tourSetRow';
+}
+
+function tourPlace() {
+  const step = TOUR[tourIdx];
+  if (!step) return;
+  const el = document.querySelector(step.sel);
+  const hole = document.getElementById('tourHole');
+  const card = document.getElementById('tourCard');
+  if (!el || !hole || !card) return;
+  const r = el.getBoundingClientRect(), pad = 8;
+  hole.style.top = (r.top - pad) + 'px';
+  hole.style.left = (r.left - pad) + 'px';
+  hole.style.width = (r.width + pad * 2) + 'px';
+  hole.style.height = (r.height + pad * 2) + 'px';
+  // карточку ставим под окном, а если внизу не помещается — над ним
+  const below = r.bottom + 14, h = card.offsetHeight || 160;
+  card.style.top = (below + h < window.innerHeight - 12 ? below : Math.max(12, r.top - h - 14)) + 'px';
+}
+
+function tourShow(i) {
+  tourIdx = i;
+  const step = TOUR[i];
+  if (!step) { tourFinish(); return; }
+  document.getElementById('tourStep').textContent = 'Шаг ' + (i + 1) + ' из ' + TOUR.length;
+  document.getElementById('tourTitle').textContent = step.title;
+  document.getElementById('tourText').textContent = step.text;
+  const next = document.getElementById('tourNextBtn');
+  tourWaitDrag = !!step.drag;
+  next.textContent = step.drag ? 'Потом' : (i === TOUR.length - 1 ? 'Готово' : 'Дальше');
+  // третий шаг показываем с открытым окном итогов
+  if (step.sel === '#tourEvRow') closeEvening && closeEvening();
+  requestAnimationFrame(() => { tourEls(); tourPlace(); });
+}
+
+function tourNext() {
+  if (tourIdx + 1 >= TOUR.length) { tourFinish(); return; }
+  tourShow(tourIdx + 1);
+}
+function tourSkip() { tourFinish(); }
+function tourFinish() {
+  document.getElementById('tour').classList.remove('show');
+  tourIdx = -1; tourWaitDrag = false;
+  if (!state.onboarded) { state.onboarded = true; state.hamboarded = true; save(); }
+}
+function startTour() {
+  switchTab('today');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  setTimeout(() => {
+    tourEls();
+    document.getElementById('tour').classList.add('show');
+    tourShow(0);
+  }, 300);
+}
+// сферу переставили — шаг про порядок считается пройденным
+function tourDragDone() {
+  if (!tourWaitDrag) return;
+  tourWaitDrag = false;
+  setTimeout(() => { if (tourIdx === 1) tourNext(); }, 420);
+}
+window.addEventListener('resize', () => { if (tourIdx >= 0) tourPlace(); });
+
 // пересмотр знакомства из «Ещё» — как предпросмотр, состояние не трогаем
 function replayOnbStory() {
   if (document.getElementById('onb').classList.contains('show')) return;
@@ -10034,8 +10200,23 @@ function sweepToPig(K) {                  // «Пронесло!»: остато
   return s;
 }
 
+// день, за который смотрим итоги: по умолчанию сегодня
+let evDate = null;
+function evDay() { return evDate || todayStr(); }
+function evShiftDay(delta) {
+  const d = parseD(evDay());
+  d.setDate(d.getDate() + delta);
+  const next = todayStr(d);
+  if (next > todayStr()) return;           // вперёд дальше сегодня не пускаем
+  evDate = next === todayStr() ? null : next;
+  vib(8);
+  renderEvening();
+}
+function evPickDay() {
+  openDayPicker({ day: evDay(), pick: d => { evDate = d === todayStr() ? null : d; renderEvening(); } });
+}
 function renderEvening() {
-  const tDay = todayStr();
+  const tDay = evDay();
   const sumToday = state.expenses.filter(e => e.date === tDay).reduce((a, e) => a + e.amount, 0);
   const envToday = state.closed.filter(c => c.date === tDay);
   const envSum = envToday.reduce((a, c) => a + c.amount, 0);
@@ -10052,7 +10233,7 @@ function renderEvening() {
   }
 
   document.getElementById('evDate').textContent =
-    new Date().toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' });
+    parseD(evDay()).toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' });
 
   // строгие белые пиктограммы на цветных бейджах
   const G = p => '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" ' +
@@ -10074,7 +10255,7 @@ function renderEvening() {
   // привычки за день
   const hTot = state.habits.length;
   if (hTot) {
-    const day = todayStr();
+    const day = evDay();
     const hDone = state.habits.filter(h => h.log.includes(day)).length;
     rows.push(hDone === hTot
       ? [IC_OK, '#0a84ff', 'Привычки: <b>все ' + hTot + '</b> закрыты']
@@ -10084,7 +10265,7 @@ function renderEvening() {
   // питание за день
   const nut = state.nutri;
   if (nut) {
-    const day = todayStr();
+    const day = evDay();
     const eatenK = fdTotals(day).k, normK = nut.kcal + fdBurned(day);
     if (eatenK > normK) rows.push([IC_WARN, '#e2653c',
       'Питание: <b>' + fmt(Math.round(eatenK - normK)) + '</b> ккал сверх нормы']);
@@ -10092,6 +10273,8 @@ function renderEvening() {
       'Питание: <b>' + fmt(Math.round(eatenK)) + '</b> из ' + fmt(Math.round(normK)) + ' ккал']);
   }
   rows.push([IC_NUM, '#0a84ff', 'Стрик: <b>' + s + '</b> ' + plural(s, 'день', 'дня', 'дней') + ' подряд']);
+  const evNext = document.getElementById('evNext');
+  if (evNext) evNext.disabled = evDay() >= todayStr();
   document.getElementById('evRows').innerHTML =
     rows.map(r => '<div class="ev-row"><span class="ev-badge">' +
       r[0] + '</span><span>' + r[2] + '</span></div>').join('');
@@ -10113,7 +10296,8 @@ function evCloseReco() {
 }
 function evSweep(k) { sweepToPig(k); renderEvening(); }
 function closeEvening() { document.getElementById('evening').classList.remove('show'); }
-function openEvening() {                  // ручной вход: тап по карточке стрика
+function openEvening() {                  // ручной вход: тап по строке «Итог дня»
+  evDate = null;                          // всегда открываем сегодняшний день
   renderEvening();
   document.getElementById('evening').classList.add('show');
 }
@@ -10143,13 +10327,12 @@ sleepCheck();
 mountSpheres();   // сферы разделов должны существовать до первого рендера
 render();
 switchTab('today');
-// сказки: свинка — при первом запуске, предпросмотры — через ?onb и ?ham
-if (onbPreview) runOnbStory(true);
-else if (!state.onboarded) {
+// знакомство при первом запуске; у тех, кто уже пользовался, его не показываем
+if (!state.onboarded) {
   if (state.closed.length || state.expenses.length) {
     state.onboarded = true;
     localStorage.setItem(KEY, JSON.stringify(state));
-  } else runOnbStory(false);
+  } else setTimeout(startTour, 600);
 }
 if (!state.hamboarded && state.expenses.length) {
   state.hamboarded = true;
